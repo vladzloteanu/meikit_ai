@@ -1,0 +1,29 @@
+slug: _fixture
+title: Fixture idea (dry runs only)
+status: RUNNING
+created: '2026-10-14'
+updated: '2026-10-16'
+geo:
+- FR
+language: fr
+buyer: independent dog groomers
+signer: the salon owner
+value_per_customer_eur: 228.0
+cap_eur: 300.0
+founder_hour_rate_eur: 100.0
+repo: null
+local_path: null
+domain: null
+current_experiment: 1
+provisional: false
+notes: Canned data for dry runs. Never a real idea; its tools never spend.
+totals:
+  cash_eur: 0.4
+  founder_time_eur: 25.0
+  by_kind:
+    ads: 0.0
+    api: 0.12
+    llm: 0.28
+    domain: 0.0
+    founder_time: 25.0
+    other: 0.0

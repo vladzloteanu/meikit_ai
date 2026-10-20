@@ -1,0 +1,3 @@
+{"ts": "2026-10-14T10:12:03", "kind": "api", "provider": "searchapi", "amount_eur": 0.12, "ref": "serp_ads_20261014-101203.json", "phase": "triage", "note": "12 SERP queries at 0.01 EUR", "channel": null}
+{"ts": "2026-10-14T10:31:45", "kind": "llm", "provider": "neuralbox", "amount_eur": 0.28, "ref": "fixture-request-1", "phase": "triage", "note": "AdsInsights category summary, one call", "channel": null}
+{"ts": "2026-10-16T11:20:00", "kind": "founder_time", "provider": "vlad", "amount_eur": 25.0, "ref": "", "phase": "launch", "note": "ad approval, 15 min at 100 EUR/h", "channel": null}
