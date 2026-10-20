@@ -1,5 +1,7 @@
 import copy
+import hashlib
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -12,7 +14,7 @@ from urllib.parse import quote
 import pytest
 import yaml
 
-from factory import secrets
+from factory import paths, secrets
 from factory.cli import main
 from factory.secrets import SecretMissing, SecretsUnavailable
 
@@ -163,6 +165,12 @@ def test_load_decrypts_once_per_root(tmp_path, monkeypatch):
     assert len(calls) == 3
 
 
+def test_tests_run_against_an_empty_factory_root():
+    assert paths.root() != REPO_ROOT
+    with pytest.raises(SecretsUnavailable):
+        secrets.load(refresh=True)
+
+
 def test_root_defaults_to_the_factory_root(root):
     make_root(root)
     assert secrets.get("providers.searchapi.api_key") == SEARCHAPI_KEY
@@ -224,6 +232,74 @@ def test_save_failure_keeps_the_file_and_leaves_no_plaintext(tmp_path, private_t
     assert SEARCHAPI_KEY not in "".join(traceback.format_exception(e.value))
     assert list(private_tmp.iterdir()) == []
     assert (root / "secrets/config.yml.enc").read_bytes() == enc
+
+
+def fake_openssl(tmp_path: Path, monkeypatch, script: str) -> None:
+    """Put an `openssl` running `script` (sh) first on PATH for the subprocesses of this test."""
+    bin_dir = tmp_path / "fakebin"
+    bin_dir.mkdir()
+    (bin_dir / "openssl").write_text(f"#!/bin/sh\n{script}\n")
+    (bin_dir / "openssl").chmod(0o755)
+    monkeypatch.setenv("PATH", f"{bin_dir}{os.pathsep}{os.environ['PATH']}")
+
+
+def test_save_never_leaves_a_half_written_enc(tmp_path, monkeypatch, private_tmp):
+    root = make_root(tmp_path / "f")
+    enc = (root / "secrets/config.yml.enc").read_bytes()
+    # An openssl that dies halfway through writing its output.
+    fake_openssl(
+        tmp_path,
+        monkeypatch,
+        'while [ $# -gt 0 ]; do [ "$1" = -out ] && echo partial > "$2"; shift; done; exit 1',
+    )
+    with pytest.raises(secrets.SecretsError):
+        secrets.save({"providers": {"searchapi": {"api_key": SEARCHAPI_KEY}}}, root)
+    assert (root / "secrets/config.yml.enc").read_bytes() == enc
+    assert sorted(entry.name for entry in (root / "secrets").iterdir()) == [
+        "config.yml.enc",
+        "master.key",
+    ]
+    assert list(private_tmp.iterdir()) == []
+
+
+def test_bin_secrets_keeps_the_key_off_the_command_line(tmp_path, monkeypatch):
+    root = make_root(tmp_path / "f")
+    key = (root / "secrets/master.key").read_text().strip()
+    argv_log = tmp_path / "argv.log"
+    fake_openssl(
+        tmp_path, monkeypatch, f'echo "$@" >> "{argv_log}"\nexec "{shutil.which("openssl")}" "$@"'
+    )
+    assert secrets.load(root, refresh=True)["nb"]["url"] == "http://127.0.0.1:3076"
+    secrets.save(secrets.load(root), root)
+    assert secrets.get("providers.searchapi.api_key", root=root) == SEARCHAPI_KEY
+    calls = argv_log.read_text().splitlines()
+    assert len(calls) == 3  # decrypt, encrypt, decrypt
+    assert all("-pass file:" in call and key not in call for call in calls)
+
+
+def test_textconv_shows_hashes_unless_asked_for_the_plaintext(tmp_path):
+    root = make_root(
+        tmp_path,
+        {"providers": {"searchapi": {"api_key": SEARCHAPI_KEY}}, "nb": {"api_key": "", "url": "x"}},
+    )
+    command = [
+        root / "bin/secrets",
+        "decrypt-for-textconv",
+        root / "secrets/master.key",
+        root / "secrets/config.yml.enc",
+    ]
+    env = {name: value for name, value in os.environ.items() if name != "SECRETS_TEXTCONV"}
+    shown = subprocess.run(command, capture_output=True, text=True, check=True, env=env).stdout
+    lines = shown.splitlines()
+    digest = hashlib.sha256(SEARCHAPI_KEY.encode()).hexdigest()[:8]
+    assert f"providers.searchapi.api_key: {digest}" in lines
+    assert "nb.api_key: (empty)" in lines
+    assert SEARCHAPI_KEY not in shown
+    dotpaths = [line.split(": ", 1)[0] for line in lines]
+    assert dotpaths == sorted(dotpaths) == ["nb.api_key", "nb.url", "providers.searchapi.api_key"]
+    env["SECRETS_TEXTCONV"] = "full"
+    full = subprocess.run(command, capture_output=True, text=True, check=True, env=env).stdout
+    assert SEARCHAPI_KEY in full
 
 
 # --- factory secrets-import-nb -----------------------------------------------------------------
@@ -406,10 +482,58 @@ def test_import_nb_reports_a_failed_make_without_its_output(root, tmp_path_facto
     assert (root / "secrets/config.yml.enc").read_bytes() == enc
 
 
-def test_import_nb_needs_the_checkout(root, capsys):
+@pytest.mark.parametrize("has_dir, named", [(False, "no-such-checkout"), (True, "Makefile")])
+def test_import_nb_needs_the_checkout(root, capsys, has_dir, named):
     make_root(root, FACTORY_CONFIG)
-    assert main(["secrets-import-nb", "--nb-root", str(root / "no-such-checkout")]) == 1
-    assert "no-such-checkout" in capsys.readouterr().err
+    nb = root / "no-such-checkout"
+    if has_dir:
+        nb.mkdir()
+    assert main(["secrets-import-nb", "--nb-root", str(nb)]) == 1
+    out, err = capsys.readouterr()
+    assert out == ""
+    assert named in err
+
+
+def test_import_nb_reads_the_local_neuralbox_config(root, tmp_path_factory, monkeypatch, capsys):
+    make_root(root, FACTORY_CONFIG)
+    # Either variable sends NeuralBox's Makefile to its remote (AWS) branch.
+    monkeypatch.setenv("NEURAL_BOX_ENV", "production")
+    monkeypatch.setenv("ENV", "staging")
+    recipe = '@test -z "$$NEURAL_BOX_ENV$$ENV" || exit 4; cat nb-config.yml'
+    nb = make_nb_root(tmp_path_factory.mktemp("dolead") / "neural_box", recipe=recipe)
+    assert main(["secrets-import-nb", "--nb-root", str(nb), "--dry-run"]) == 0
+    assert capsys.readouterr().out.splitlines() == list(EXPECTED)
+
+
+@pytest.mark.parametrize("dry_run", [False, True])
+def test_import_nb_keeps_own_keys_and_refreshes_its_own(root, nb_root, capsys, dry_run):
+    config = copy.deepcopy(FACTORY_CONFIG)
+    config["providers"]["searchapi"] = {"api_key": "own-searchapi-key"}
+    config["providers"]["apify"] = {"api_key": "own-apify-key", "source": "apify.com"}
+    config["providers"]["seranking"] = {
+        "api_token": "old-nb-token",
+        "source": "neural_box",
+        "imported_at": date(2026, 1, 1),
+    }
+    make_root(root, config)
+    argv = ["secrets-import-nb", "--nb-root", str(nb_root)] + (["--dry-run"] if dry_run else [])
+    assert main(argv) == 0
+    out, err = capsys.readouterr()
+    kept = ["providers.searchapi.api_key", "providers.apify.api_key"]
+    assert out.splitlines() == [dotpath for dotpath in EXPECTED if dotpath not in kept]
+    for dotpath in kept:
+        assert dotpath in err
+    for value in ("own-searchapi-key", "own-apify-key", "old-nb-token", *NB_VALUES):
+        assert value not in out + err
+    providers = secrets.load(root, refresh=True)["providers"]
+    assert providers["searchapi"] == {"api_key": "own-searchapi-key"}
+    assert providers["apify"] == {"api_key": "own-apify-key", "source": "apify.com"}
+    if dry_run:
+        assert providers["seranking"] == config["providers"]["seranking"]
+    else:
+        assert providers["seranking"]["api_token"] == "nb-seranking-0002"
+        assert providers["seranking"]["source"] == "neural_box"
+        assert providers["seranking"]["imported_at"] != date(2026, 1, 1)
 
 
 @pytest.mark.parametrize(
@@ -419,13 +543,16 @@ def test_import_nb_needs_the_checkout(root, capsys):
         f'export NB_API_KEY="{NB_API_KEY}"',
         f"NB_API_KEY = '{NB_API_KEY}'",
         f"NB_API_KEY={NB_API_KEY}  # local key",
+        f'NB_API_KEY="{NB_API_KEY}" # note',
+        f"export NB_API_KEY='{NB_API_KEY}'  # note",
     ],
 )
 def test_env_value_reads_dotenv_lines(tmp_path, line):
     from factory.tools import secrets_import_nb
 
     env = tmp_path / ".env"
-    env.write_text(f"# comment\nNB_API_KEY_OLD=stale-value\nOTHER=1\n{line}\n")
+    env.write_text(f'# comment\nNB_API_KEY_OLD=stale-value\nHASHED="a #b"\n{line}\n')
     assert secrets_import_nb.env_value(env, "NB_API_KEY") == NB_API_KEY
+    assert secrets_import_nb.env_value(env, "HASHED") == "a #b"
     assert secrets_import_nb.env_value(env, "MISSING_NAME") is None
     assert secrets_import_nb.env_value(tmp_path / "absent.env", "NB_API_KEY") is None

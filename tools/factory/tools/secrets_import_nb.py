@@ -10,6 +10,7 @@ prints the dotpaths and changes nothing.
 
 import argparse
 import copy
+import os
 import subprocess
 import sys
 from datetime import date
@@ -41,6 +42,8 @@ MAPPING = {
 }
 # NeuralBox `.env` variable -> factory dotpath.
 ENV_MAPPING = {"NB_API_KEY": "nb.api_key"}
+# Either one sends NeuralBox's Makefile to its remote (AWS) branch; the local config is imported.
+REMOTE_SWITCHES = ("NEURAL_BOX_ENV", "ENV")
 
 
 class ImportFailed(Exception):
@@ -69,30 +72,58 @@ def run(args: argparse.Namespace) -> int:
     nb_root = Path(args.nb_root).expanduser()
     root = paths.root()
     try:
+        require_checkout(nb_root)
         config = copy.deepcopy(secrets.load(root, refresh=True))
         values, missing = collect(nb_root)
         for name in missing:
             print(f"{COMMAND}: skipped {name}: not set in NeuralBox", file=sys.stderr)
         if not values:
             raise ImportFailed(f"nothing to import from {nb_root}")
-        if not args.dry_run:
+        for dotpath in own_keys(config, values):
+            print(
+                f"{COMMAND}: kept {dotpath}: set, and its source is not {SOURCE}", file=sys.stderr
+            )
+            del values[dotpath]
+        if values and not args.dry_run:
             secrets.save(apply(config, values, date.today()), root)
             _verify(values, root)
     except (secrets.SecretsError, ImportFailed) as exc:
         print(f"{COMMAND}: {exc}", file=sys.stderr)
         return 1
-    print("\n".join(values))
-    outcome = (
-        "dry run, nothing written" if args.dry_run else f"written to {root / secrets.ENCRYPTED}"
-    )
+    if values:
+        print("\n".join(values))
+    if args.dry_run:
+        outcome = "dry run, nothing written"
+    elif values:
+        outcome = f"written to {root / secrets.ENCRYPTED}"
+    else:
+        outcome = "nothing to write"
     print(f"{COMMAND}: {len(values)} values from NeuralBox, {outcome}", file=sys.stderr)
     return 0
 
 
-def collect(nb_root: Path) -> tuple[dict[str, Any], list[str]]:
-    """{factory dotpath: value} for each mapped value NeuralBox has, and the names it lacks."""
+def require_checkout(nb_root: Path) -> None:
+    """Refuse a --nb-root that is not a NeuralBox checkout, before anything runs."""
     if not nb_root.is_dir():
         raise ImportFailed(f"no NeuralBox checkout at {nb_root} (pass --nb-root)")
+    if not (nb_root / "Makefile").is_file():
+        raise ImportFailed(f"no Makefile in {nb_root}: --nb-root must be the NeuralBox checkout")
+
+
+def own_keys(config: dict, values: dict[str, Any]) -> list[str]:
+    """The dotpaths the import keeps: set in `config`, and the `source` beside them is not ours."""
+    kept = []
+    for dotpath in values:
+        parent = _dig(config, dotpath.rpartition(".")[0])
+        source = parent.get("source") if isinstance(parent, dict) else None
+        if not _is_blank(_dig(config, dotpath)) and source != SOURCE:
+            kept.append(dotpath)
+    return kept
+
+
+def collect(nb_root: Path) -> tuple[dict[str, Any], list[str]]:
+    """{factory dotpath: value} for each mapped value NeuralBox has, and the names it lacks."""
+    require_checkout(nb_root)
     nb_config = read_nb_config(nb_root)
     values: dict[str, Any] = {}
     missing: list[str] = []
@@ -116,8 +147,9 @@ def read_nb_config(nb_root: Path) -> dict:
     shown = f"`make -C {nb_root} secrets-cat`"
     # -s and --no-print-directory keep make's own lines out of the YAML on stdout.
     command = ["make", "-s", "--no-print-directory", "-C", str(nb_root), "secrets-cat"]
+    env = {name: value for name, value in os.environ.items() if name not in REMOTE_SWITCHES}
     try:
-        proc = subprocess.run(command, capture_output=True, stdin=subprocess.DEVNULL)
+        proc = subprocess.run(command, capture_output=True, stdin=subprocess.DEVNULL, env=env)
     except OSError as exc:
         raise ImportFailed(f"cannot run make: {exc.strerror}") from None
     if proc.returncode != 0:
@@ -129,10 +161,7 @@ def read_nb_config(nb_root: Path) -> dict:
         # The parser's message quotes the offending line, which may hold a value.
         raise ImportFailed(f"{shown} did not print valid YAML") from None
     if len(documents) > 1:
-        raise ImportFailed(
-            f"{shown} printed {len(documents)} YAML documents (NEURAL_BOX_ENV or ENV set?); "
-            "unset them to read the local config"
-        )
+        raise ImportFailed(f"{shown} printed {len(documents)} YAML documents, expected one")
     if not documents or not isinstance(documents[0], dict):
         raise ImportFailed(f"{shown} did not print a YAML mapping")
     return documents[0]
@@ -153,8 +182,11 @@ def env_value(path: Path, name: str) -> str | None:
         if not sep or key.strip() != name:
             continue
         raw = raw.strip()
-        if len(raw) >= 2 and raw[0] == raw[-1] and raw[0] in "'\"":
-            value = raw[1:-1]
+        quote = raw[:1]
+        if quote in ("'", '"') and quote in raw[1:]:
+            # A quoted value ends at its closing quote: what follows is a comment, a ` #` inside
+            # the quotes is part of the value.
+            value = raw[1 : raw.index(quote, 1)]
         else:
             value = raw.split(" #", 1)[0].rstrip()
     return value

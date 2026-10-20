@@ -9,12 +9,24 @@ it, `secrets/master.key`, stays on this machine: gitignored, mode 600.
 
 | Path | In git | What |
 |---|---|---|
-| `bin/secrets` | yes | the scheme: `init`, `encrypt`, `decrypt`, `edit`, `cat`, `get`, `apply-diff`, `generate-key` |
+| `bin/secrets` | yes | the scheme: `init`, `encrypt`, `decrypt`, `edit`, `cat`, `get`, `apply-diff`, `generate-key` (see "This copy of bin/secrets") |
 | `secrets/config.yml.enc` | yes | the factory config, encrypted |
 | `secrets/config.yml.example` | yes | its schema, every secret empty |
 | `secrets/master.key` | no | the key; lose it and the `.enc` cannot be opened |
 | `secrets/config.yml` | no | plaintext, only while you write a config by hand |
-| `.gitattributes` | yes | `diff=encrypted`, so git shows decrypted diffs locally (see Rules) |
+| `secrets/.gitignore` | yes | an allowlist: only itself, the example and the `.enc` can ever be committed |
+| `.gitattributes` | yes | `diff=encrypted`: git diffs of the `.enc` show one hash per value (see Rules) |
+
+## This copy of bin/secrets
+
+It started as a copy of `~/wrk/pers/personal_skills_and_tools/bin/secrets` and differs from it in
+two points:
+
+- openssl reads the key from the key file (`-pass file:secrets/master.key`), so the key never
+  appears on a command line or in the process list; upstream passes `-pass pass:<key>`. Both read
+  the same passphrase, so a file encrypted by either script opens with the other;
+- `decrypt-for-textconv`, the git diff filter, prints hashes instead of the plaintext unless
+  `SECRETS_TEXTCONV=full` is set (see Rules).
 
 ## Two layers (spec section 11)
 
@@ -53,8 +65,10 @@ safe = secrets.redact(text)                           # every config string of 8
 `secrets.load()` decrypts once per process and factory root (`refresh=True` reads the file again).
 Without a key or a `.enc` it raises `SecretsUnavailable` with one line naming `make secrets-init`
 or `bin/secrets encrypt`, before running anything; a tool prints that line and exits 1, never a
-traceback. `secrets.save(config)` re-encrypts a whole config; its plaintext exists only in a
-private temp file (mode 600, outside the repo) while `bin/secrets` runs.
+traceback. `secrets.save(config)` re-encrypts a whole config: its plaintext exists only in a
+private temp file (mode 600, outside the repo) while `bin/secrets` runs, and the new `.enc` is
+written next to the old one and renamed over it once encryption succeeded, so a failure or Ctrl-C
+leaves the old file intact.
 
 ## NeuralBox keys
 
@@ -81,9 +95,15 @@ It runs `make -C <nb-root> secrets-cat` and parses the output in memory, reads `
 and writes nothing inside NeuralBox. Each value lands next to `source: neural_box` and
 `imported_at: <date>`; the factory config is re-encrypted and only the dotpaths written are
 printed. A value NeuralBox lacks is skipped and named on stderr. `--dry-run` reads both sides and
-prints the dotpaths it would write, changing nothing. Run it again to pick up a key
-NeuralBox rotated. To move a provider to an own key: `make secrets-edit`, replace the value,
-delete its `source` and `imported_at`.
+prints the dotpaths it would write, changing nothing. `make` runs without `NEURAL_BOX_ENV` and
+`ENV`, so NeuralBox's Makefile reads its local config, and a `--nb-root` without a `Makefile` is
+refused before anything runs.
+
+Run it again to pick up a key NeuralBox rotated: entries marked `source: neural_box` are
+refreshed. An entry whose value is set and whose `source` is anything else, or absent, is an own
+key: the import keeps it and names its dotpath on stderr (in `--dry-run` too). To move a provider
+to an own key: `make secrets-edit`, replace the value, and delete its `source` and `imported_at`
+(or set `source` to where the key comes from).
 
 The import rewrites the YAML from data, so comments in the decrypted config are not kept (the
 example keeps them).
@@ -93,9 +113,13 @@ example keeps them).
 - A secret value never appears in stdout, logs, exceptions, research files, commits or chat.
   Check presence, not values: `secrets.get(path, None) is not None`, or a walk that prints key
   paths only.
-- Once `make secrets-init` has run, `git diff`, `git show` and `git log -p` print
-  `secrets/config.yml.enc` **decrypted**. To share or review a diff, use `--no-textconv`, `--stat`
-  or `-- . ':!secrets/config.yml.enc'`.
+- Once `make secrets-init` has run, `git diff`, `git show` and `git log -p` render
+  `secrets/config.yml.enc` through `bin/secrets decrypt-for-textconv`: one line per value, sorted
+  by dotpath, `dotpath: <first 8 hex digits of the value's sha256>` or `dotpath: (empty)`. A diff
+  shows which keys changed, never a value.
+- `SECRETS_TEXTCONV=full git diff …` (or `git show`, `git log -p`) renders the plaintext instead:
+  for your own screen only, never in a shared terminal, an agent session or a review file. Without
+  the key, or with `--no-textconv`, git shows the `.enc` as a binary file.
 - Rotate a key: issue a new one at the provider, `make secrets-edit`, replace the value, commit the
   `.enc`. A key that leaked is rotated at the provider, not just removed from the file: the old
   value stays in git history.

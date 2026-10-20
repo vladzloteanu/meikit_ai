@@ -10,6 +10,7 @@ Secret values must never reach stdout, logs, exceptions, research files or git: 
 here quotes one, and `redact` scrubs them from text that might hold one (a provider's error body).
 """
 
+import contextlib
 import json
 import os
 import subprocess
@@ -142,34 +143,42 @@ def save(config: dict, root: Path | None = None) -> None:
     """Encrypt `config` as the factory config of `root` with `bin/secrets encrypt`, then reload.
 
     The plaintext exists only in a private temp file (mode 0600, outside the repo) while
-    bin/secrets runs, and is deleted whatever happens. bin/secrets checks the key and validates the
-    YAML before it overwrites the .enc; git holds the previous version.
+    bin/secrets runs, and is deleted whatever happens. The new .enc is written next to the old one
+    and renamed over it only once bin/secrets succeeds, so a failure or Ctrl-C leaves it intact.
     """
     root = _root(root)
     key, encrypted = root / KEY, root / ENCRYPTED
     if not key.is_file():
         raise SecretsUnavailable(_no_key(key, encrypted))
-    fd, plaintext = tempfile.mkstemp(prefix="factory-secrets-", suffix=".yml")
+    fd, staged = tempfile.mkstemp(dir=encrypted.parent, prefix=f".{encrypted.name}.", suffix=".tmp")
+    os.close(fd)
     try:
-        with os.fdopen(fd, "w", encoding="utf-8") as f:
-            yaml.safe_dump(config, f, sort_keys=False, allow_unicode=True)
-        proc = _bin_secrets(root, "encrypt", plaintext, encrypted, key)
-    except yaml.YAMLError:
-        raise SecretsError(
-            "the config holds a value YAML cannot represent; nothing was written"
-        ) from None
+        fd, plaintext = tempfile.mkstemp(prefix="factory-secrets-", suffix=".yml")
+        try:
+            with os.fdopen(fd, "w", encoding="utf-8") as f:
+                yaml.safe_dump(config, f, sort_keys=False, allow_unicode=True)
+            proc = _bin_secrets(root, "encrypt", plaintext, staged, key)
+        except yaml.YAMLError:
+            raise SecretsError(
+                "the config holds a value YAML cannot represent; nothing was written"
+            ) from None
+        finally:
+            os.unlink(plaintext)
+        if proc.returncode != 0:
+            # bin/secrets relays the YAML parser, which quotes content: keep its own `Error:` lines.
+            errors = [
+                line
+                for line in proc.stderr.decode("utf-8", "replace").splitlines()
+                if line.startswith("Error:")
+            ]
+            raise SecretsError(
+                f"bin/secrets could not encrypt {encrypted}: "
+                f"{' | '.join(errors) or 'no error message'}"
+            )
+        os.replace(staged, encrypted)
     finally:
-        os.unlink(plaintext)
-    if proc.returncode != 0:
-        # bin/secrets relays the YAML parser, which quotes content: keep its own `Error:` lines.
-        errors = [
-            line
-            for line in proc.stderr.decode("utf-8", "replace").splitlines()
-            if line.startswith("Error:")
-        ]
-        raise SecretsError(
-            f"bin/secrets could not encrypt {encrypted}: {' | '.join(errors) or 'no error message'}"
-        )
+        with contextlib.suppress(FileNotFoundError):
+            os.unlink(staged)
     load(root, refresh=True)
 
 
