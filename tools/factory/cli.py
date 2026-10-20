@@ -14,7 +14,7 @@ import sys
 from factory import __version__
 
 # Module names under `factory.tools`, one per tool. Add a new tool's module name here.
-TOOL_MODULES: list[str] = []
+TOOL_MODULES: list[str] = ["secrets_import_nb"]
 
 
 def build_parser() -> argparse.ArgumentParser:

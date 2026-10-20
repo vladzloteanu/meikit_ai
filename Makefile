@@ -1,4 +1,4 @@
-.PHONY: sync test check fixture
+.PHONY: sync test check fixture secrets-init secrets-edit secrets-cat secrets-get secrets-apply-diff
 
 sync:
 	uv sync
@@ -11,3 +11,20 @@ check: test
 
 fixture:
 	bash scripts/fixture.sh
+
+# Secrets (docs/secrets.md): every target delegates to bin/secrets. secrets-cat prints every
+# value; secrets-get K=a.b.c prints one, so use it for non-secret values only.
+secrets-init:
+	bin/secrets init
+
+secrets-edit:
+	bin/secrets edit
+
+secrets-cat:
+	@bin/secrets cat
+
+secrets-get:
+	@bin/secrets get "$(K)"
+
+secrets-apply-diff:
+	bin/secrets apply-diff
