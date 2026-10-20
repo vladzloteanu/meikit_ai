@@ -1,7 +1,7 @@
 # Ideas Factory — design
 
 **Status:** draft for approval · **Date:** 2026-10-20 · **Owner:** Vlad Zloteanu
-**Repo:** `~/wrk/pers/astrafable` (personal) · **Supersedes:** `/idea-validate` in `personal_skills_and_tools`
+**Repo:** `~/wrk/pers/astrafable` (personal, the control plane) · **Supersedes:** `/idea-validate` in `personal_skills_and_tools`
 
 ## 1. Intent
 
@@ -9,9 +9,11 @@ One bootstrapped idea tested per week, for a solo founder or a pair, until one i
 "Tested" means: a real buyer saw a real offer at a real price through a real channel, and the
 factory knows what one lead or one payment intent cost. Desk research never ends a run.
 
-The factory is a set of Claude Code skills, deterministic tools, a shared test website and a
-written method. Vlad will run the skills himself; they must work without the agent that built them
-in the room. Every run must leave the factory better than it found it.
+The factory is a control plane: Claude Code skills, deterministic tools, recipes, a ledger of
+ideas, and a website template. Each idea that reaches launch gets its own GitHub repo, its own
+Vercel project and its own secrets, created by the factory from the template. Vlad runs the skills
+himself; they must work without the agent that built them in the room. Every run must leave the
+factory better than it found it.
 
 ### Why v2 exists
 
@@ -29,12 +31,16 @@ never tooling; it was throughput to the money phase. v2 is designed around that.
 - Paid and unpaid channels measured in the same unit: cost per primary event, all-in, with founder
   time priced.
 - The factory improves on every run through calibration rows, learnings and skill edits.
-- Costs of every kind (ads, APIs, LLM calls, domains, founder time) live in the idea's folder.
+- Costs of every kind (ads, APIs, LLM calls, domains, founder time) live in the idea's ledger.
+- An idea with a BUILD verdict graduates as it is: its repo, its secrets, its history. A co-founder
+  can be given one idea's repo without the factory's keys.
+- Opening a session with `/factory` shows every idea and its state, and lets Vlad continue the
+  plan step by step or rework one part of it (a better landing page, an A/B test, a new channel).
 
 **Non-goals**
 - Building the product. A BUILD verdict ends the factory's job for that idea.
 - Brand work, naming perfection, pixel-perfect design. Good enough to be credible for one week.
-- Multi-week ad optimisation. One week, one framing, one readout.
+- Multi-week ad optimisation. One week, one framing, one readout per experiment.
 
 **Anti-goals (would make this a failure even if it works)**
 - A run that ends in a research document with no spend, no outreach and no number.
@@ -42,17 +48,20 @@ never tooling; it was throughput to the money phase. v2 is designed around that.
 - Spending from a company ad account, or leaving company-specific content in this repo.
 - Losing the ad account to a policy ban: it is shared by every future idea.
 - Skills that only work when the agent that wrote them is driving.
+- An idea repo that holds a secret it does not need.
 
 ## 3. Decisions already made (Vlad, 2026-10-20)
 
 | # | Decision |
 |---|---|
-| D1 | **Ad spend from personal ad accounts** (Meta, Google; TikTok later). **Research and creative APIs through NeuralBox's provider accounts** (SearchAPI, SERanking, Apify, Firecrawl, Tavily, ScreenshotAPI, Gemini, OpenAI, Fal, Legnext, ElevenLabs, Submagic). Every cost is stored inside the idea's metadata. |
-| D2 | **Primary metric per test is either cost per payment intent or cost per lead**, declared at launch in `experiment.yml`. |
+| D1 | **Ad spend from personal ad accounts** (Meta, Google; TikTok later). **Research and creative APIs through NeuralBox's provider accounts** (SearchAPI, SERanking, Apify, Firecrawl, Tavily, ScreenshotAPI, Gemini, OpenAI, Fal, Legnext, ElevenLabs, Submagic). Every cost is stored inside the idea's ledger. |
+| D2 | **Primary metric per experiment is either cost per payment intent or cost per lead**, declared in the experiment file. |
 | D3 | **A domain is bought per idea by default.** `meikit.ai` (unregistered on 2026-10-20) becomes the lab domain; `<slug>.meikit.ai` is the fast path when a name is not ready or brand matters little. |
 | D4 | **Non-ads channels are first-class**: replying to people who complain, Reddit posts, direct LinkedIn contact, cold email, communities. Chosen per idea by the same decision table as paid channels. |
 | D5 | **The test website is a new design by Claude**, not a fork of the MonMagot rig. Its hard-won lessons carry over (section 9). |
 | D6 | The first real idea is supplied by Vlad; the factory is built against it, not against a dummy. |
+| D7 | **Every deployed project lives in its own GitHub repo with only the secrets it needs.** The factory instantiates it from a template and keeps the ledger; the idea repo holds the site and its own encrypted secrets. |
+| D8 | **`/factory` is the entry point.** It lists the ideas with their status, lets Vlad pick one or start a new one, then either runs the next step of that idea's plan or reworks one part of it. |
 
 Governance facts checked today: the Vercel CLI on this machine is scoped to Dolead's team and
 MonMagot lives on a SelectionA team, so the factory needs its own Vercel scope (open question Q1).
@@ -65,7 +74,7 @@ NeuralBox's Google/Meta/TikTok Ads tools spend from Dolead's accounts and are ne
 - **Budget.** Default cap 300 EUR per idea, all-in, declared at intake and enforced at every gate.
   Founder time is priced at a declared hourly rate (default 100 EUR/h) so unpaid channels compare.
 - **Founder time.** About 2 hours per week: intake, the challenge session, ad approval, and five
-  conversations with the people who converted. P8-style conversations stay mandatory.
+  conversations with the people who converted. Those conversations stay mandatory.
 - **Legal (FR/EU).** Legal mentions, privacy page, lawful basis for emails, cookie banner, honest
   fake-door disclosure. B2B cold email allowed with relevance and opt-out; B2C cold email is not.
 - **Ad platform policy.** No guarantees, no before/after, no fake scarcity, no misleading claims.
@@ -75,23 +84,28 @@ NeuralBox's Google/Meta/TikTok Ads tools spend from Dolead's accounts and are ne
 - **NeuralBox is LLM-mediated.** A `/respond` call takes about two minutes and costs about 0.30 USD.
   It is used where it holds unique data (AdsInsights) or for exploratory research, never on the
   daily path where a direct API call exists.
+- **Secrets isolation.** The factory's master key never enters an idea repo; an idea's master key
+  opens only that idea's secrets.
 
-## 5. The weekly cycle
+## 5. Plans, steps and workstreams
 
-| Day | Command | Who | Output | Timebox |
+Every idea has a `plan.md`: the weekly cycle instantiated as numbered steps, each with a status
+(todo, doing, done, skipped, void), the command that runs it, its gate and its timebox. `/factory`
+reads it to show where the idea stands and to offer the next step.
+
+### The default plan (one week)
+
+| Step | Command | Who | Output | Timebox |
 |---|---|---|---|---|
-| Mon AM | `/idea-new` | Vlad 15 min | `ideas/<slug>/intake.md` (verbatim pitch, geo, buyer, value per customer, cap) | 15 min |
-| Mon AM | `/idea-triage` | agent, automatic | `brief.md`: who pays today, prices, demand signals, complaints, triage score | 60 min, 3 EUR |
-| Mon PM | `/idea-challenge` | Vlad 45 min with agent | `challenge.md`: forcing questions answered, adversarial read, pivot fan-out scored, GO/NO-GO with one framing, recipe, channels, predictions | 1 session |
-| Tue | `/idea-launch` | agent, Vlad approves ads 15 min | domain, site live, QA passed, creatives, campaign specs, channel kits, `experiment.yml` frozen | 1 day |
-| Wed–Sun | `/idea-status` | agent daily | `results.md` refreshed: spend, clicks, events, cost per primary, stop-rule check | 5 min/day |
-| Next Mon | `/idea-verdict` | agent, Vlad confirms | verdict, calibration row, learnings, write-back | 30 min |
-| Every 2 weeks | `/factory-retro` | agent | skill, recipe and tool edits from learnings; fixture dry run | 1 h |
+| 1 Intake | `/idea-new` | Vlad 15 min | `intake.md` (verbatim pitch, geo, buyer, value per customer, cap) | 15 min |
+| 2 Triage | `/idea-triage` | agent, automatic | `brief.md`: who pays today, prices, demand signals, complaints, triage score | 60 min, 3 EUR |
+| 3 Challenge | `/idea-challenge` | Vlad 45 min with agent | `challenge.md`: forcing questions answered, adversarial read, pivot fan-out scored, GO/NO-GO with one framing, recipe, channels, predictions | 1 session |
+| 4 Launch | `/idea-launch` | agent, Vlad approves ads 15 min | idea repo created from the template, domain, site live, QA passed, creatives, campaign specs, channel kits, experiment 1 frozen | 1 day |
+| 5 Run | `/idea-status` daily | agent | `results/1.md` refreshed: spend, clicks, events, cost per primary, stop-rule check; today's outreach batch; converters to call | 5 min/day |
+| 6 Conversations | Vlad | Vlad | notes in `conversations/` | 5 × 20 min |
+| 7 Verdict | `/idea-verdict` | agent, Vlad confirms | verdict, calibration row, learnings, write-back | 30 min |
 
-Two ideas overlap: idea N is in traffic while idea N+1 is in intake and challenge. A phase that
-overruns its timebox is cut and noted in learnings, not finished.
-
-Gates (a run stops or pivots when one fails):
+Gates (a step fails and the plan stops or pivots when one is not met):
 - Intake: slug, geo, language, buyer, value per customer, cap written down.
 - Triage: at least one of {someone pays to acquire this buyer today, a trigger keyword exists,
   recurring complaints exist}. All three absent ends the run at cost zero.
@@ -100,30 +114,56 @@ Gates (a run stops or pivots when one fails):
 - Launch: page live, QA passed, a test event reached the admin, claims lint clean, legal pages up.
 - Verdict: minimum sample reached, or VOID.
 
-## 6. The idea folder contract
+Two ideas overlap: idea N is in step 5 while idea N+1 is in steps 1 to 3. A step that overruns its
+timebox is cut and noted in learnings, not finished.
 
-`ideas/<slug>/` is the single source of truth for an idea; a run that leaves no files did not happen.
+### Workstreams (reworking a part of the plan)
+
+A workstream is an optional block of steps inserted into an idea's plan after launch, when Vlad
+wants to improve a part rather than move on. Each has a recipe under `workstreams/<name>.md`, and
+each one that changes what is measured ends by pre-registering a new experiment
+(`experiments/<n>.yml`) so the readout stays honest.
+
+| Workstream | What it does | Ends with |
+|---|---|---|
+| `lp-improve` | design review of the live page, converter interviews read, a new variant written and reviewed | experiment n+1 on variant B, or an A/B test |
+| `ab-test` | two variants served 50/50 by cookie, per-variant thresholds and minimum sample | experiment n+1 with per-variant readout |
+| `new-creatives` | new angles and formats from the winners and losers of the week | same experiment, new ad set, noted in results |
+| `new-channel` | add a channel kit (for example outreach next to search ads) | experiment n+1 or an addendum with its own thresholds |
+| `re-triage` | refresh the brief after new facts | updated `brief.md` |
+| `re-challenge` | run the challenge again on a new framing | new GO/NO-GO; the plan restarts at launch |
+| `pivot` | carry the surviving framing into a new launch with the same channel setup | new experiment |
+
+## 6. The idea ledger (`ideas/<slug>/` in the factory)
+
+The factory's folder for an idea is the single source of truth for everything except the site code,
+which lives in the idea's own repo (section 9). A run that leaves no files did not happen.
 
 ```
 ideas/<slug>/
-  idea.yml          # status, dates, geo, buyer, value_per_customer_eur, cap_eur, totals (computed)
-  intake.md         # verbatim pitch + intake answers, never edited after Monday
+  idea.yml          # status, phase, dates, geo, buyer, value_per_customer_eur, cap_eur,
+                    # repo (github url), local_path, domain, current_experiment, totals (computed)
+  plan.md           # the steps and workstreams with their status (section 5)
+  intake.md         # verbatim pitch + intake answers, never edited after step 1
   brief.md          # triage output
   challenge.md      # challenge session: questions, answers, adversarial read, framings, decision
-  experiment.yml    # the pre-registered test (schema below), frozen at launch
-  site.yml          # page content and theme for the stand (section 9)
+  experiments/      # 1.yml, 2.yml … each pre-registered and frozen at its launch (schema below)
+  results/          # 1.md, 2.md … daily readouts per experiment, regenerated by /idea-status
   channels/         # one kit per channel: campaign spec, ad copy, outreach list, drafts
   creatives/        # generated images/videos, with the prompt and cost of each
   costs.jsonl       # every cost line: {ts, kind, provider, amount_eur, ref, phase, note}
-  results.md        # daily readout, regenerated by /idea-status
   verdict.md        # BUILD / PIVOT / PARK / DROP with the numbers and the reason
   learnings.md      # append-only, written by every command
   conversations/    # notes from the calls with people who converted
 ```
 
-`experiment.yml`:
+Idea statuses: `NEW`, `TRIAGED`, `GO`, `NO-GO`, `LAUNCHED`, `RUNNING`, `REWORK`, `BUILD`, `PIVOT`,
+`PARK`, `DROP`. `/factory` shows them on the board.
+
+`experiments/<n>.yml`:
 
 ```yaml
+n: 1
 slug: dog-grooming-scheduler
 framing: "Online booking page for independent dog groomers in FR, 19 EUR/month"
 recipe: fake-door-saas            # see section 7
@@ -132,10 +172,11 @@ value_per_customer_eur: 228       # 12 months × 19
 cap_eur: 300
 founder_hour_rate_eur: 100
 channels: [google_search, meta_feed, reddit_reply]
+variants: [a]                     # [a, b] for an A/B test, split 50/50 by cookie
 predictions: {cpc_eur: 0.9, ctr_pct: 4, lp_cvr_pct: 6, cost_per_primary_eur: 15}
 thresholds:
-  pass_cost_per_primary_max_eur: 25   # must leave ≥3× margin on one-shot value, ≥1/3 of LTV on recurring
-  min_clicks: 300
+  pass_cost_per_primary_max_eur: 25   # ≥3× margin on one-shot value, ≥1/3 of LTV on recurring
+  min_clicks: 300                     # per variant when there are two
   min_primary_events: 20
   void_below_clicks: 100
 stop_rules:
@@ -172,7 +213,7 @@ Rules that hold for every recipe:
 
 ## 8. Acquisition channels
 
-Each channel has a kit template under `channels/<name>/` in the repo: how to build the list or
+Each channel has a kit template under `channels/<name>/` in the factory: how to build the list or
 campaign, cost unit, tracking, compliance, and the stop rules. The challenge session picks 2 to 3.
 
 | Channel | Cost unit | Tracking | Notes |
@@ -191,43 +232,48 @@ consumers → Meta; identifiable B2B buyers → outreach before ads; pain writte
 Founder minutes are converted to EUR at the intake rate so every channel yields a comparable cost
 per primary event.
 
-## 9. The stand (shared test website)
+## 9. The stand: a template, instantiated per idea
 
-One multi-tenant Next.js app on Vercel serves every idea; the hostname selects the idea's `site.yml`.
-One deploy, one admin, one event schema across ideas. Lessons kept from MonMagot: fire the
-conversion at capture, not at double opt-in; store utm and click ids on the lead row and fall back
-to them when the cookie is gone.
+The stand is a Next.js App Router site kept as a GitHub **template repository** (`stand-template`,
+developed from a sibling checkout of the factory). `/idea-launch` creates `vladzloteanu/<slug>`
+from it, writes the idea's content, creates the Vercel project and database, attaches the domain
+and deploys. One repo, one Vercel project, one database, one set of secrets per idea. Lessons kept
+from MonMagot: fire the conversion at capture, not at double opt-in; store utm and click ids on the
+lead row and fall back to them when the cookie is gone.
 
-- **Pages per idea:** landing, offer/pricing (inline or `/pricing`), checkout or booking step,
-  thanks, legal mentions, privacy, cookies, contact. Legal pages are generated from the operator
-  entity in secrets.
-- **Content:** `site.yml` holds headline, subhead, three proof points, offer (price, unit, what is
-  included, CTA), FAQ, and a theme (palette, font pair) so pages do not all look alike. Variants are
-  additional `site.yml` entries selected by path, for later A/B.
+- **Pages:** landing, offer/pricing (inline or `/pricing`), checkout or booking step, thanks, legal
+  mentions, privacy, cookies, contact. Legal pages are generated from the operator entity.
+- **Content:** `site.yml` in the idea repo holds headline, subhead, three proof points, offer
+  (price, unit, what is included, CTA), FAQ, and a theme (palette, font pair) so pages do not all
+  look alike. A second entry under `variants:` is served 50/50 by cookie when an A/B test is on.
 - **Events (canonical):** `page_view`, `scroll_50`, `cta_click`, `checkout_view`, `intent`,
-  `lead`, `payment`, `share`. Every event carries the idea slug, the variant, utm and click ids.
-- **Storage:** Postgres provisioned through the Vercel Marketplace (builder picks via the
+  `lead`, `payment`, `share`. Every event carries the variant, utm and click ids.
+- **Storage:** Postgres provisioned through the Vercel Marketplace per idea (builder picks via the
   marketplace skill; Neon unless discovery says otherwise). Tables: visits, events, leads, intents,
-  payments; `idea_slug` on every row.
-- **Pixels:** one Meta pixel and one Google Ads conversion set for the whole stand; the slug travels
-  on the event and per-idea custom conversions are defined by hostname. Server-side forwarding to
-  Meta Conversions API; Google enhanced conversions when the account exists.
-- **Admin:** `/admin`, basic auth from secrets. Per idea: visits by source, events funnel, leads,
-  intents, payments, spend (from `costs.jsonl` and ad APIs), cost per primary, prediction deltas.
-  `/api/stats/<slug>` serves the same numbers to `/idea-status`.
+  payments.
+- **Pixels:** one Meta pixel (dataset) and one set of Google Ads conversion actions **per idea**,
+  created in the personal accounts at launch. Server-side forwarding to Meta Conversions API;
+  Google enhanced conversions when the account allows.
+- **Admin:** `/admin`, basic auth from the idea's secrets. Visits by source, events funnel per
+  variant, leads, intents, payments, cost per primary against the prediction. `/api/stats`
+  serves the same numbers to the factory's `/idea-status` under a per-idea stats token.
 - **Anti-bot:** Cloudflare Turnstile on forms (free tier).
-- **Email:** confirmation and "we are live" emails through Resend on a dedicated subdomain.
+- **Email:** confirmation and "we are live" emails through Resend on the idea's own domain.
 - **Design:** built fresh with the frontend-design skill; credible, fast, mobile-first. Design
   review and QA before every launch.
+- **Template drift:** the idea repo records the template version it was created from; a
+  `stand_sync` tool applies later template fixes to a running idea when wanted (builder's design).
 
 Domains: `vercel domains buy` when the TLD is sold by Vercel, else manual purchase at Porkbun with
-DNS pointed to Vercel; `<slug>.meikit.ai` otherwise. Adding a domain to the stand is one command.
+DNS pointed to Vercel; `<slug>.meikit.ai` otherwise. Attaching a domain to an idea's project is one
+command.
 
-## 10. Tools layer
+## 10. Tools layer (in the factory)
 
 `tools/` holds deterministic CLIs, Python 3.14 with `uv`, `httpx`, no LLM in the loop. Every tool
-takes `--idea <slug>`, appends its cost to `costs.jsonl`, supports `--dry-run`, and has `--selftest`.
-Keys come from `secrets/config.yml.enc` (section 11), never from the environment of a Dolead repo.
+takes `--idea <slug>`, appends its cost to the idea's `costs.jsonl`, supports `--dry-run`, and has
+`--selftest`. Keys come from the factory's `secrets/config.yml.enc` (section 11), never from the
+environment of a Dolead repo.
 
 | Group | Tools | Provider |
 |---|---|---|
@@ -236,10 +282,11 @@ Keys come from `secrets/config.yml.enc` (section 11), never from the environment
 | landscape | `pricing_scan` (extract prices from competitor pages), `site_screenshot`, `domain_owner` | Firecrawl, ScreenshotAPI, NeuralBox |
 | unique data | `nb` (NeuralBox `/respond` client with structured output, tool whitelist, cost logging, and the no-fabricated-numbers clause) | NeuralBox |
 | creative | `image_gen` (Gemini/OpenAI/Legnext via NeuralBox accounts), `claims_lint` | NeuralBox accounts |
-| launch | `domain_check` (RDAP), `domain_buy`, `stand_add_domain`, `stand_deploy`, `stand_smoke` | Vercel CLI |
+| launch | `domain_check` (RDAP), `domain_buy`, `repo_create` (from the template, with the idea's secrets), `vercel_project` (create, link, env, domain), `stand_deploy`, `stand_smoke`, `stand_sync` | gh, Vercel CLI |
 | ads | `meta_campaign` (create or spec-only), `google_campaign`, `ads_spend` (daily readout) | personal accounts |
 | outreach | `list_build`, `outreach_draft`, `tracked_link` | Apify, stand |
-| measure | `idea_stats`, `verdict_engine`, `calibration_append`, `costs_total` | stand, local files |
+| measure | `idea_stats` (pulls `/api/stats` of the idea), `verdict_engine`, `calibration_append`, `costs_total` | idea repo, local files |
+| board | `ledger` (reads every `idea.yml` and `plan.md`, renders the board for `/factory`) | local files |
 
 Ads automation is staged: the first runs produce a campaign spec plus creatives and Vlad creates
 the campaign in the ads UI in ten minutes, pasting the campaign id back; API creation on the
@@ -251,39 +298,58 @@ secrets; the `naming` skill and `check-availability.sh` come along; `dev-tool-tr
 join the voice-of-customer group; the three `business_ideas/` folders move to `ideas/` with their
 status preserved. The old `/idea-validate` command gets a pointer here.
 
-## 11. Secrets
+## 11. Secrets: two layers
 
-Same scheme as `cmt_agents/bin/secrets`: `bin/secrets` (OpenSSL AES-256-CBC, PBKDF2 100k, YAML
-validated), `secrets/config.yml.enc` committed, `secrets/master.key` gitignored (chmod 600),
-`.gitattributes` textconv for decrypted diffs, `make secrets-init | secrets-edit | secrets-cat`.
-The stand reads `MASTER_KEY` from Vercel env and decrypts in memory.
+Same scheme in both layers as `cmt_agents/bin/secrets`: `bin/secrets` (OpenSSL AES-256-CBC, PBKDF2
+100k, YAML validated), `secrets/config.yml.enc` committed, `secrets/master.key` gitignored (chmod
+600), `.gitattributes` textconv for decrypted diffs, `make secrets-init | secrets-edit | secrets-cat`.
 
-`config.yml` shape:
+**Factory secrets** (`astrafable/secrets/config.yml.enc`): everything that spends, researches or
+creates, plus the keys to operate each idea.
 
 ```yaml
 operator: {name, address, email, siren}          # legal pages and fake-door disclosure
 nb: {url: http://127.0.0.1:3076, api_key, user_email}
-providers: {searchapi, seranking, apify, firecrawl, tavily, screenshotapi, gemini, openai, legnext, fal, elevenlabs, submagic, resend, turnstile}
+providers: {searchapi, seranking, apify, firecrawl, tavily, screenshotapi, gemini, openai, legnext, fal, elevenlabs, submagic}
 accounts:
+  github: {owner, token}                         # repo creation from the template
   vercel: {team, token}
-  meta: {ad_account_id, pixel_id, capi_token, app_id, app_secret}
-  google_ads: {customer_id, conversion_ids, developer_token, oauth}
-  stripe: {secret_key, payment_link_base}
+  meta: {business_id, ad_account_id, system_user_token, app_id, app_secret}
+  google_ads: {customer_id, developer_token, oauth}
+  stripe: {secret_key}
   porkbun: {api_key, secret}
-stand: {admin_user, admin_password, database_url}
+  resend: {account_key}                          # to mint per-domain sending keys
+ideas:
+  <slug>: {master_key, stats_token}              # the only way into that idea's secrets
+```
+
+**Idea secrets** (`<slug>/secrets/config.yml.enc`, decrypted in memory by the site from the
+`MASTER_KEY` Vercel env var): only what that site needs to run.
+
+```yaml
+database_url
+admin: {user, password}
+stats_token
+meta: {pixel_id, capi_token}                     # this idea's dataset only
+google: {conversion_ids_and_labels}
+resend: {api_key, from}                          # key scoped to this domain
+turnstile: {site_key, secret_key}
+stripe: {payment_link}                           # when the recipe uses it
 ```
 
 Provider keys that come from NeuralBox are copied once with `make secrets-cat` run in the
 NeuralBox checkout and annotated `source: neural_box` in the YAML, so a later switch to own keys is
-a one-line change. Nothing is ever written into the NeuralBox tree.
+a one-line change. Nothing is ever written into the NeuralBox tree. No factory key is ever copied
+into an idea repo.
 
 ## 12. Measurement and verdicts
 
-`/idea-status` pulls spend (ads APIs or CSV), events (stand API), outreach logs and founder time,
-computes clicks, CTR, CPC, conversion rate and cost per primary event, compares them with the
-predictions, checks the stop rules and writes `results.md`. It never changes `experiment.yml`.
+`/idea-status` pulls spend (ads APIs or CSV), events (the idea's `/api/stats`), outreach logs and
+founder time, computes clicks, CTR, CPC, conversion rate and cost per primary event per variant,
+compares them with the predictions, checks the stop rules and writes `results/<n>.md`. It never
+changes a frozen experiment file.
 
-`/idea-verdict` applies the pre-registered rule:
+`/idea-verdict` applies the pre-registered rule of the current experiment:
 - **VOID** below `void_below_clicks`, or when tracking was broken, or when ads never served.
 - **PASS → BUILD** when cost per primary ≤ threshold at minimum sample, and at least one
   conversation produced the buyer's own words and a buying question.
@@ -293,18 +359,19 @@ predictions, checks the stop rules and writes `results.md`. It never changes `ex
 - **PARK** when the market is right and the time is wrong, with the trigger to watch.
 
 The verdict appends a row to `docs/calibration.csv` (predicted vs actual CPC, CTR, CVR, cost per
-primary, channel, recipe, buyer type, geo). After five rows the default predictions in the recipes
-are replaced by the medians.
+primary, channel, recipe, buyer type, geo, variant). After five rows the default predictions in the
+recipes are replaced by the medians.
 
 ## 13. The learning loop
 
 - Every command appends dated lines to `ideas/<slug>/learnings.md`: tool gaps, timings, costs,
   surprises, things a human had to do by hand.
 - `/factory-retro` reads learnings, costs and calibration across ideas and proposes concrete edits
-  to skills, recipes, channel kits and tools, with the reason; applies the approved ones; runs the
-  fixture.
+  to skills, recipes, workstreams, channel kits, the template and tools, with the reason; applies
+  the approved ones; runs the fixture.
 - `/factory-doctor` checks before any run: master key present, NeuralBox heartbeat, provider
-  selftests, Vercel scope is the factory's team, ad accounts reachable, stand healthy.
+  selftests, Vercel scope is the factory's team, GitHub token can create repos, ad accounts
+  reachable, each running idea's `/api/stats` answering.
 - `ideas/_fixture/` is a dummy idea with canned data so every skill and tool can be dry-run without
   spending; the retro and any skill edit end with a fixture run.
 - `docs/learnings.md` holds the durable, cross-idea lessons; `CLAUDE.md` stays short and points to
@@ -314,11 +381,16 @@ are replaced by the medians.
 
 All are project skills in `.claude/skills/<name>/SKILL.md`, invocable as `/<name>`, written to be
 run by Vlad alone. Each has a checklist, reads only the files it needs, and ends with the learnings
-append and a one-screen summary.
+append and a one-screen summary. `CLAUDE.md` tells a new session to start with `/factory`.
 
+- **`/factory`** (entry point): render the board from the ledger (slug, status, current step,
+  experiment number, spend against cap, last activity, next step), ask Vlad to pick an idea or
+  start a new one, then offer two paths: **follow** (run the next step of `plan.md`) or **rework**
+  (pick a workstream from section 5, insert it into the plan, run its first step). Also shows the
+  running ideas that need a daily `/idea-status` or converter calls.
 - **`/idea-new`**: capture the pitch verbatim, ask the intake questions one at a time (geo,
-  language, buyer, who signs, value per customer, cap, founder rate), create the folder, run the
-  cheap checks on any factual claim in the pitch.
+  language, buyer, who signs, value per customer, cap, founder rate), create the ledger folder and
+  `plan.md`, run the cheap checks on any factual claim in the pitch.
 - **`/idea-triage`**: build the four keyword buckets (solution-aware, problem-aware, trigger,
   adjacent budget), run the demand, landscape and voice-of-customer tools, query AdsInsights through
   NeuralBox when the category matches, and write `brief.md` with a triage score and a "who pays
@@ -329,13 +401,14 @@ append and a one-screen summary.
   channel and buyer side, score them on triage data, and end with GO on one framing plus recipe,
   channels, price and predictions, or NO-GO. Uses `/gstack-office-hours` and `/gstack-plan-ceo-review`
   rather than re-implementing them.
-- **`/idea-launch`**: working title and domain, `site.yml` written and reviewed, creatives
-  generated and claims-linted, campaign specs and outreach kits produced, domain bought and attached,
-  stand deployed, QA and design review passed, test event verified in admin, `experiment.yml`
-  frozen, Vlad approves the ads and channel kits, campaigns go live, first outreach batch prepared.
+- **`/idea-launch`**: working title and domain; repo created from the template with the idea's own
+  secrets; `site.yml` written and reviewed; creatives generated and claims-linted; campaign specs
+  and outreach kits produced; Vercel project, database and domain attached; deployed; QA and
+  design review passed; test event verified in admin; experiment file frozen; Vlad approves the ads
+  and channel kits; campaigns go live; first outreach batch prepared.
 - **`/idea-status`**: section 12. Also drafts the day's outreach batch and flags converters to call.
-- **`/idea-verdict`**: section 12, plus write-back of `verdict.md`, `idea.yml`, calibration, and the
-  conversation notes.
+- **`/idea-verdict`**: section 12, plus write-back of `verdict.md`, `idea.yml`, `plan.md`,
+  calibration, and the conversation notes.
 - **`/factory-retro`**, **`/factory-doctor`**: section 13.
 - **`/factory-scout`** (later): propose three candidate ideas per week from structural signals
   (fast-growing advertisers, one-star reviews, "alternatives to X" demand, public complaints) in the
@@ -343,13 +416,15 @@ append and a one-screen summary.
 
 ## 15. Left to the builder
 
-- Exact Next.js structure, component library, theming mechanism, and the admin's look.
+- Exact Next.js structure, component library, theming mechanism, variant assignment, and the
+  admin's look.
 - Postgres provider via the marketplace skill; schema details and migrations tooling.
 - Python package layout under `tools/`, shared HTTP client, retry and 429 pacing (SERanking
   needs 2.5 s between calls), price table for API costs.
 - Which ad-intel scripts merge into one module and which stay as they are.
 - Meta Conversions API and Google conversion wiring details; enhanced conversions can wait.
-- Fixture content and the dry-run mechanics.
+- How `stand_sync` propagates template fixes to a running idea.
+- Fixture content and the dry-run mechanics; `plan.md` format and how `/factory` parses it.
 - Order of implementation, as long as the first real idea can run end to end by its launch day.
 
 ## 16. Open questions for Vlad
@@ -367,11 +442,14 @@ append and a one-screen summary.
 ## 17. My calls (reject any)
 
 - Python 3.14 + `uv` for tools; Next.js App Router on Vercel for the stand; Postgres from the
-  marketplace; Resend for email; Turnstile for anti-bot.
-- One multi-tenant stand rather than one project per idea.
-- One Meta pixel and one Google conversion set across ideas, slug on every event.
+  marketplace per idea; Resend for email; Turnstile for anti-bot.
+- The stand is a GitHub template repository; idea repos are private under Vlad's GitHub account.
+- One Meta pixel and one Google conversion set **per idea**, so an idea repo never holds another
+  idea's token.
 - Staged ads automation: spec plus manual creation first, API creation once accounts exist.
-- Founder rate default 100 EUR/h; cap default 300 EUR; minimum sample 300 clicks or 20 primary events.
-- Commands live in `.claude/skills/`, recipes and channel kits as plain markdown under `recipes/`
-  and `channels/`, big topics under `docs/`, short `CLAUDE.md` pointing at them.
+- Founder rate default 100 EUR/h; cap default 300 EUR; minimum sample 300 clicks or 20 primary
+  events, per variant when A/B testing.
+- Commands live in `.claude/skills/`, recipes, workstreams and channel kits as plain markdown
+  under `recipes/`, `workstreams/` and `channels/`, big topics under `docs/`, short `CLAUDE.md`
+  pointing at them.
 - v1 assets migrate into this repo; the old command is marked superseded.
