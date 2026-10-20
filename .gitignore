@@ -1,0 +1,7 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+secrets/master.key
+secrets/config.yml
+ideas/*/research/*.tmp
