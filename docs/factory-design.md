@@ -1,6 +1,6 @@
 # Ideas Factory — design
 
-**Status:** draft for approval · **Date:** 2026-10-20 · **Owner:** Vlad Zloteanu
+**Status:** approved 2026-10-20 (open questions answered, section 16) · **Date:** 2026-10-20 · **Owner:** Vlad Zloteanu
 **Repo:** `~/wrk/pers/astrafable` (personal, the control plane) · **Supersedes:** `/idea-validate` in `personal_skills_and_tools`
 
 ## 1. Intent
@@ -56,16 +56,22 @@ never tooling; it was throughput to the money phase. v2 is designed around that.
 |---|---|
 | D1 | **Ad spend from personal ad accounts** (Meta, Google; TikTok later). **Research and creative APIs through NeuralBox's provider accounts** (SearchAPI, SERanking, Apify, Firecrawl, Tavily, ScreenshotAPI, Gemini, OpenAI, Fal, Legnext, ElevenLabs, Submagic). Every cost is stored inside the idea's ledger. |
 | D2 | **Primary metric per experiment is either cost per payment intent or cost per lead**, declared in the experiment file. |
-| D3 | **A domain is bought per idea by default.** `meikit.ai` (unregistered on 2026-10-20) becomes the lab domain; `<slug>.meikit.ai` is the fast path when a name is not ready or brand matters little. |
+| D3 | **Lab domain first.** `meikit.ai` (unregistered on 2026-10-20, to be bought during setup) is the lab domain. The first three runs default to `<slug>.meikit.ai` with the root verified once in Meta; a dedicated domain is bought only when brand trust is part of the test (consumer `.fr`) or after a BUILD. Amended by Q6, 2026-10-20. |
 | D4 | **Non-ads channels are first-class**: replying to people who complain, Reddit posts, direct LinkedIn contact, cold email, communities. Chosen per idea by the same decision table as paid channels. |
 | D5 | **The test website is a new design by Claude**, not a fork of the MonMagot rig. Its hard-won lessons carry over (section 9). |
 | D6 | The first real idea is supplied by Vlad; the factory is built against it, not against a dummy. |
 | D7 | **Every deployed project lives in its own GitHub repo with only the secrets it needs.** The factory instantiates it from a template and keeps the ledger; the idea repo holds the site and its own encrypted secrets. |
 | D8 | **`/factory` is the entry point.** It lists the ideas with their status, lets Vlad pick one or start a new one, then either runs the next step of that idea's plan or reworks one part of it. |
+| D9 | **Vercel: Vlad's personal account**, the login already on this machine, in its personal scope. Never a team scope. Hobby terms forbid commercial use, so `/factory-doctor` reads the plan and warns before the first launch; upgrading to Pro is Vlad's call. |
+| D10 | **Operator is Vlad as an individual.** Legal pages, the fake-door disclosure and Stripe name him as a natural person; a company can replace him later by editing `operator` in the factory secrets. |
+| D11 | **Ad and payment assets do not exist yet and are created later** (personal Meta Business Manager and ad account, Google Ads, Stripe, warmed sending domain). A `/factory-setup` checklist walks through creating each one and stores its keys. Until an asset exists, `/factory-doctor` removes its channels from the eligible set, so the first idea's week one runs on unpaid channels plus whatever account is live by then. |
+| D12 | **Consent posture: informative banner, pixels on** (MonMagot's posture), re-decided per geo if a run targets a stricter market. |
+| D13 | **First idea: an AI watchdog for ad accounts** (section 18). The factory is built against it. |
 
 Governance facts checked today: the Vercel CLI on this machine is scoped to Dolead's team and
-MonMagot lives on a SelectionA team, so the factory needs its own Vercel scope (open question Q1).
-NeuralBox's Google/Meta/TikTok Ads tools spend from Dolead's accounts and are never used to spend.
+MonMagot lives on a SelectionA team, so the factory switches the CLI to the personal scope and
+the doctor refuses to run against any team (D9). NeuralBox's Google/Meta/TikTok Ads tools spend
+from Dolead's accounts and are never used to spend.
 
 ## 4. Constraints
 
@@ -302,9 +308,10 @@ lead row and fall back to them when the cookie is gone.
 - **Template drift:** the idea repo records the template version it was created from; a
   `stand_sync` tool applies later template fixes to a running idea when wanted (builder's design).
 
-Domains: `vercel domains buy` when the TLD is sold by Vercel, else manual purchase at Porkbun with
-DNS pointed to Vercel; `<slug>.meikit.ai` otherwise. Attaching a domain to an idea's project is one
-command.
+Domains: `<slug>.meikit.ai` by default for the first three runs (D3): the root is bought once
+during setup, its DNS lives at the registrar with a wildcard pointed to Vercel, and attaching a
+subdomain to an idea's project is one command. A dedicated domain, when a test needs one, is bought
+with `vercel domains buy` when Vercel sells the TLD, else at Porkbun with DNS pointed to Vercel.
 
 ## 10. Tools layer (in the factory)
 
@@ -350,8 +357,8 @@ operator: {name, address, email, siren}          # legal pages and fake-door dis
 nb: {url: http://127.0.0.1:3076, api_key, user_email}
 providers: {searchapi, seranking, apify, firecrawl, tavily, screenshotapi, gemini, openai, legnext, fal, elevenlabs, submagic}
 accounts:
-  github: {owner, token}                         # repo creation from the template
-  vercel: {team, token}
+  github: {owner}                                # repo creation uses the logged-in gh CLI; token optional
+  vercel: {scope}                                # the personal scope; the logged-in Vercel CLI does the work
   meta: {business_id, ad_account_id, system_user_token, app_id, app_secret}
   google_ads: {customer_id, developer_token, oauth}
   stripe: {secret_key}
@@ -423,8 +430,10 @@ recipes are replaced by the medians.
   to skills, recipes, workstreams, channel kits, the template and tools, with the reason; applies
   the approved ones; runs the fixture.
 - `/factory-doctor` checks before any run: master key present, NeuralBox heartbeat, provider
-  selftests, Vercel scope is the factory's team, GitHub token can create repos, ad accounts
-  reachable, each running idea's `/api/stats` answering.
+  selftests, Vercel CLI logged in and in the personal scope (never a team), plan read and the Hobby
+  warning shown, `gh` can create repos, `meikit.ai` resolves to Vercel, each configured asset
+  reachable (ad accounts, Stripe, Resend, sending domain), each running idea's `/api/stats`
+  answering. Its output is the eligible channel set for the next challenge session.
 - `ideas/_fixture/` is a dummy idea with canned data so every skill and tool can be dry-run without
   spending; the retro and any skill edit end with a fixture run.
 - `docs/learnings.md` holds the durable, cross-idea lessons; `CLAUDE.md` stays short and points to
@@ -463,6 +472,12 @@ append and a one-screen summary. `CLAUDE.md` tells a new session to start with `
 - **`/idea-verdict`**: section 12, plus write-back of `verdict.md`, `idea.yml`, `plan.md`,
   calibration, and the conversation notes.
 - **`/factory-retro`**, **`/factory-doctor`**: section 13.
+- **`/factory-setup`**: the one-time asset checklist (D11), resumable. For each asset: why the
+  factory needs it, the exact steps to create it in the provider's UI, which key to paste where, and
+  the doctor check that proves it works. Assets: `meikit.ai` purchase and wildcard DNS; Vercel
+  personal scope and plan; Meta Business Manager, ad account, pixel dataset and system user;
+  Google Ads account, developer token and conversion access; Stripe as an individual; Resend;
+  Turnstile; Porkbun API; the shared cold-email sending domain and its warm-up.
 - **`/factory-scout`** (later): propose three candidate ideas per week from structural signals
   (fast-growing advertisers, one-star reviews, "alternatives to X" demand, public complaints) in the
   intake format.
@@ -480,25 +495,16 @@ append and a one-screen summary. `CLAUDE.md` tells a new session to start with `
 - Fixture content and the dry-run mechanics; `plan.md` format and how `/factory` parses it.
 - Order of implementation, as long as the first real idea can run end to end by its launch day.
 
-## 16. Open questions for Vlad
+## 16. Open questions, answered (Vlad, 2026-10-20)
 
-- **Q1 Vercel scope.** A new personal Pro team for the factory (about 20 USD/month; Hobby forbids
-  commercial use), or an existing non-Dolead team?
-- **Q2 Operator entity.** Who is the legal operator on the legal pages and on Stripe: Vlad as an
-  individual, or a company? Needed before any traffic.
-- **Q3 Assets today.** Which of these already exist and in what standing: a personal Meta Business
-  Manager with an ad account, a personal Google Ads account, a Stripe account, a warmed cold-email
-  sending domain and tool, Reddit and LinkedIn accounts with history? New ad accounts take days to
-  verify and warm up, a sending domain takes two to four weeks, and each missing asset removes a
-  channel from week one.
-- **Q4 Consent posture.** Default is MonMagot's: informative banner, pixels on, re-decided per geo.
-  Strict CNIL posture (pixels only after consent) is safer and costs signal. Which one?
-- **Q5 The first idea.**
-- **Q6 Domain default for the first runs.** Recommendation from the builder review: several
-  near-identical private-beta pages on brand-new domains, run from one young ad account, is a known
-  trigger for "circumventing systems" bans. Default the first three runs to `<slug>.meikit.ai` with
-  the root verified once in Meta, and buy a dedicated domain only when brand trust is part of the
-  test (consumer `.fr`) or after a BUILD. Accept, or keep "domain per idea" as the default?
+| Q | Answer | Folded into |
+|---|---|---|
+| Q1 Vercel scope | a personal Vercel account | D9 |
+| Q2 Operator entity | Vlad as a person, to start | D10 |
+| Q3 Assets today | none yet; they will be created later | D11, `/factory-setup`, doctor gating |
+| Q4 Consent posture | informative banner | D12 |
+| Q5 First idea | the ad-account watchdog (section 18) | D13 |
+| Q6 Domain default | accept `<slug>.meikit.ai` for the first three runs | D3 amended |
 
 ## 17. My calls (reject any)
 
@@ -521,3 +527,34 @@ append and a one-screen summary. `CLAUDE.md` tells a new session to start with `
   contacts reached, not clicks; the verdict engine is a two-stage deterministic rule with PARK as
   the only human override; cold email sends from one shared, warmed factory domain with protective
   stop rules; AdsInsights output is persisted as aggregated conclusions only.
+
+## 18. The first run: an AI watchdog for ad accounts
+
+Vlad's pitch, verbatim (2026-10-20):
+
+> We got hacked at Dolead - our facebook account was stolen (from a phishing on one of our
+> admins - that opened an infected file); so my point: what if you could have a AI security stuff
+> - that would alert you if anything weird is happening with your ad accounts? pivot: it can also
+> help you do the right settings
+
+What the pitch gives the factory, and what it does not yet:
+
+- **The pain is real and written down in public.** "Ad account hacked" is a recurring complaint on
+  Reddit, in Meta's own community forums and on X, which makes `complaint-response` and
+  `reddit_reply` natural first channels, and the trigger-keyword bucket ("facebook ad account
+  hacked", "unauthorized ads on my account", "business manager hacked") is a search-ads candidate
+  once a Google Ads account exists.
+- **Two framings are already on the table**: the watchdog (detect and alert on anomalies: new
+  admins, payment method changes, new campaigns, spend spikes, country or page changes, permission
+  grants) and the posture pivot (audit and fix the settings before the incident). The challenge
+  session scores them with the triage data and keeps one for experiment 1.
+- **Still to be decided at intake**: the buyer (agency owner, in-house performance marketer, SMB
+  founder running ads alone), geo and language, the price shape (per ad account per month is the
+  obvious one) and the value per customer, the cap. The buyer choice also decides the recipe:
+  `fake-door-saas` for self-serve, `concierge-b2b` or `cold-email-b2b` for agencies.
+- **The origin story stays out of the test.** The incident at Dolead is the motivation, not
+  content: no Dolead name, detail or screenshot appears in any page, ad or outreach (section 4).
+
+Build order follows from it: the ledger, intake and triage tools first so the brief exists before
+the challenge session with Vlad; then the stand and the unpaid channel kits, because week one of
+this idea cannot buy traffic (D11); paid-channel tooling lands as the accounts do.
