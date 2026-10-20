@@ -71,8 +71,12 @@ NeuralBox's Google/Meta/TikTok Ads tools spend from Dolead's accounts and are ne
 
 - **Company boundary.** Reading `~/wrk/dolead/*` and `~/wrk/cmt/*` is fine. Nothing from this repo
   is ever written into them. No Dolead, SelectionA or CMT client data or brand material lands here.
-- **Budget.** Default cap 300 EUR per idea, all-in, declared at intake and enforced at every gate.
-  Founder time is priced at a declared hourly rate (default 100 EUR/h) so unpaid channels compare.
+- **Budget.** Default cap 300 EUR per experiment, **cash only** (ads, APIs, LLM calls, domains,
+  tools), declared at intake and enforced at every gate; `idea.yml` tracks the cumulative cash across
+  experiments. Founder time is priced at a declared hourly rate (default 100 EUR/h) so unpaid
+  channels compare, but it never counts against the cash cap. Fixed founder time (intake, challenge,
+  verdict) is idea-level overhead; only channel execution time (posting, sending, replying) enters
+  that channel's cost per primary event.
 - **Founder time.** About 2 hours per week: intake, the challenge session, ad approval, and five
   conversations with the people who converted. Those conversations stay mandatory.
 - **Legal (FR/EU).** Legal mentions, privacy page, lawful basis for emails, cookie banner, honest
@@ -86,6 +90,14 @@ NeuralBox's Google/Meta/TikTok Ads tools spend from Dolead's accounts and are ne
   daily path where a direct API call exists.
 - **Secrets isolation.** The factory's master key never enters an idea repo; an idea's master key
   opens only that idea's secrets.
+- **AdsInsights data.** Only aggregated, category-level benchmarks and conclusions may be written
+  into an idea's files (advertiser counts, reach shares of named public advertisers, typical hooks).
+  No client-level rows, no raw exports, no Dolead internal identifiers. The `nb` tool's AdsInsights
+  mode returns a structured summary and `/idea-triage` writes conclusions, never the payload.
+- **Channel prerequisites.** A channel is eligible for an experiment only when its asset exists and
+  is in good standing (ad account verified, warmed sending domain, Reddit or LinkedIn account with
+  history, Stripe live for deposits). `/factory-doctor` checks them and the challenge session only
+  picks eligible channels.
 
 ## 5. Plans, steps and workstreams
 
@@ -174,11 +186,15 @@ founder_hour_rate_eur: 100
 channels: [google_search, meta_feed, reddit_reply]
 variants: [a]                     # [a, b] for an A/B test, split 50/50 by cookie
 predictions: {cpc_eur: 0.9, ctr_pct: 4, lp_cvr_pct: 6, cost_per_primary_eur: 15}
+primary_to_customer_rate: 0.33    # recipe prior (section 7), replaced by calibration over runs
 thresholds:
-  pass_cost_per_primary_max_eur: 25   # ≥3× margin on one-shot value, ≥1/3 of LTV on recurring
-  min_clicks: 300                     # per variant when there are two
+  # allowed CAC = value_per_customer / 3; pass max = allowed CAC × primary_to_customer_rate
+  # here: 228 / 3 = 76 → 76 × 0.33 ≈ 25
+  pass_cost_per_primary_max_eur: 25
+  sample_unit: clicks                 # clicks for traffic recipes, contacts_reached for outreach
+  min_sample: 300                     # per variant when there are two
   min_primary_events: 20
-  void_below_clicks: 100
+  void_below_sample: 100
 stop_rules:
   - "spend ≥ cap"
   - "clicks ≥ 150 and primary events = 0"
@@ -188,7 +204,14 @@ window: {start: 2026-10-28, end: 2026-11-02}
 
 `costs.jsonl` kinds: `ads`, `api`, `llm`, `domain`, `founder_time`, `other`. Tools append their own
 lines (NeuralBox returns `cost_usd` per call; provider tools use a per-call price table). `idea.yml`
-totals are recomputed by `/idea-status`.
+totals are recomputed by `/idea-status`. `founder_time` lines carry a `channel` field when the time
+was channel execution, and none when it was idea-level overhead.
+
+**Value per customer** is first-year gross margin per customer, declared at intake (recurring:
+monthly price × gross margin × 12, never more than 12 months). **Allowed CAC** is one third of it.
+**The pass threshold** is allowed CAC × the recipe's primary-to-customer prior, so a pass means the
+modelled CAC leaves a 3× margin. The prior comes from the recipe table and is replaced by the
+calibration median once five rows exist for that recipe.
 
 ## 7. Recipes (what a test is)
 
@@ -204,11 +227,26 @@ fit, the minimum sample and the default thresholds. Chosen in the challenge sess
 | `complaint-response` | page as above; traffic from replies to people complaining in public | lead or intent | any idea where the pain is written down in public |
 | `waitlist-b2c` | email capture, no price | lead | last resort, only when a price cannot be stated yet |
 
+What exactly counts, per recipe:
+
+| Recipe | Primary event fires when | Sample unit | Minimum sample / events | VOID below | Primary → customer prior |
+|---|---|---|---|---|---|
+| `fake-door-saas` | the checkout step (price shown again, private-beta disclosure) is submitted with an email; `cta_click` on the priced page is a secondary event. A paid refundable deposit fires `payment` on top and is reported separately | clicks | 300 / 20 | 100 clicks | 0.33 |
+| `pre-order` | Stripe checkout completed (refundable) | clicks | 300 / 10 | 100 clicks | 0.8 |
+| `concierge-b2b` | a call is booked with a work email | clicks | 300 / 15 | 100 clicks | 0.3 |
+| `cold-email-b2b` | a reply expressing interest (classified by the agent, confirmed by Vlad) | contacts reached (delivered) | 100 / 10 | 40 reached | 0.15 |
+| `complaint-response` | lead or intent on the page, from a tracked reply link | replies posted | 40 / 8 | 15 posted | 0.2 |
+| `waitlist-b2c` | email submitted | clicks | 300 / 30 | 100 clicks | 0.05 |
+
+Every primary event carries an email (or a reply thread), so every converter can be called; the
+conversation requirement in the verdict is therefore always satisfiable.
+
 Rules that hold for every recipe:
 - A price is shown unless the recipe is `waitlist-b2c`. No price, no launch.
 - The page states honestly that the product is in private beta or pre-launch (fake-door disclosure).
 - The primary event fires server-side and is forwarded to the ad platforms (Meta Conversions API first).
-- Minimum sample: 300 clicks or 20 primary events or the cap; below 100 clicks the run is VOID.
+- The minimum sample, the primary events and the VOID floor are the recipe's (table above), per
+  variant in an A/B test. The window is a target; the cap is the hard stop (section 12).
 - Conversations with converters are part of the recipe, not an afterthought.
 
 ## 8. Acquisition channels
@@ -224,7 +262,7 @@ campaign, cost unit, tracking, compliance, and the stop rules. The challenge ses
 | `reddit_reply` | founder minutes | per-thread tracked link | agent finds complaints (Arctic Shift, SearchAPI); drafts genuinely helpful replies; human posts |
 | `reddit_post` | founder minutes | tracked link | one honest post per fitting subreddit, written to its rules |
 | `linkedin_outreach` | founder minutes | reply log + tracked link | agent builds the list (Apify, NeuralBox domain-owner identification) and a 3-touch sequence; human sends ≤20/day |
-| `cold_email_b2b` | founder minutes + sending tool | tracked link + reply log | separate sending domain; relevance + opt-out; never B2C |
+| `cold_email_b2b` | founder minutes + sending tool | tracked link + reply log | sent from the factory's shared, pre-warmed sending domain (a factory asset set up during the build, never an idea's own domain); per-idea sender identity; an idea pauses at bounce > 5 % or complaint > 0.3 % to protect the shared asset; relevance + opt-out; never B2C |
 | `community_post` | founder minutes | tracked link | Facebook groups, Discord/Slack, Indie Hackers, Product Hunt, Show HN |
 
 Channel choice is a decision table, not taste: solution-aware searches → search ads; problem-unaware
@@ -349,14 +387,29 @@ founder time, computes clicks, CTR, CPC, conversion rate and cost per primary ev
 compares them with the predictions, checks the stop rules and writes `results/<n>.md`. It never
 changes a frozen experiment file.
 
-`/idea-verdict` applies the pre-registered rule of the current experiment:
-- **VOID** below `void_below_clicks`, or when tracking was broken, or when ads never served.
-- **PASS → BUILD** when cost per primary ≤ threshold at minimum sample, and at least one
-  conversation produced the buyer's own words and a buying question.
-- **PIVOT** when clicks were cheap and CTR fine but the page did not convert (the offer, not the
-  market), carrying one new framing into the next week with the same channel setup.
-- **DROP** when clicks were expensive and conversion poor.
-- **PARK** when the market is right and the time is wrong, with the trigger to watch.
+The engine is deterministic in two stages.
+
+**Stage 1, status of the experiment** (computed, no human input):
+- **VOID**: tracking broken, ads never served, or sample below the recipe's VOID floor.
+- **PASS**: minimum sample and minimum events reached, cost per primary ≤ threshold.
+- **FAIL**: minimum sample reached and cost per primary > threshold; or a stop rule fired with the
+  sample above the VOID floor.
+- **EXTEND**: the window ended with the sample between the VOID floor and the minimum, and cash
+  remains under the cap. The window extends automatically, once, until the minimum or the cap.
+- **INCONCLUSIVE**: cap reached with the sample between the VOID floor and the minimum. The cost
+  per primary is still reported.
+
+**Stage 2, verdict label** (computed from the status and the predictions; one human override):
+- PASS and at least one converter conversation produced the buyer's own words and a buying
+  question → **BUILD**. PASS without conversations → the verdict waits up to three days for them,
+  then BUILD if they happen, otherwise PIVOT with "offer reached buyers we could not talk to".
+- FAIL with CTR ≥ 0.7× predicted and CPC ≤ 1.5× predicted and page conversion < 0.5× predicted
+  → **PIVOT** (the offer, not the market): experiment n+1 in the same folder, one new framing,
+  same channel setup, its own cap declared.
+- FAIL otherwise, or INCONCLUSIVE → **DROP**.
+- **PARK** is the only human override: it may replace a DROP when Vlad writes the trigger to watch
+  and the reason; `verdict.md` records it as an override of the computed label.
+- VOID → fix and re-run as experiment n+1; nothing is interpreted.
 
 The verdict appends a row to `docs/calibration.csv` (predicted vs actual CPC, CTR, CVR, cost per
 primary, channel, recipe, buyer type, geo, variant). After five rows the default predictions in the
@@ -433,11 +486,19 @@ append and a one-screen summary. `CLAUDE.md` tells a new session to start with `
   commercial use), or an existing non-Dolead team?
 - **Q2 Operator entity.** Who is the legal operator on the legal pages and on Stripe: Vlad as an
   individual, or a company? Needed before any traffic.
-- **Q3 Ad accounts today.** Do a personal Meta Business Manager and a personal Google Ads account
-  already exist? New accounts take days to verify and warm up, which sets the first launch date.
+- **Q3 Assets today.** Which of these already exist and in what standing: a personal Meta Business
+  Manager with an ad account, a personal Google Ads account, a Stripe account, a warmed cold-email
+  sending domain and tool, Reddit and LinkedIn accounts with history? New ad accounts take days to
+  verify and warm up, a sending domain takes two to four weeks, and each missing asset removes a
+  channel from week one.
 - **Q4 Consent posture.** Default is MonMagot's: informative banner, pixels on, re-decided per geo.
   Strict CNIL posture (pixels only after consent) is safer and costs signal. Which one?
 - **Q5 The first idea.**
+- **Q6 Domain default for the first runs.** Recommendation from the builder review: several
+  near-identical private-beta pages on brand-new domains, run from one young ad account, is a known
+  trigger for "circumventing systems" bans. Default the first three runs to `<slug>.meikit.ai` with
+  the root verified once in Meta, and buy a dedicated domain only when brand trust is part of the
+  test (consumer `.fr`) or after a BUILD. Accept, or keep "domain per idea" as the default?
 
 ## 17. My calls (reject any)
 
@@ -453,3 +514,10 @@ append and a one-screen summary. `CLAUDE.md` tells a new session to start with `
   under `recipes/`, `workstreams/` and `channels/`, big topics under `docs/`, short `CLAUDE.md`
   pointing at them.
 - v1 assets migrate into this repo; the old command is marked superseded.
+- From the builder review: the cap is cash only and per experiment; founder overhead is idea-level
+  and only channel execution time enters a channel's cost per primary; the pass threshold is
+  allowed CAC (value per customer / 3) × the recipe's primary-to-customer prior; `intent` fires on
+  the submitted checkout step with an email, never on the first button; outreach recipes count
+  contacts reached, not clicks; the verdict engine is a two-stage deterministic rule with PARK as
+  the only human override; cold email sends from one shared, warmed factory domain with protective
+  stop rules; AdsInsights output is persisted as aggregated conclusions only.
