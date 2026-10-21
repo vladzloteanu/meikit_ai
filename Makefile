@@ -6,8 +6,10 @@ sync:
 test:
 	uv run pytest -q
 
-# The doctor (uv run factory doctor --offline) joins check once it exists.
+# The tests, then the doctor without the network (docs/doctor.md): it reads the secrets and
+# exits 1 when a check fails.
 check: test
+	uv run factory doctor --offline
 
 fixture:
 	bash scripts/fixture.sh
