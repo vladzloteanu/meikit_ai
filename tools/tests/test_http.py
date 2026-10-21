@@ -321,6 +321,43 @@ def test_the_rdap_fixtures_answer_404_and_200():
 # --- ProviderError -----------------------------------------------------------------------------
 
 
+def test_ok_calls_counts_only_the_calls_answered_with_a_2xx(monkeypatch):
+    monkeypatch.setattr(time, "sleep", lambda s: None)
+    c = Client(
+        "searchapi",
+        "https://x.test",
+        retries=2,
+        fatal=searchapi.quota_used_up,
+        transport=replay(
+            httpx.Response(200, json={}),  # /a: answered
+            httpx.Response(500),  # /b: answered on its retry
+            httpx.Response(201, json={}),
+            httpx.Response(500),  # /c: failed after its retries
+            httpx.Response(503),
+            httpx.Response(404),  # /d: an answer, not a 2xx
+            httpx.ConnectError("refused"),  # /e: never answered
+            httpx.ConnectError("refused"),
+            httpx.Response(429, json=QUOTA_BODY),  # /f: the used-up quota, fatal at once
+        ),
+    )
+    assert c.get_json("/a") == {} and c.post_json("/b") == {}
+    with pytest.raises(ProviderError):
+        c.get_json("/c")
+    assert c.get("/d").status_code == 404
+    for path in ("/e", "/f"):
+        with pytest.raises(ProviderError):
+            c.get(path)
+    assert (c.calls, c.ok_calls) == (6, 2)
+
+
+def test_a_dry_run_counts_its_2xx_answers_as_ok_calls(monkeypatch, tmp_path):
+    fixture_dir(monkeypatch, tmp_path, {"t/missing": {"_status": 404}, "t/plain": {"a": 1}})
+    c = Client("t", "https://x.test", dry_run=True)
+    c.get("/a", fixture="t/plain")
+    c.get("/b", fixture="t/missing")
+    assert (c.calls, c.ok_calls) == (2, 1)
+
+
 def test_provider_error_redacts_known_secrets_and_credential_params(monkeypatch):
     monkeypatch.setattr(
         secrets, "load", lambda *a, **k: {"providers": {"x": {"t": "tok-abcdef-123"}}}

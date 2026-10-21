@@ -131,7 +131,7 @@ def test_a_second_run_in_the_same_second_does_not_overwrite_the_first(root, stam
     tool = make_tool(lambda r: r.write({"n": 1}))
     assert tool(args_for("--idea", "_fixture")) == 0
     assert tool(args_for("--idea", "_fixture")) == 0
-    assert research(root) == ["demo_20261021-101203-2.json", NAME]
+    assert research(root) == [NAME, "demo_20261021-101203_2.json"]  # sorts after the first
 
 
 def test_a_dry_run_marks_its_file_name_and_its_json(root, stamp, tmp_path, capsys):
@@ -139,8 +139,8 @@ def test_a_dry_run_marks_its_file_name_and_its_json(root, stamp, tmp_path, capsy
     assert tool(args_for("--idea", "_fixture", "--dry-run", "--json")) == 0
     assert tool(args_for("--idea", "_fixture", "--dry-run")) == 0
     assert research(root) == [
-        "demo_20261021-101203-2.dryrun.json",
         "demo_20261021-101203.dryrun.json",
+        "demo_20261021-101203_2.dryrun.json",
     ]
     for name in research(root):
         path = root / "ideas/_fixture/research" / name

@@ -97,7 +97,7 @@ def run(args: argparse.Namespace) -> int:
         try:
             rows = seranking.analyze_keywords(client, cc, keywords)
             data, not_asked = collect(cc, args.language, buckets, rows)
-            if not_asked:
+            if not_asked and not r.dry_run:  # the dry-run fixture answers its own keywords
                 listed = ", ".join(repr(keyword) for keyword in not_asked)
                 print(
                     f"{TOOL}: SE Ranking answered for {len(not_asked)} keyword"
@@ -106,7 +106,7 @@ def run(args: argparse.Namespace) -> int:
                 )
             r.write(data)
         finally:
-            r.log_cost(PROVIDER, client.calls)
+            r.log_cost(PROVIDER, client.ok_calls)
         r.summary(summary(data))
     return 0
 

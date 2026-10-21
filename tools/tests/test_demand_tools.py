@@ -32,6 +32,8 @@ DRY_RUNS = [
     ["ad_library", "--engine", "google_transparency", "--domain", "hootsuite.com"],
 ]
 DRY_RUN_IDS = ["serp_ads", "keyword_volume", "meta", "tiktok", "linkedin", "google_transparency"]
+AD_LIBRARY_META = ["ad_library", "--engine", "meta", "--q", "x"]
+KEYWORD_VOLUME_X = ["keyword_volume", "--cc", "us", "--keywords", "x"]
 
 # SE Ranking rows shaped like its documented answer: one with data, one without (the fixture's).
 FOUND = {
@@ -190,7 +192,7 @@ def test_a_dry_run_writes_research_reads_no_key_and_logs_nothing(root, capsys, m
     assert log.read_text(encoding="utf-8") == before
     out, err = capsys.readouterr()
     assert out.strip()
-    report = err.splitlines()[-1]  # keyword_volume warns first about the fixture's other row
+    [report] = err.splitlines()  # a dry run says what it wrote, and nothing else
     assert report.startswith(f"{argv[0]}: dry run: wrote ideas/_fixture/research/{argv[0]}_")
     assert report.endswith("not logged")
 
@@ -206,6 +208,49 @@ def test_a_dry_run_file_is_marked_and_a_real_one_is_not(root, monkeypatch):
     [real] = [path for path in research(root, "serp_ads") if path != dry]
     assert re.fullmatch(r"serp_ads_[0-9]{8}-[0-9]{6}\.json", real.name)
     assert "dry_run" not in json.loads(real.read_text(encoding="utf-8"))
+
+
+@pytest.mark.parametrize(
+    ("argv", "module", "status"),
+    [
+        pytest.param(["serp_ads", "--keywords", "x"], searchapi, 429, id="serp_ads-quota"),
+        pytest.param(["serp_ads", "--keywords", "x"], searchapi, 500, id="serp_ads-500"),
+        pytest.param(AD_LIBRARY_META, searchapi, 429, id="ad_library-quota"),
+        pytest.param(AD_LIBRARY_META, searchapi, 500, id="ad_library-500"),
+        pytest.param(KEYWORD_VOLUME_X, seranking, 500, id="keyword_volume-500"),
+    ],
+)
+def test_a_call_the_provider_did_not_answer_is_not_billed(
+    root, capsys, monkeypatch, argv, module, status
+):
+    monkeypatch.setattr(time, "sleep", lambda s: None)  # the 500 is retried
+    body = {"error": QUOTA if status == 429 else "boom"}
+    wire(monkeypatch, module, answer(body, status), fatal=searchapi.quota_used_up)
+    log = root / "ideas/_fixture/costs.jsonl"
+    before = log.read_text(encoding="utf-8")
+    assert main([*argv, "--idea", "_fixture"]) == 1
+    assert log.read_text(encoding="utf-8") == before  # no cost line
+    assert research(root, argv[0]) == []
+    [err] = capsys.readouterr().err.splitlines()
+    assert err.startswith(f"{argv[0]}: {module.__name__.rsplit('.', 1)[-1]}: HTTP {status}: ")
+
+
+@pytest.mark.parametrize(
+    ("argv", "module", "body"),
+    [
+        pytest.param(["serp_ads", "--keywords", "x"], searchapi, {}, id="serp_ads"),
+        pytest.param(AD_LIBRARY_META, searchapi, {}, id="ad_library"),
+        pytest.param(KEYWORD_VOLUME_X, seranking, [], id="keyword_volume"),
+    ],
+)
+def test_an_answered_call_is_billed_once(root, monkeypatch, argv, module, body):
+    wire(monkeypatch, module, answer(body))
+    before = len(costs.read_lines("_fixture"))
+    assert main([*argv, "--idea", "_fixture"]) == 0
+    [line] = costs.read_lines("_fixture")[before:]
+    provider = module.__name__.rsplit(".", 1)[-1]
+    assert (line["kind"], line["provider"]) == ("api", provider)
+    assert line["amount_eur"] == costs.PRICE_TABLE_EUR[provider]
 
 
 @pytest.mark.parametrize("argv", DRY_RUNS, ids=DRY_RUN_IDS)
@@ -508,10 +553,10 @@ def test_serp_ads_logs_the_searches_made_before_a_failure(root, capsys, monkeypa
     before = costs.total("_fixture", kind="api")
     assert main(["serp_ads", "--idea", "_fixture", "--keywords", "a", "b"]) == 1
     assert research(root, "serp_ads") == []
-    # two searches were made: the first answered, the second failed after its retries
-    assert costs.total("_fixture", kind="api") == round(before + 0.02, 4)
+    # two searches were made: the first answered (billed), the second failed after its retries
+    assert costs.total("_fixture", kind="api") == round(before + 0.01, 4)
     err = capsys.readouterr().err.splitlines()
-    assert err[0] == "serp_ads: 0.02 EUR (2 searchapi calls at 0.01 EUR) logged before the failure"
+    assert err[0] == "serp_ads: 0.01 EUR (1 searchapi call at 0.01 EUR) logged before the failure"
     assert err[1].startswith("serp_ads: searchapi: HTTP 500: GET /search?") and len(err) == 2
 
 
@@ -646,16 +691,26 @@ def test_keyword_volume_summary_without_buckets_or_data(root, capsys, monkeypatc
     assert capsys.readouterr().out == "no data in SE Ranking (fr) for 1 of 1 keywords: x\n"
 
 
-def test_keyword_volume_warns_about_rows_for_keywords_not_asked(root, capsys):
+def test_keyword_volume_warns_about_rows_for_keywords_not_asked(root, capsys, monkeypatch):
+    rows = [NOT_FOUND, {**FOUND, "keyword": "x"}, {"keyword": "y", "is_data_found": False}]
+    wire(monkeypatch, seranking, answer(rows))
+    argv = ["keyword_volume", "--idea", "_fixture", "--cc", "us", "--keywords", "x"]
+    assert main([*argv, "--json"]) == 0
+    out, err = capsys.readouterr()
+    assert json.loads(out)["keywords"]["x"]["found"] is True
+    assert err.splitlines()[0] == (
+        "keyword_volume: SE Ranking answered for 2 keywords not asked, ignored: "
+        "'facebook ad account hacked', 'y'"
+    )
+
+
+def test_keyword_volume_dry_run_does_not_warn_about_the_fixture_rows(root, capsys):
     # the dry-run fixture answers for its own two keywords, whatever is asked
     argv = ["keyword_volume", "--idea", "_fixture", "--dry-run", "--cc", "us", "--keywords", "x"]
     assert main([*argv, "--json"]) == 0
     out, err = capsys.readouterr()
     assert json.loads(out)["keywords"] == {"x": {**NO_DATA, "bucket": None}}
-    assert (
-        "keyword_volume: SE Ranking answered for 2 keywords not asked, ignored: "
-        "'facebook ad account hacked', 'business manager hacked'"
-    ) in err
+    assert "not asked" not in err and len(err.splitlines()) == 1
 
 
 def test_keyword_volume_pays_one_call_per_20_keywords(root, capsys, monkeypatch):
@@ -991,6 +1046,17 @@ def test_ad_library_refuses_a_query_its_library_cannot_run(root, capsys, argv, n
 def test_ad_library_flags_are_checked_by_the_parser(root, capsys, argv, needle):
     assert main(["ad_library", "--idea", "_fixture", "--dry-run", *argv]) == 2
     assert needle in capsys.readouterr().err
+
+
+def test_ad_library_plans_one_search_against_the_cap(root, capsys):
+    # the fixture idea has spent 0.40 EUR: one search (0.01 EUR) fits a cap of 0.41, not of 0.40
+    argv = ["ad_library", "--idea", "_fixture", "--dry-run", "--engine", "meta", "--q", "x"]
+    assert main(["idea", "set", "_fixture", "cap_eur=0.41"]) == 0
+    assert main(argv) == 0
+    capsys.readouterr()
+    assert main(["idea", "set", "_fixture", "cap_eur=0.40"]) == 0
+    assert main(argv) == 1
+    assert "(0.40 spent + 0.01 planned), over its cap of 0.40 EUR" in capsys.readouterr().err
 
 
 def test_ad_library_logs_one_search(root, monkeypatch):

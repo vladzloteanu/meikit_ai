@@ -103,7 +103,7 @@ def run(args: argparse.Namespace) -> int:
             data = collect(client, engine, query, args.num)
             r.write(data)
         finally:
-            r.log_cost(PROVIDER, client.calls)
+            r.log_cost(PROVIDER, client.ok_calls)
         r.summary(summary(data))
     return 0
 

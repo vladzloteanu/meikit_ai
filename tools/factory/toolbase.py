@@ -16,7 +16,7 @@ Its parser takes its own flags plus the ones `add_common` adds, and its `run` re
                 data = ...                        # the provider calls
                 r.write(data)
             finally:
-                r.log_cost("searchapi", client.calls)
+                r.log_cost("searchapi", client.ok_calls)
             r.summary(table)
         return 0
 
@@ -25,7 +25,8 @@ idea past its cap unless --force, before any key is read or any call made; the c
 dry run too. `r.write` puts the research JSON in
 `ideas/<slug>/research/<tool>_<YYYYMMDD-HHMMSS>.json` (or --out) through a `.tmp` file renamed
 into place, so no half-written file is ever left. `r.log_cost` appends to the idea's costs.jsonl
-what the calls cost by `costs.PRICE_TABLE_EUR`, the calls made before a failure included.
+what the calls cost by `costs.PRICE_TABLE_EUR`: the calls the provider answered with a 2xx
+(`Client.ok_calls`), those answered before a failure included, never one it refused.
 
 A dry run answers from the fixtures and logs nothing. Its file is
 `<tool>_<YYYYMMDD-HHMMSS>.dryrun.json` and its JSON starts with `"dry_run": true` (at --out and
@@ -173,10 +174,10 @@ class Run:
     def write(self, data: dict) -> Path:
         """Write `data` as the research JSON and return its path; with --json, also print it.
 
-        The file is `ideas/<slug>/research/<tool>_<YYYYMMDD-HHMMSS>.json` (`-2`, `-3`... added
-        when a run of the same second has it already), or --out. In a dry run it ends in
-        `.dryrun.json` instead (--out keeps the path given) and the JSON starts with
-        `"dry_run": true`. It is written to a `.tmp` beside it and renamed into place: no
+        The file is `ideas/<slug>/research/<tool>_<YYYYMMDD-HHMMSS>.json` (`_2`, `_3`... added
+        when a run of the same second has it already, so it sorts after it), or --out. In a dry
+        run it ends in `.dryrun.json` instead (--out keeps the path given) and the JSON starts
+        with `"dry_run": true`. It is written to a `.tmp` beside it and renamed into place: no
         half-written file is ever left. Raises ToolError when it cannot be written.
         """
         if self.dry_run:
@@ -230,7 +231,7 @@ class Run:
         path = folder / f"{self.tool}_{stamp}{suffix}"
         n = 2
         while path.exists():
-            path = folder / f"{self.tool}_{stamp}-{n}{suffix}"
+            path = folder / f"{self.tool}_{stamp}_{n}{suffix}"
             n += 1
         return path
 

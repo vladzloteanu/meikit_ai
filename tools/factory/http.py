@@ -70,7 +70,8 @@ class Client:
     `retry_on` makes more responses worth a retry than 429 and 5xx (Arctic Shift's 422 "slow
     down"); `fatal` picks responses no retry can help (a used-up monthly quota): even `get` and
     `post` raise ProviderError on those, at once. `calls` counts the get/post calls made, dry-run
-    ones included, a retried call once.
+    ones included, a retried call once; `ok_calls` counts those whose final answer was a 2xx, the
+    calls a provider bills.
     """
 
     def __init__(
@@ -96,6 +97,7 @@ class Client:
         self.retry_on = retry_on
         self.fatal = fatal
         self.calls = 0
+        self.ok_calls = 0
         self._last_start: float | None = None
         # A dry run never gets a connection pool, so it cannot reach the network.
         self._http = None
@@ -142,7 +144,7 @@ class Client:
     def _send(self, method: str, path: str, fixture: str | None, **kwargs: Any) -> httpx.Response:
         self.calls += 1
         if self._http is None:
-            return self._replay(method, path, fixture)
+            return self._counted(self._replay(method, path, fixture))
         response: httpx.Response | None = None
         error: httpx.RequestError | None = None
         for attempt in range(1, self.retries + 1):
@@ -162,6 +164,12 @@ class Client:
             raise ProviderError(
                 self.provider, None, f"{method} {path}: {type(error).__name__}: {error}"
             )
+        return self._counted(response)
+
+    def _counted(self, response: httpx.Response) -> httpx.Response:
+        """`response`, counted in `ok_calls` when it is a 2xx."""
+        if response.is_success:
+            self.ok_calls += 1
         return response
 
     def _replay(self, method: str, path: str, fixture: str | None) -> httpx.Response:
