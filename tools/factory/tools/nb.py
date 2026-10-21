@@ -1,23 +1,24 @@
 """`factory nb`: ask NeuralBox, the local agent service that holds AdsInsights (docs/neuralbox.md).
 
-    factory nb ask --idea S (--prompt P | --prompt-file F) [--tools A,B] [--schema F.json]
-                   [--max-turns 8] [--session ID]
+    factory nb ask --idea S (--prompt P | --prompt-file F) [--schema F.json] [--max-turns 8]
+                   [--session ID]
     factory nb adsinsights --idea S --category C --countries FR,US
                            [--networks facebook,search] [--top 10]
 
-`ask` sends one prompt to NeuralBox (`neuralbox.respond`) and keeps what it answered in
-`research/nb_ask_<ts>.json`:
+`ask` sends one prompt to NeuralBox (`neuralbox.respond`) with no tool at all: every tool and
+server NeuralBox has is denied, the AdsInsights ones included, since `ask` keeps its answer as
+written and AdsInsights is kept only as `adsinsights`' conclusions. It keeps what NeuralBox
+answered in `research/nb_ask_<ts>.json`:
 
     {"prompt", "answer", "structured", "cost_usd", "tools_called", "tools_denied", "session_id",
      "request_id"}
 
 `prompt` as given (without the DISCIPLINE every request carries), `structured` the JSON that
 --schema (a JSON Schema object) asked for, null without one, `tools_called` the names of the
-tools that ran, `tools_denied` those the agent tried and the block refused (both commands also
-warn of these on stderr). --tools names the tools the agent may use, among the three AdsInsights
-tools of the whitelist (`mcp__tools__QueryAdsInsights`...), any other name refused; without it
-the agent has no tool at all. --session resumes the conversation of an earlier answer's
-`session_id`. The summary is the answer, the structured JSON, the tools.
+tools that ran (none, unless NeuralBox let one through), `tools_denied` those the agent tried and
+the block refused (both commands also warn of these on stderr). --session resumes the
+conversation of an earlier answer's `session_id`. The summary is the answer, the structured JSON
+and any tool that ran.
 
 `adsinsights` asks NeuralBox about the market of one category in some countries: the category
 found with LookupAdsInsights (ListCategories when needed), then for each network one
@@ -31,23 +32,27 @@ QueryAdsInsights call on the `company` tile of its `aggregations` at `sort=all`,
      "typical_hooks", "not_found"}
 
 Its research file, `nb_adsinsights_<ts>.json`, holds that structured answer only, cut to what the
-schema describes, never the answer text or what the tools returned: AdsInsights is kept as
-aggregated conclusions (counts, shares of named advertisers, typical hooks), the persistence rule.
+schema describes, every string at MAX_TEXT characters and at most MAX_HOOKS hooks, never the
+answer text or what the tools returned: AdsInsights is kept as aggregated conclusions (counts,
+shares of named advertisers, typical hooks), the persistence rule.
 A network whose query failed has null figures and a caveat saying so. The summary is the category
 and the countries, one row per network `network | total_reach | advertisers | top companies`, the
 hooks and the caveats.
 
 Every call carries the block (`neuralbox.respond`): NeuralBox is told to deny every tool and
-server it lists but the call's whitelisted tools, and no call is made when its heartbeat cannot
-say which tools those are, or lacks a tool the call needs. At most MAX_HOOKS typical hooks are
-kept.
+server it has but the call's whitelisted tools, and no call is made when its heartbeat cannot say
+which tools those are, or lacks a tool the call needs. Everything NeuralBox writes is redacted
+(`secrets.redact`) before it is kept, printed or raised.
 
 Every call is billed by NeuralBox: the `llm` cost `cost_usd` x USD_EUR is logged with the request
 id as `ref` (PLANNED_EUR when NeuralBox reports no cost), and PLANNED_EUR is what the idea's cap is
-checked against before the call. A run NeuralBox reports failed (its `errors`), and an
-`adsinsights` answer without structured output, logs its cost, writes nothing and exits 1.
+checked against before the call. When the request left and its outcome is unknown (no answer, a
+5xx, an answer that is not a JSON object), PLANNED_EUR is logged with the note `unconfirmed:
+<reason>`, so that the cap counts it as spent. A run NeuralBox reports failed (its `errors`, or a
+structured output that is not a JSON object), and an `adsinsights` answer without structured
+output, logs its cost, writes nothing and exits 1. Every failure is a ProviderError line.
 
---selftest (either action) gets the heartbeat, then sends one prompt without tools ("Reply with
+--selftest (either action) gets the heartbeat, then sends one prompt with no tool ("Reply with
 the single word pong", one turn), and prints `OK neuralbox <n> items; respond cost <x> EUR`, n
 the tools NeuralBox lists; for `adsinsights` the heartbeat must list ADSINSIGHTS_TOOLS, checked
 before the paid call. It writes and logs nothing.
@@ -62,7 +67,7 @@ from pathlib import Path
 from typing import Any
 
 from factory import costs, tables, toolbase
-from factory.http import Client
+from factory.http import Client, ProviderError
 from factory.providers import neuralbox
 
 COMMAND = "nb"
@@ -75,6 +80,7 @@ DEFAULT_TOP = 10
 MAX_TOP = 56  # QueryAdsInsights' rows per tile at most
 ADSINSIGHTS_TOOLS = list(neuralbox.WHITELIST)  # the only tools the factory lets NeuralBox use
 MAX_HOOKS = 5  # typical hooks kept per answer
+MAX_TEXT = 200  # characters of any string kept from AdsInsights
 SELFTEST_PROMPT = "Reply with the single word pong"
 TOP_SHOWN = 5  # companies per network in the summary
 COLUMNS = ["network", "total_reach", "advertisers", "top companies"]
@@ -163,19 +169,12 @@ def add_parser(sub: argparse._SubParsersAction) -> None:
     ask = actions.add_parser(
         "ask",
         help="send one prompt and keep the answer",
-        description="Send one prompt to NeuralBox and keep its answer, the structured JSON a "
-        "--schema asked for, and the names of the tools it called.",
+        description="Send one prompt to NeuralBox, with no tool at all, and keep its answer and "
+        "the structured JSON a --schema asked for. AdsInsights goes through `nb adsinsights`.",
     )
     prompt = ask.add_mutually_exclusive_group()
     prompt.add_argument("--prompt", metavar="P", help="the prompt (required unless --selftest)")
     prompt.add_argument("--prompt-file", type=Path, metavar="F", help="a file holding the prompt")
-    ask.add_argument(
-        "--tools",
-        action="append",
-        metavar="A,B",
-        help="the tools the agent may use, comma-separated, among "
-        f"{', '.join(neuralbox.WHITELIST)} (default: none); the flag repeats",
-    )
     ask.add_argument(
         "--schema",
         type=Path,
@@ -238,22 +237,19 @@ def _ask(args: argparse.Namespace) -> int:
     if args.selftest:
         return _selftest(args, required=[])
     prompt = _prompt(args)
-    tools = _tools(args.tools)
     schema = _schema(args.schema)
     with toolbase.run(args, tool="nb_ask", planned_eur=PLANNED_EUR) as r:
         client = neuralbox.client(dry_run=r.dry_run)
-        _require_listed(client, tools or [])
-        result = neuralbox.respond(
+        result = _respond(
+            r,
+            "ask",
             client,
             prompt,
-            allowed_tools=tools,
+            allowed_tools=[],
             schema=schema,
             max_turns=args.max_turns,
             session_id=args.session,
         )
-        _warn_denied(result)
-        _log_cost(r, result, "ask")
-        _require_success(result)
         r.write(
             {
                 "prompt": prompt,
@@ -284,8 +280,10 @@ def _adsinsights(args: argparse.Namespace) -> int:
     )
     with toolbase.run(args, tool="nb_adsinsights", planned_eur=PLANNED_EUR) as r:
         client = neuralbox.client(dry_run=r.dry_run)
-        _require_listed(client, ADSINSIGHTS_TOOLS)
-        result = neuralbox.respond(
+        neuralbox.require_tools(client, ADSINSIGHTS_TOOLS)
+        result = _respond(
+            r,
+            "adsinsights",
             client,
             prompt,
             allowed_tools=ADSINSIGHTS_TOOLS,
@@ -293,13 +291,12 @@ def _adsinsights(args: argparse.Namespace) -> int:
             max_turns=adsinsights_turns(len(networks)),
             fixture="neuralbox/adsinsights",
         )
-        _warn_denied(result)
-        _log_cost(r, result, "adsinsights")
-        _require_success(result)
         if result.structured is None:
-            raise toolbase.ToolError(
-                f"{PROVIDER}: no structured output: the answer is not kept "
-                "(AdsInsights is kept as conclusions only)"
+            raise ProviderError(
+                PROVIDER,
+                200,
+                "POST /respond: no structured output, so nothing is kept (AdsInsights is kept "
+                "as conclusions only)",
             )
         data = conclusions(ADSINSIGHTS_SCHEMA, result.structured)
         if isinstance(data.get("typical_hooks"), list):
@@ -317,8 +314,9 @@ def adsinsights_turns(networks: int) -> int:
 
 def conclusions(schema: dict, value: Any) -> Any:
     """`value` cut to what `schema` describes: an object keeps its declared properties only, an
-    array its items, each cut the same way; a value of the wrong shape is emptied (null for an
-    object or a scalar, [] for an array), so nothing the schema does not describe is kept."""
+    array its items, each cut the same way, a string its first MAX_TEXT characters (the last one
+    `…` when cut); a value of the wrong shape is emptied (null for an object or a scalar, [] for
+    an array), so nothing the schema does not describe is kept."""
     kind = schema.get("type")
     if kind == "object":
         if not isinstance(value, dict):
@@ -333,7 +331,9 @@ def conclusions(schema: dict, value: Any) -> Any:
         if not isinstance(value, list):
             return []
         return [conclusions(schema.get("items", {}), item) for item in value]
-    return value if value is None or isinstance(value, str | int | float | bool) else None
+    if isinstance(value, str):
+        return value if len(value) <= MAX_TEXT else value[: MAX_TEXT - 1] + "…"
+    return value if value is None or isinstance(value, int | float | bool) else None
 
 
 def ask_summary(result: neuralbox.NBResult) -> str:
@@ -386,12 +386,12 @@ def adsinsights_summary(data: dict, category: str, countries: list[str]) -> str:
 def _selftest(args: argparse.Namespace, required: list[str]) -> int:
     """The heartbeat, the `required` tools in its list, then one prompt without tools."""
     client = neuralbox.client(dry_run=args.dry_run)
-    tools = _require_listed(client, required)
-    result = neuralbox.respond(client, SELFTEST_PROMPT, max_turns=1)
-    _require_success(result)
+    tools = neuralbox.require_tools(client, required)
+    result = neuralbox.respond(client, SELFTEST_PROMPT, allowed_tools=[], max_turns=1)
+    neuralbox.require_success(result)
     if not result.answer.strip():
-        raise toolbase.ToolError(
-            f"{PROVIDER}: the selftest's respond call came back without an answer"
+        raise ProviderError(
+            PROVIDER, 200, "POST /respond: the selftest's call came back without an answer"
         )
     cost = (
         "not reported" if result.cost_usd is None else f"{result.cost_usd * costs.USD_EUR:.4f} EUR"
@@ -411,14 +411,21 @@ def _log_cost(r: toolbase.Run, result: neuralbox.NBResult, action: str) -> None:
     r.log("llm", PROVIDER, amount, ref=result.request_id or "", note=note)
 
 
-def _require_listed(client: Client, tools: list[str]) -> list[str]:
-    """The tools NeuralBox lists (fetched once per client), refusing to go on, before the paid
-    call, when it lists none or lacks one of `tools`."""
-    listed = neuralbox.listed_tools(client)
-    missing = [name for name in tools if name not in listed]
-    if missing:
-        raise toolbase.ToolError(f"{PROVIDER}: the heartbeat lists no {', '.join(missing)}")
-    return listed
+def _respond(
+    r: toolbase.Run, action: str, client: Client, prompt: str, **options: Any
+) -> neuralbox.NBResult:
+    """`neuralbox.respond`, its cost logged as soon as it is known: what NeuralBox reports, or
+    PLANNED_EUR noted `unconfirmed: <reason>` when the request left and its outcome is unknown.
+    A run that went wrong is then a ProviderError."""
+    try:
+        result = neuralbox.respond(client, prompt, **options)
+    except neuralbox.Unconfirmed as exc:
+        r.log("llm", PROVIDER, PLANNED_EUR, note=f"unconfirmed: {exc.reason}")
+        raise
+    _warn_denied(result)
+    _log_cost(r, result, action)
+    neuralbox.require_success(result)
+    return result
 
 
 def _warn_denied(result: neuralbox.NBResult) -> None:
@@ -426,11 +433,6 @@ def _warn_denied(result: neuralbox.NBResult) -> None:
     if result.tools_denied:
         denied = ", ".join(dict.fromkeys(result.tools_denied))
         print(f"{COMMAND}: the block denied the agent {denied}", file=sys.stderr)
-
-
-def _require_success(result: neuralbox.NBResult) -> None:
-    if result.errors:
-        raise toolbase.ToolError(f"{PROVIDER}: the run failed: {'; '.join(result.errors)}")
 
 
 def _prompt(args: argparse.Namespace) -> str:
@@ -450,27 +452,6 @@ def _prompt(args: argparse.Namespace) -> str:
     if not prompt.strip():
         raise toolbase.UsageError("the prompt is empty")
     return prompt
-
-
-def _tools(values: list[str] | None) -> list[str] | None:
-    """The --tools names, each once, in order; None when the flag is not given."""
-    if values is None:
-        return None
-    names: list[str] = []
-    for value in values:
-        for part in value.split(","):
-            name = part.strip()
-            if name and name not in names:
-                names.append(name)
-    if not names:
-        raise toolbase.UsageError(f"--tools names no tool (among {', '.join(neuralbox.WHITELIST)})")
-    for name in names:
-        if name not in neuralbox.WHITELIST:
-            raise toolbase.UsageError(
-                f"--tools: {name!r} is not a tool the factory lets NeuralBox use "
-                f"(only {', '.join(neuralbox.WHITELIST)})"
-            )
-    return names
 
 
 def _schema(path: Path | None) -> dict | None:
