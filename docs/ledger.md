@@ -56,7 +56,10 @@ back after the known ones (a migrated v1 idea keeps its `v1_status`; `create_ide
 sets them on a new idea). Saving rewrites the file from data, so comments in it are not kept, and
 replaces it in one step, so a crash leaves the old file or the new one. A file that cannot be read
 (broken YAML, an unknown status, a number that is not a number) raises `IdeaFileError` naming the
-file.
+file. Saving reads back what it is about to write with that same reader: a value that would not load
+(a `cap_eur` of `nan`, text where a number goes) raises `IdeaFileError` and the file is left as it
+was, so one bad edit can never make `list_ideas` fail. `create_idea` does the same check before it
+creates the folder.
 
 ## Statuses
 
@@ -145,6 +148,45 @@ One JSON object per line, appended and never rewritten, keys in this order:
   its number, because skipping it would hide spend from the cap.
 - `costs.PRICE_TABLE_EUR` holds the per-call price estimates of the API tools (the retro corrects
   them from invoices) and `costs.USD_EUR` converts NeuralBox's `cost_usd`.
+
+## On the command line
+
+`uv run factory <command>`. A command's data goes to stdout; the line saying what a command did
+(`idea new`, `idea set`, `plan mark`, `costs add`) goes to stderr, so output can be piped and read
+as it is. Exit codes: 0 done, 1 a user error (an unknown idea or step, a bad value, a file that
+cannot be read) with one line on stderr, 2 a usage error from argparse.
+
+| Command | What it does |
+|---|---|
+| `board [--json] [--all]` | one row per idea: `slug`, `status`, `step`, `exp`, `spend/cap`, `updated`, `next` |
+| `idea new <slug> --title T [--geo FR,US] [--language ..] [--buyer ..] [--signer ..] [--value-eur N] [--cap-eur N] [--rate-eur N] [--provisional] [--notes ..]` | `create_idea`; exit 1 for a slug that exists or is not a slug |
+| `idea set <slug> key=value ...` | change fields of `idea.yml`, all or nothing |
+| `plan show <slug>`, `plan next <slug>`, `plan mark <slug> <id> <status>` | the steps as a table; the next step as `<id>. <name> — <command> — <timebox>` (`done: ...` when none is left); set a step's status |
+| `costs add --idea S --kind K --amount-eur N [--provider ..] [--phase ..] [--note ..] [--channel ..]` | append a line to `costs.jsonl`, the cap is not checked; a negative amount corrects |
+| `costs total --idea S [--json]` | the sum per kind, then `cash` and `cap` |
+
+- **The board.** `step` is `<id>. <name>` of `next_step` (`done` when none is left) and `next` is
+  that step's command, for example `/idea-triage`; `exp` is the current experiment or `-`;
+  `spend/cap` is the cash spent over the cap in whole EUR (founder time is not cash). `_fixture` is
+  listed only with `--all`. `--json` prints a list of `{slug, status, step, exp, spend_eur, cap_eur,
+  updated, next}` with numbers as numbers and null for what a row cannot say. A broken idea is
+  shown, not skipped, and each part is judged alone: an `idea.yml` that cannot be read shows
+  `idea.yml invalid` as its status (its cap, experiment and date are unknown), a `plan.md` that
+  cannot be read shows `plan.md:<line> invalid` as its step, and a `costs.jsonl` that cannot be
+  read shows `?` as its spend. `factory plan show <slug>` and `factory costs total --idea <slug>`
+  print the error with its line number.
+- **`idea set`.** The keys are the `Idea` fields but `slug`, `created`, `updated`, `totals` and
+  `extra`. `status` must be one of the statuses, `geo` is split on commas, `cap_eur`,
+  `value_per_customer_eur` and `founder_hour_rate_eur` are finite numbers, `current_experiment` a
+  whole number, `provisional` `true` or `false`. An empty value clears `repo`, `local_path`,
+  `domain` and `current_experiment`, and empties `geo` and the text fields. Every pair is checked
+  before anything is written: an unknown key or a bad value is one line on stderr, exit 1, and the
+  file is untouched. It saves through `save_idea`, so `updated` and `totals` are refreshed.
+- **`plan mark`.** `<status>` is one of `todo`, `doing`, `done`, `skipped`, `void`; only that
+  step's line changes (`mark_step`).
+- **`costs total`.** One line per kind (every kind of `costs.KINDS`, then any other found in the
+  file), then `cash` and `cap`. `--json` prints `{"<kind>": EUR, ..., "cash_eur": EUR, "cap_eur":
+  EUR}`.
 
 ## In code
 

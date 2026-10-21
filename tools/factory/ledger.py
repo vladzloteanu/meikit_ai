@@ -224,13 +224,7 @@ def load_idea(slug: str) -> Idea:
         text = path.read_text(encoding="utf-8")
     except FileNotFoundError:
         raise IdeaNotFound(slug) from None
-    try:
-        data = yaml.safe_load(text)
-    except yaml.YAMLError as exc:
-        raise IdeaFileError(slug, _yaml_problem(exc)) from None
-    if not isinstance(data, dict):
-        raise IdeaFileError(slug, "does not hold a YAML mapping")
-    return _idea_from_mapping(slug, data)
+    return _parse_idea(slug, text)
 
 
 def save_idea(idea: Idea) -> None:
@@ -239,14 +233,16 @@ def save_idea(idea: Idea) -> None:
     `updated` becomes today and `totals` is recomputed from costs.jsonl (on `idea` too). The keys
     follow the order of the fields, `extra` last. The file is rewritten from data, so comments in
     it are not kept, and replaced in one step: a crash leaves the old file or the new one. Raises
-    ValueError for a status that is not one of STATUSES and IdeaNotFound when the idea has no
-    folder.
+    ValueError for a status that is not one of STATUSES, IdeaNotFound when the idea has no folder
+    and IdeaFileError when a value would not load back (a `cap_eur` of nan or of text): what is
+    written is read by the same reader as `load_idea` first, so one bad value never makes the idea
+    unreadable, and the file is then left as it was.
     """
     _check_status(idea.status)
     folder = require_dir(idea.slug)
     idea.updated = _today()
     idea.totals = _totals(idea.slug)
-    _write_text(folder / "idea.yml", _dump(idea))
+    _write_text(folder / "idea.yml", _dump_checked(idea))
 
 
 def create_idea(slug: str, title: str, **fields: Any) -> Idea:
@@ -256,8 +252,9 @@ def create_idea(slug: str, title: str, **fields: Any) -> Idea:
     the default plan.md, intake.md with its header, learnings.md with its header, an empty
     costs.jsonl and research/. A file already in the folder is kept, not overwritten; idea.yml is
     written last, so an interrupted create leaves a folder that is not yet an idea. Raises
-    ValueError for a slug that is not a slug or a bad status (before creating anything), TypeError
-    for an unknown field and IdeaExists when the idea already has an idea.yml.
+    ValueError for a slug that is not a slug or a bad status, IdeaFileError for a value that would
+    not load back (as `save_idea` does), both before creating anything, TypeError for an unknown
+    field and IdeaExists when the idea already has an idea.yml.
     """
     if not (isinstance(slug, str) and _SLUG_RE.fullmatch(slug)):
         raise ValueError(
@@ -265,6 +262,7 @@ def create_idea(slug: str, title: str, **fields: Any) -> Idea:
         )
     idea = Idea(slug=slug, title=title, **fields)
     _check_status(idea.status)
+    _dump_checked(idea)
     folder = paths.idea_dir(slug)
     if (folder / "idea.yml").exists():
         raise IdeaExists(slug)
@@ -446,6 +444,17 @@ def _valid_day(text: str) -> bool:
 # --- idea.yml: reading and writing -------------------------------------------------------------
 
 
+def _parse_idea(slug: str, text: str) -> Idea:
+    """The idea in the text of an idea.yml: the reader of `load_idea`, and of `_dump_checked`."""
+    try:
+        data = yaml.safe_load(text)
+    except yaml.YAMLError as exc:
+        raise IdeaFileError(slug, _yaml_problem(exc)) from None
+    if not isinstance(data, dict):
+        raise IdeaFileError(slug, "does not hold a YAML mapping")
+    return _idea_from_mapping(slug, data)
+
+
 def _idea_from_mapping(slug: str, data: dict) -> Idea:
     if "slug" in data and data["slug"] != slug:
         raise IdeaFileError(slug, f"slug {data['slug']!r} is not the folder's name {slug!r}")
@@ -557,6 +566,18 @@ def _dump(idea: Idea) -> str:
     for key, value in idea.extra.items():
         data.setdefault(key, value)
     return yaml.safe_dump(data, sort_keys=False, allow_unicode=True)
+
+
+def _dump_checked(idea: Idea) -> str:
+    """The idea.yml text for `idea`, once the reader of `load_idea` has accepted it."""
+    text = _dump(idea)
+    try:
+        _parse_idea(idea.slug, text)
+    except IdeaFileError as exc:
+        raise IdeaFileError(
+            idea.slug, f"not written, it would not load back: {exc.reason}"
+        ) from None
+    return text
 
 
 def _check_status(status: str) -> None:

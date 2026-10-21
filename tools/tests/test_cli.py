@@ -18,7 +18,7 @@ def test_help_lists_tools(capsys):
     main(["--help"])
     out = capsys.readouterr().out
     assert "factory" in out
-    assert "tool" in out
+    assert "board" in out
 
 
 def test_help_exits_0(capsys):

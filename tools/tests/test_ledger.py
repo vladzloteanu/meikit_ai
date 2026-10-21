@@ -413,6 +413,29 @@ def test_save_idea_refuses_a_status_that_is_not_one_of_the_eleven(root):
     assert read(root / "ideas/_fixture/idea.yml") == before
 
 
+@pytest.mark.parametrize(
+    ("name", "value"),
+    [
+        ("cap_eur", float("nan")),
+        ("founder_hour_rate_eur", float("inf")),
+        ("cap_eur", "lots"),
+        ("provisional", "yes"),
+        ("current_experiment", "first"),
+    ],
+)
+def test_save_idea_refuses_a_value_that_would_not_load_back(root, name, value):
+    path = root / "ideas/_fixture/idea.yml"
+    before = read(path)
+    i = ledger.load_idea("_fixture")
+    setattr(i, name, value)
+    with pytest.raises(ledger.LedgerError, match=name) as e:
+        ledger.save_idea(i)
+    assert "\n" not in str(e.value)
+    assert read(path) == before
+    assert not [n for n in os.listdir(path.parent) if n.endswith(".tmp")]
+    assert [idea.slug for idea in ledger.list_ideas(include_fixture=True)] == ["_fixture"]
+
+
 def test_save_idea_refuses_a_missing_folder_and_creates_nothing(root):
     with pytest.raises(ledger.IdeaNotFound):
         ledger.save_idea(ledger.Idea(slug="ghost", title="Ghost"))
@@ -517,6 +540,12 @@ def test_create_idea_refuses_a_bad_slug_and_creates_nothing(root, slug):
 def test_create_idea_with_a_bad_status_creates_nothing(root):
     with pytest.raises(ValueError, match="status"):
         ledger.create_idea("demo", "Demo", status="LIVE")
+    assert not (root / "ideas/demo").exists()
+
+
+def test_create_idea_with_a_value_that_would_not_load_back_creates_nothing(root):
+    with pytest.raises(ledger.IdeaFileError, match="cap_eur"):
+        ledger.create_idea("demo", "Demo", cap_eur=float("nan"))
     assert not (root / "ideas/demo").exists()
 
 
