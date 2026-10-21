@@ -164,23 +164,32 @@ class Clock:
 
 
 @pytest.fixture
-def clock(monkeypatch):
-    """Answers last what the fake Arctic Shift says; no pacing, so `slept` holds only the
-    search's own waits."""
+def clock(monkeypatch, slept):
+    """Answers last what the fake Arctic Shift says, and a sleep advances the clock; no pacing,
+    so `slept` holds only the search's own waits and the client's backoffs."""
     fake = Clock()
+
+    def sleep(seconds):
+        slept.append(seconds)
+        fake.now += seconds
+
     monkeypatch.setattr(time, "perf_counter", fake)
+    monkeypatch.setattr(time, "monotonic", fake)
+    monkeypatch.setattr(time, "sleep", sleep)
     monkeypatch.setattr(arcticshift, "PACE_S", 0.0)
     return fake
 
 
 def timed(clock, *replies):
     """A handler answering each request with the next (seconds, response) of `replies`: the
-    request lasts that many seconds on `clock`."""
+    request lasts that many seconds on `clock`. A reply that is an exception is raised."""
     queue = list(replies)
 
     def handler(request):
         took, response = queue.pop(0)
         clock.now += took
+        if isinstance(response, Exception):
+            raise response
         return response
 
     return handler
@@ -244,9 +253,16 @@ def test_arctic_shift_slow_down_is_waited_out_then_the_same_window_answers(
         ("£12 per seat per month", ["£12 per seat per month"]),
         ("Solo $29/mo, Team $99/user/month, Solo $29/mo", ["$29/mo", "$99/user/month"]),
         ("Version 2.5 of 2026: 30 days free, 4.9/5 stars", []),
-        # a currency after an amount is not followed by a digit: "1 $" is no price
+        # a $ or £ after an amount is not followed by a digit, even after a space: "1 $" is no
+        # price; a € may be, as French writes it ("19 € 1er mois offert", an old and a new price)
         ("Tier 1 $9/mo, Tier 2 $29/mo", ["$9/mo", "$29/mo"]),
         ("Tier 1 $ 9/mo", ["$ 9/mo"]),
+        ("Up to 5 $49/month", ["$49/month"]),
+        ("Plan 2 €19/mois", ["€19/mois"]),
+        ("19 € 1er mois offert", ["19 €"]),
+        ("Pro 29 € 3 mois offerts", ["29 €"]),
+        ("29€ 12 mois d'engagement", ["29€"]),
+        ("99 € 49 €", ["99 €", "49 €"]),
         # an amount starts after neither a digit nor a letter: not "026 150" inside "2026 150";
         # HT stays, since a price before VAT is 20 % less than one with it
         ("Offre 2026 150 € HT", ["150 € HT"]),
@@ -276,6 +292,22 @@ def test_extract_prices_reads_each_way_a_price_is_written(text, prices):
         (["$29"], "Solo $29. No setup fee. Billed monthly.", "subscription"),
         (["$199"], "Pay once, use it forever.", "one_shot"),
         (["$499"], "Enterprise? Contact sales.", "one_shot"),
+        # a link's target or a bare URL after the price is not what it recurs by, even cut
+        # short by the window's end...
+        (
+            ["$49"],
+            "One-time purchase: $49. [An overview](https://x.example/an-overview)",
+            "one_shot",
+        ),
+        (["$49"], "Lifetime: $49 [Buy](https://shop.example/an/checkout)", "one_shot"),
+        (["$199"], "One-time fee: $199 [Details](https://x.example/year-in-review)", "one_shot"),
+        (["$49"], "Pay once: $49. Docs: https://x.example/docs/an/overview", "one_shot"),
+        (["$49"], "[Buy for $49](https://shop.example/an/checkout) today", "one_shot"),
+        # ...but a link's text is
+        (["$29"], "Solo $29 [billed monthly](#faq)", "subscription"),
+        # a marker is a whole word: no "/an" in "/analytics", no "/mo" in "/mobile"
+        (["$49"], "Once: $49 for the /analytics and /mobile add-ons", "one_shot"),
+        (["$49"], "Once: $49, a yearlong licence", "one_shot"),
         ([], "Contact sales for a quote", "quote"),
         ([], "Tarifs sur devis", "quote"),
         ([], "Talk to our sales team", "quote"),
@@ -793,6 +825,7 @@ def test_reddit_mentions_counts_by_month_and_subreddit_and_keeps_the_newest_hits
                 "complete": True,
                 "covered_since": "2026-08-01",
                 "skipped": False,
+                "error": None,
                 "calls": 4,
                 "waited_s": 0.0,
                 "hits": [
@@ -1009,8 +1042,8 @@ def test_a_one_day_window_that_times_out_ends_its_search(root, capsys, monkeypat
 
 
 def test_a_reddit_dry_run_counts_each_fixture_item_once(root, capsys, no_secrets):
-    # the fixtures answer every window with the same items: they count once, and the search
-    # runs to the start of the range instead of stopping at --limit on repeats
+    # a search is one call over the whole range, which the fixture of its kind answers with
+    # its 10 items (under a full page): each counts once, and the term is complete
     argv = ["reddit_mentions", "--idea", "_fixture", "--dry-run", "--terms", "x"]
     out = run_json(capsys, [*argv, "--subreddits", "FacebookAds"])
     term = out["terms"]["x"]
@@ -1059,7 +1092,7 @@ def test_reddit_mentions_summary_names_the_incomplete_terms(root, capsys, monkey
     assert main([*argv, *RANGE]) == 0
     assert capsys.readouterr().out.splitlines()[-1] == (
         '"x": every match fetched only from 2026-09-16 on, so its counts are lower bounds (a '
-        "search came back full, or ran out of calls or waiting time, or was skipped; 2 calls, "
+        "search came back full, failed, ran out of calls or waiting time, or was skipped; 2 calls, "
         "0 s waited on Arctic Shift)"
     )
 
@@ -1070,7 +1103,7 @@ def test_reddit_mentions_summary_says_when_no_day_was_covered(root, capsys, monk
     assert main([*argv, "--since", "2026-10-20", "--until", "2026-10-20"]) == 0
     assert capsys.readouterr().out.splitlines()[-1] == (
         '"x": no day fetched in full, so its counts are lower bounds (a search came back full, '
-        "or ran out of calls or waiting time, or was skipped; 2 calls, 0 s waited on Arctic "
+        "failed, ran out of calls or waiting time, or was skipped; 2 calls, 0 s waited on Arctic "
         "Shift)"
     )
 
@@ -1114,7 +1147,7 @@ def test_the_summary_says_how_many_searches_were_skipped(root, capsys, monkeypat
     assert main([*argv, "--subreddits", "PPC", *RANGE, "--max-wait-s", "10"]) == 0
     assert capsys.readouterr().out.splitlines()[-4:] == [
         '"a": no day fetched in full, so its counts are lower bounds (a search came back full, '
-        "or ran out of calls or waiting time, or was skipped; 3 calls, 8 s waited on Arctic "
+        "failed, ran out of calls or waiting time, or was skipped; 3 calls, 8 s waited on Arctic "
         "Shift)",
         '"b": not searched: the run\'s waiting budget was spent',
         '"c": not searched: the run\'s waiting budget was spent',
@@ -1132,6 +1165,132 @@ def test_the_per_search_budgets_hold_inside_the_run_budget(root, capsys, monkeyp
     out = run_json(capsys, [*argv, *RANGE, "--max-wait-s", "1000"])
     assert len(seen) == 9 and slept == [1] * 7
     assert (out["skipped_searches"], out["terms"]["x"]["skipped"]) == (0, False)
+
+
+def refused(status, text="down", headers=None):
+    """An answer Client retries (a 429 or a 5xx) and gives up on after its 3 attempts."""
+    return httpx.Response(status, text=text, headers=headers)
+
+
+FAILED_POSTS = (
+    "arcticshift: HTTP 503: GET /api/posts/search?query=x&subreddit=PPC&after=2026-08-01"
+    "&before=2026-10-21&limit=100&sort=desc: down"
+)
+
+
+def test_a_failed_search_is_recorded_on_its_term_and_the_run_goes_on(
+    root, capsys, monkeypatch, clock, slept
+):
+    # the posts search: a 503 three times, Client's attempts (4 s then 6 s of backoff); the
+    # comments search answers, and the run keeps it
+    found = comment("c1", "2026-10-06", subreddit="PPC")
+    replies = [*[(0.5, refused(503))] * 3, (0.5, data(found))]
+    seen = wire(monkeypatch, arcticshift, timed(clock, *replies))
+    argv = ["reddit_mentions", "--idea", "_fixture", "--terms", "x", "--subreddits", "PPC"]
+    assert main([*argv, *RANGE, "--json"]) == 0
+    out, err = capsys.readouterr()
+    result = json.loads(out)
+    whole = ("2026-08-01", "2026-10-21")
+    assert asked(seen) == [*[("posts", *whole)] * 3, ("comments", *whole)]
+    assert slept == [4, 6]  # the client's backoffs
+    term = result["terms"]["x"]
+    assert (term["posts"], term["comments"], term["complete"]) == (0, 1, False)
+    assert term["covered_since"] == "2026-10-21"  # the posts search covered no day
+    assert term["error"] == FAILED_POSTS
+    # the failed call's wall-clock (three 0.5 s attempts, 10 s of backoff) counts as waiting
+    assert (term["calls"], term["waited_s"], result["waited_s"]) == (2, 11.5, 11.5)
+    assert err.startswith("reddit_mentions: wrote ")
+    [path] = research(root, "reddit_mentions")
+    assert json.loads(path.read_text(encoding="utf-8")) == result
+
+
+def test_a_network_error_in_a_search_is_recorded_like_a_refusal(
+    root, capsys, monkeypatch, clock, slept
+):
+    replies = [*[(0.0, httpx.ConnectError("refused"))] * 3, (0.5, data())]
+    seen = wire(monkeypatch, arcticshift, timed(clock, *replies))
+    argv = ["reddit_mentions", "--idea", "_fixture", "--terms", "x", "--subreddits", "PPC"]
+    out = run_json(capsys, [*argv, *RANGE])
+    assert len(seen) == 4 and slept == [4, 6]
+    term = out["terms"]["x"]
+    assert (
+        term["error"] == "arcticshift: network error: GET /api/posts/search: ConnectError: refused"
+    )
+    assert (term["complete"], term["calls"], term["waited_s"]) == (False, 2, 10)
+
+
+def test_a_search_failing_on_a_later_call_keeps_the_windows_it_fetched(
+    root, capsys, monkeypatch, clock, slept
+):
+    found = post("a1", "2026-10-01", subreddit="PPC")
+    replies = [
+        (6.0, slowed(10)),  # a timeout: wait 10 s, halve
+        (1.0, data(found)),  # the newest half: one post
+        *[(0.5, refused(502, "bad gateway"))] * 3,  # the older half: refused after the retries
+        (0.5, data()),  # the comments
+    ]
+    seen = wire(monkeypatch, arcticshift, timed(clock, *replies))
+    argv = ["reddit_mentions", "--idea", "_fixture", "--terms", "x", "--subreddits", "PPC"]
+    out = run_json(capsys, [*argv, *RANGE])
+    assert asked(seen) == [
+        ("posts", "2026-08-01", "2026-10-21"),
+        ("posts", "2026-09-10", "2026-10-21"),
+        *[("posts", "2026-08-01", "2026-09-10")] * 3,
+        ("comments", "2026-08-01", "2026-10-21"),
+    ]
+    assert slept == [10, 4, 6]
+    term = out["terms"]["x"]
+    assert (term["posts"], term["complete"], term["covered_since"]) == (1, False, "2026-09-10")
+    assert term["error"].startswith(
+        "arcticshift: HTTP 502: GET /api/posts/search?query=x&subreddit=PPC&after=2026-08-01"
+        "&before=2026-09-10&"
+    )
+    assert term["error"].endswith(": bad gateway")
+    assert (term["calls"], term["waited_s"]) == (4, 21.5)  # 10 s of reset, 11.5 s of retries
+
+
+def test_the_retries_of_a_failed_search_count_against_the_run_budget(
+    root, capsys, monkeypatch, clock, slept
+):
+    # PPC: the posts answer; the comments get a 429 asking 100 s, three times, so the client
+    # sleeps 100 s twice, past --max-wait-s 150: FacebookAds' searches are skipped
+    found = post("p1", "2026-10-05", subreddit="PPC")
+    later = refused(429, "later", headers={"Retry-After": "100"})
+    seen = wire(monkeypatch, arcticshift, timed(clock, (0.5, data(found)), *[(0.5, later)] * 3))
+    argv = ["reddit_mentions", "--idea", "_fixture", "--terms", "x"]
+    argv += ["--subreddits", "PPC,FacebookAds", *RANGE, "--max-wait-s", "150"]
+    out = run_json(capsys, argv)
+    assert [kind for kind, _, _ in asked(seen)] == ["posts", "comments", "comments", "comments"]
+    assert slept == [100, 100]
+    term = out["terms"]["x"]
+    assert (term["posts"], term["skipped"], term["complete"]) == (1, True, False)
+    assert term["error"].startswith("arcticshift: HTTP 429: GET /api/comments/search?body=x&")
+    assert (term["calls"], term["waited_s"]) == (2, 201.5)
+    assert (out["waited_s"], out["skipped_searches"]) == (201.5, 2)
+
+
+def test_reddit_mentions_summary_names_a_failed_search(root, capsys, monkeypatch, clock):
+    wire(monkeypatch, arcticshift, timed(clock, *[(0.5, refused(503))] * 3, (0.5, data())))
+    argv = ["reddit_mentions", "--idea", "_fixture", "--terms", "x", "--subreddits", "PPC"]
+    assert main([*argv, *RANGE]) == 0
+    assert capsys.readouterr().out.splitlines()[-2:] == [
+        '"x": no day fetched in full, so its counts are lower bounds (a search came back full, '
+        "failed, ran out of calls or waiting time, or was skipped; 2 calls, 11.5 s waited on "
+        "Arctic Shift)",
+        f'"x": a search failed: {FAILED_POSTS}',
+    ]
+
+
+def test_a_run_no_search_of_which_is_answered_fails_after_trying_them_all(
+    root, capsys, monkeypatch, clock, slept
+):
+    seen = wire(monkeypatch, arcticshift, timed(clock, *[(0.5, refused(503))] * 6))
+    argv = ["reddit_mentions", "--idea", "_fixture", "--terms", "x", "--subreddits", "PPC"]
+    assert main([*argv, *RANGE]) == 1
+    out, err = capsys.readouterr()
+    assert out == "" and err == f"reddit_mentions: {FAILED_POSTS} (no search answered)\n"
+    assert len(seen) == 6 and slept == [4, 6, 4, 6]
+    assert research(root, "reddit_mentions") == []
 
 
 @pytest.mark.parametrize("value", ["-1", "soon", "nan"])
@@ -1222,9 +1381,11 @@ def test_reddit_mentions_refuses_a_command_line_it_cannot_run(
     assert needle in capsys.readouterr().err
 
 
-def test_reddit_mentions_stops_on_one_line_when_arctic_shift_refuses(root, capsys, monkeypatch):
+def test_reddit_mentions_stops_on_one_line_when_no_search_is_answered(root, capsys, monkeypatch):
+    # every search is refused: nothing to keep, so no research file, the first refusal on one
+    # line, and exit 1
     refusal = {"data": None, "error": "Subreddit not found"}
-    wire(monkeypatch, arcticshift, answer(refusal, status=400))
+    seen = wire(monkeypatch, arcticshift, answer(refusal, status=400))
     argv = ["reddit_mentions", "--idea", "_fixture", "--terms", "x", "--subreddits", "nope"]
     assert main(argv) == 1
     out, err = capsys.readouterr()
@@ -1232,6 +1393,8 @@ def test_reddit_mentions_stops_on_one_line_when_arctic_shift_refuses(root, capsy
         "reddit_mentions: arcticshift: HTTP 400: GET /api/posts/search?"
     )
     assert "Subreddit not found" in err and err.count("\n") == 1
+    assert err.endswith(" (no search answered)\n")
+    assert [kind for kind, _, _ in asked(seen)] == ["posts", "comments"]  # the run went on
     assert research(root, "reddit_mentions") == []
 
 

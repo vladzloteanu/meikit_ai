@@ -16,31 +16,37 @@ heavy for it; the time the answer took tells them apart. A throttle (under 5 s) 
 full, X-RateLimit-Reset seconds (120 at most, 3 without one), and the same window asked again. A
 timeout (5 s or more) halves the window: its reset is waited out, the newest half asked, then the
 older ranges in windows of the size that answered. A search makes 8 calls at most and waits 240 s
-at most in all; when either runs out it stops, and what it fetched is kept. A run waits
---max-wait-s at most across all its searches: once a wait would pass it, the searches left are
-skipped. The research JSON is
+at most in all; when either runs out it stops, and what it fetched is kept. So does a search
+Arctic Shift refuses after the client's retries (a 429, a 5xx) or a network error ends: its
+failure is recorded on its term, and the run goes on with the next search. A run waits
+--max-wait-s at most across all its searches, the time the client spent retrying a call that
+failed counted in: once a wait would pass it, the searches left are skipped. The run fails (exit
+1, no research file) only when no search at all was answered. The research JSON is
 
     {"subreddits", "since", "until", "limit", "max_wait_s", "waited_s", "skipped_searches",
      "terms": {term: {"posts", "comments", "by_month": {"YYYY-MM": n},
                       "by_subreddit": {subreddit: n}, "complete", "covered_since", "skipped",
-                      "calls", "waited_s",
+                      "error", "calls", "waited_s",
                       "hits": [{"kind", "subreddit", "title", "url", "score", "created",
                                 "snippet"}]}}}
 
 `posts` and `comments` count the items fetched; `by_month` counts both together by the month
 (UTC) they were created, `by_subreddit` by subreddit, the most first. `covered_since` is the first
 day from which every search of the term fetched every match; `complete` says it is --since. When
-it is not (a search came back full, ran out of calls or waiting time, or was skipped), the counts
-are lower bounds. `skipped` says some of the term's searches were not made, the run's waiting
-budget spent. `calls` and `waited_s` are what the term's searches cost in Arctic Shift calls and
-in seconds waiting on its resets, what makes a run slow; at the top, `waited_s` is the run's and
-`skipped_searches` counts the searches skipped. `hits` are the term's newest --limit items: `kind`
+it is not (a search came back full, failed, ran out of calls or waiting time, or was skipped), the
+counts are lower bounds. `skipped` says some of the term's searches were not made, the run's
+waiting budget spent; `error` is the message of the first of its searches that failed (null when
+none did), one line and never quoting a secret. `calls` and `waited_s` are what the term's
+searches cost in Arctic Shift calls and in seconds waiting on its resets and on the client's
+retries, what makes a run slow; at the top, `waited_s` is the run's and `skipped_searches` counts
+the searches skipped. `hits` are the term's newest --limit items: `kind`
 is post or comment, `url` the item on reddit.com (its permalink, else its rebuilt path), `created`
 its day, `snippet` the start of its text (null for a post with none); a comment has no title.
 Deleted and removed comments, and those of bots (AutoModerator, "I am a bot"), are left out, as in
 v1. Arctic Shift is free: no cost is logged.
 The summary is one row per term, `term | posts | comments | top subreddits`, then a line for each
-term that is incomplete or waited on Arctic Shift, and one saying how many searches were skipped.
+term that is incomplete or waited on Arctic Shift, one for each whose search failed, and one
+saying how many searches were skipped.
 The selftest is one posts search; a throttle is waited out once (60 s at most) and the call made
 once more.
 """
@@ -54,7 +60,7 @@ from dataclasses import dataclass
 from datetime import UTC, date, datetime, timedelta
 
 from factory import tables, toolbase
-from factory.http import Client
+from factory.http import Client, ProviderError
 from factory.providers import arcticshift
 
 TOOL = "reddit_mentions"
@@ -145,6 +151,9 @@ def run(args: argparse.Namespace) -> int:
     with toolbase.run(args, tool=TOOL) as r:
         client = arcticshift.client(dry_run=r.dry_run)
         data = collect(client, terms, subreddits, since, until, args.limit, args.max_wait_s)
+        errors = [found["error"] for found in data["terms"].values() if found["error"]]
+        if errors and not client.ok_calls:  # nothing fetched to keep: the first failure, exit 1
+            raise toolbase.ToolError(f"{errors[0]} (no search answered)")
         r.write(data)
         r.summary(summary(data))
     return 0
@@ -188,6 +197,12 @@ class WaitBudget:
     def allows(self, wait: float) -> bool:
         return not self.spent and self.waited_s + wait <= self.max_s
 
+    def charge(self, seconds: float) -> None:
+        """Count `seconds` waited; past `max_s`, the budget is spent."""
+        self.waited_s += seconds
+        if self.waited_s > self.max_s:
+            self.spent = True
+
 
 @dataclass
 class Search:
@@ -197,6 +212,7 @@ class Search:
     covered: date  # the first day from which every match was fetched
     calls: int = 0
     waited_s: float = 0.0
+    error: str | None = None  # the failure that ended the search, if one did
 
 
 def search(
@@ -214,16 +230,19 @@ def search(
     again; a 422 that timed out is waited out and the window halved, the newest half first, the
     search then going on older in windows of the size that answered. MAX_CALLS calls and
     MAX_WAITED_S seconds of waiting at most: whichever runs out first ends the search. A wait
-    the run's `budget` cannot cover ends it too, and marks the budget spent."""
+    the run's `budget` cannot cover ends it too, and marks the budget spent. So does any other
+    failure of a call (refused after the client's retries, a network error): it is the search's
+    `error`, and the call's wall-clock, which holds the retries' sleeps, counts as waited."""
     budget = budget if budget is not None else WaitBudget(MAX_WAITED_S)
     find = arcticshift.posts_search if kind == "post" else arcticshift.comments_search
     found: dict[str, dict] = {}
     covered = end  # every match created from `covered` to `end` is in `found`
     days = (end - start).days  # the window asked next
-    calls, waited = 0, 0.0
+    calls, waited, error = 0, 0.0, None
     while covered > start and calls < MAX_CALLS:
         after = max(start, covered - timedelta(days=days))
         calls += 1
+        started = time.monotonic()
         try:
             page = find(
                 client,
@@ -247,8 +266,14 @@ def search(
                 break
             time.sleep(wait)
             waited += wait
-            budget.waited_s += wait
+            budget.charge(wait)
             continue
+        except ProviderError as exc:
+            error = str(exc)
+            retried = time.monotonic() - started  # the client's attempts and their backoffs
+            waited += retried
+            budget.charge(retried)
+            break
         for item in page:
             if isinstance(item.get("id"), str):
                 found.setdefault(item["id"], item)
@@ -258,7 +283,7 @@ def search(
                 covered = max(after, _first_full_day(min(times)))
             break
         covered = after
-    return Search(list(found.values()), covered, calls, waited)
+    return Search(list(found.values()), covered, calls, waited, error)
 
 
 def summary(data: dict) -> str:
@@ -285,14 +310,16 @@ def summary(data: dict) -> str:
             else:
                 seen = f"every match fetched only from {found['covered_since']} on"
             lines.append(
-                f'"{term}": {seen}, so its counts are lower bounds (a search came back full, or '
-                f"ran out of calls or waiting time, or was skipped; {cost})"
+                f'"{term}": {seen}, so its counts are lower bounds (a search came back full, '
+                f"failed, ran out of calls or waiting time, or was skipped; {cost})"
             )
         elif found["waited_s"]:
             lines.append(
                 f'"{term}": complete after {found["calls"]} calls and {found["waited_s"]:g} s '
                 "waited on Arctic Shift"
             )
+        if found["error"]:
+            lines.append(f'"{term}": a search failed: {found["error"]}')
     if data["skipped_searches"]:
         lines.append(
             f"{data['skipped_searches']} searches skipped: the run waited {data['waited_s']:g} s "
@@ -311,10 +338,11 @@ def _term(
     budget: WaitBudget,
 ) -> dict:
     """One term's entry in the research JSON: its posts and comments in every subreddit, the
-    searches the run's `budget` no longer allows skipped (nothing found, no day covered)."""
+    searches the run's `budget` no longer allows skipped (nothing found, no day covered), the
+    first failure among its searches as `error`."""
     items: dict[tuple[str, str], dict] = {}
     covered_since = since
-    calls, waited, skipped = 0, 0.0, False
+    calls, waited, skipped, error = 0, 0.0, False, None
     for subreddit in subreddits:
         for kind in KINDS:
             if budget.spent:
@@ -325,6 +353,7 @@ def _term(
             covered_since = max(covered_since, found.covered)
             calls += found.calls
             waited += found.waited_s
+            error = error or found.error
             for raw in found.items:
                 item = _item(kind, raw)
                 if item is not None:
@@ -335,9 +364,10 @@ def _term(
         "comments": sum(1 for item in newest if item["kind"] == "comment"),
         "by_month": dict(sorted(Counter(toolbase.month_of(i["ts"]) for i in newest).items())),
         "by_subreddit": _most_first(Counter(item["subreddit"] for item in newest)),
-        "complete": covered_since == since,
+        "complete": covered_since == since and error is None,
         "covered_since": covered_since.isoformat(),
         "skipped": skipped,
+        "error": error,
         "calls": calls,
         "waited_s": round(waited, 1),
         "hits": [_hit(item) for item in newest[:limit]],

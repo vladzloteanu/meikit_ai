@@ -32,19 +32,21 @@ SELFTEST_URL = "https://example.com"
 
 # A price: a currency then an amount, or an amount then a currency, then what it is per, all on
 # one line (a space may be a no-break one: `19\u202f€`). An amount written before its currency
-# starts after neither a digit nor a letter (not `026 150 €` inside `2026 150 €`), and its
-# currency is not followed by a digit (`Tier 1 $9` holds `$9`, not `1 $`).
+# starts after neither a digit nor a letter (not `026 150 €` inside `2026 150 €`). A `$` or `£`
+# after it is not followed by a digit, even after a space (`Tier 1 $9` holds `$9`, not `1 $`);
+# a `€` only not at once, since French writes the amount first and a number may follow
+# (`19 € 1er mois offert`, `99 € 49 €` an old and a new price; `Plan 2 €19/mois` holds `€19`).
 _SP = r"[ \t\u00a0\u202f]"
 _THOUSANDS = rf"(?:[,.]|{_SP})\d{{3}}"  # 1,299  1.299  1 299
 _AMOUNT = rf"(?:\d{{1,3}}{_THOUSANDS}+(?:[.,]\d{{1,2}})?|\d+(?:[.,]\d{{1,2}})?)"
-_CURRENCY_AFTER = r"(?:€|\$|£|(?:EUR|USD|GBP)\b)"
+_CURRENCY_AFTER = rf"(?:€(?!\d)|[$£](?!{_SP}?\d)|(?:EUR|USD|GBP)\b)"
 _UNIT = (
     r"(?:months?|mois|mos?|years?|yrs?|année|annum|an|weeks?|semaine|users?|seats?"
     r"|utilisateurs?|licen[cs]es?)\b"
 )
 _PER = rf"(?:{_SP}?/{_SP}?{_UNIT}|{_SP}(?:per|par|a){_SP}{_UNIT})"
 PRICE = re.compile(
-    rf"(?:[$€£]{_SP}?{_AMOUNT}|(?<!\w){_AMOUNT}{_SP}?{_CURRENCY_AFTER}(?!{_SP}?\d))"
+    rf"(?:[$€£]{_SP}?{_AMOUNT}|(?<!\w){_AMOUNT}{_SP}?{_CURRENCY_AFTER})"
     rf"(?:{_SP}?(?:HT|TTC)\b)?(?:{_PER}{{1,2}})?",
     re.IGNORECASE,
 )
@@ -56,6 +58,9 @@ RECURRING = re.compile(
     re.IGNORECASE,
 )
 AFTER_PRICE = 40  # characters after a price read for what it recurs by
+# What those characters hold that is not read: a link's target (`](https://x.example/an-overview)`,
+# its text kept) and a bare URL, either cut short by the window's end.
+_LINK_TARGET_OR_URL = re.compile(r"\]\([^)\n]*\)?|https?://\S*")
 # A negation earlier in the same clause: "no monthly fees", "sans abonnement mensuel".
 NEGATION = re.compile(
     r"\b(?:no|not|non|without|never|zero|sans|pas\s+d[e']?|aucun(?:e)?)\b[^.;:!?\n]{0,20}$",
@@ -147,9 +152,10 @@ def guess_offer_shape(prices: list[str], md: str) -> str:
     in itself or in the 40 characters after it in `md`, unless a negation comes first there ("no
     monthly fees"); `quote` when there is no price and the page asks for a quote or a sales
     contact (`quote`, `devis`, `contact sales`); `one_shot` for prices none of which recurs;
-    `unknown` otherwise. What the page says elsewhere does not count."""
+    `unknown` otherwise. What the page says elsewhere does not count, nor do the links' targets
+    and the URLs after a price (`/an-overview` is no year)."""
     after = (
-        md[match.end() : match.end() + AFTER_PRICE]
+        _LINK_TARGET_OR_URL.sub(" ", md[match.end() : match.end() + AFTER_PRICE])
         for match in PRICE.finditer(md)
         if " ".join(match.group(0).split()) in prices
     )

@@ -68,11 +68,11 @@ class Client:
     """One provider's HTTP client: pacing, retries, dry-run fixtures and secret-free errors.
 
     `headers` and `params` go with every request (a provider's credentials travel there).
-    `retry_on` makes more responses worth a retry than 429 and 5xx (Arctic Shift's 422 "slow
-    down"); `fatal` picks responses no retry can help (a used-up monthly quota): even `get` and
-    `post` raise ProviderError on those, at once. `calls` counts the get/post calls made, dry-run
-    ones included, a retried call once; `ok_calls` counts those whose final answer was a 2xx, the
-    calls a provider bills.
+    `retry_on` makes more responses worth a retry than 429 and 5xx (no provider passes one today:
+    Arctic Shift's 422 "slow down" is the search's to wait out or halve); `fatal` picks responses
+    no retry can help (a used-up monthly quota): even `get` and `post` raise ProviderError on
+    those, at once. `calls` counts the get/post calls made, dry-run ones included, a retried call
+    once; `ok_calls` counts those whose final answer was a 2xx, the calls a provider bills.
     """
 
     def __init__(
