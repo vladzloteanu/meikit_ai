@@ -8,13 +8,16 @@
 `ask` sends one prompt to NeuralBox (`neuralbox.respond`) and keeps what it answered in
 `research/nb_ask_<ts>.json`:
 
-    {"prompt", "answer", "structured", "cost_usd", "tools_called", "session_id", "request_id"}
+    {"prompt", "answer", "structured", "cost_usd", "tools_called", "tools_denied", "session_id",
+     "request_id"}
 
 `prompt` as given (without the DISCIPLINE every request carries), `structured` the JSON that
 --schema (a JSON Schema object) asked for, null without one, `tools_called` the names of the
-tools the agent called. --tools names the tools the agent is given, as NeuralBox's /heartbeat
-lists them (`mcp__tools__QueryAdsInsights`, `WebSearch`); --session resumes the conversation of
-an earlier answer's `session_id`. The summary is the answer, the structured JSON, the tools.
+tools that ran, `tools_denied` those the agent tried and the block refused (both commands also
+warn of these on stderr). --tools names the tools the agent may use, among the three AdsInsights
+tools of the whitelist (`mcp__tools__QueryAdsInsights`...), any other name refused; without it
+the agent has no tool at all. --session resumes the conversation of an earlier answer's
+`session_id`. The summary is the answer, the structured JSON, the tools.
 
 `adsinsights` asks NeuralBox about the market of one category in some countries: the category
 found with LookupAdsInsights (ListCategories when needed), then for each network one
@@ -34,6 +37,11 @@ A network whose query failed has null figures and a caveat saying so. The summar
 and the countries, one row per network `network | total_reach | advertisers | top companies`, the
 hooks and the caveats.
 
+Every call carries the block (`neuralbox.respond`): NeuralBox is told to deny every tool and
+server it lists but the call's whitelisted tools, and no call is made when its heartbeat cannot
+say which tools those are, or lacks a tool the call needs. At most MAX_HOOKS typical hooks are
+kept.
+
 Every call is billed by NeuralBox: the `llm` cost `cost_usd` x USD_EUR is logged with the request
 id as `ref` (PLANNED_EUR when NeuralBox reports no cost), and PLANNED_EUR is what the idea's cap is
 checked against before the call. A run NeuralBox reports failed (its `errors`), and an
@@ -49,10 +57,12 @@ import argparse
 import json
 import math
 import re
+import sys
 from pathlib import Path
 from typing import Any
 
 from factory import costs, tables, toolbase
+from factory.http import Client
 from factory.providers import neuralbox
 
 COMMAND = "nb"
@@ -63,11 +73,8 @@ REGIONS = ["NAM", "EMEA", "LATAM", "APAC"]
 DEFAULT_NETWORKS = "facebook,search"
 DEFAULT_TOP = 10
 MAX_TOP = 56  # QueryAdsInsights' rows per tile at most
-ADSINSIGHTS_TOOLS = [
-    "mcp__tools__LookupAdsInsights",
-    "mcp__tools__ListCategories",
-    "mcp__tools__QueryAdsInsights",
-]
+ADSINSIGHTS_TOOLS = list(neuralbox.WHITELIST)  # the only tools the factory lets NeuralBox use
+MAX_HOOKS = 5  # typical hooks kept per answer
 SELFTEST_PROMPT = "Reply with the single word pong"
 TOP_SHOWN = 5  # companies per network in the summary
 COLUMNS = ["network", "total_reach", "advertisers", "top companies"]
@@ -166,8 +173,8 @@ def add_parser(sub: argparse._SubParsersAction) -> None:
         "--tools",
         action="append",
         metavar="A,B",
-        help="the tools the agent is given, comma-separated, as NeuralBox's /heartbeat names "
-        "them (mcp__tools__QueryAdsInsights, WebSearch); the flag repeats",
+        help="the tools the agent may use, comma-separated, among "
+        f"{', '.join(neuralbox.WHITELIST)} (default: none); the flag repeats",
     )
     ask.add_argument(
         "--schema",
@@ -235,6 +242,7 @@ def _ask(args: argparse.Namespace) -> int:
     schema = _schema(args.schema)
     with toolbase.run(args, tool="nb_ask", planned_eur=PLANNED_EUR) as r:
         client = neuralbox.client(dry_run=r.dry_run)
+        _require_listed(client, tools or [])
         result = neuralbox.respond(
             client,
             prompt,
@@ -243,6 +251,7 @@ def _ask(args: argparse.Namespace) -> int:
             max_turns=args.max_turns,
             session_id=args.session,
         )
+        _warn_denied(result)
         _log_cost(r, result, "ask")
         _require_success(result)
         r.write(
@@ -252,6 +261,7 @@ def _ask(args: argparse.Namespace) -> int:
                 "structured": result.structured,
                 "cost_usd": result.cost_usd,
                 "tools_called": result.tools_called,
+                "tools_denied": result.tools_denied,
                 "session_id": result.session_id,
                 "request_id": result.request_id,
             }
@@ -274,6 +284,7 @@ def _adsinsights(args: argparse.Namespace) -> int:
     )
     with toolbase.run(args, tool="nb_adsinsights", planned_eur=PLANNED_EUR) as r:
         client = neuralbox.client(dry_run=r.dry_run)
+        _require_listed(client, ADSINSIGHTS_TOOLS)
         result = neuralbox.respond(
             client,
             prompt,
@@ -282,6 +293,7 @@ def _adsinsights(args: argparse.Namespace) -> int:
             max_turns=adsinsights_turns(len(networks)),
             fixture="neuralbox/adsinsights",
         )
+        _warn_denied(result)
         _log_cost(r, result, "adsinsights")
         _require_success(result)
         if result.structured is None:
@@ -290,6 +302,8 @@ def _adsinsights(args: argparse.Namespace) -> int:
                 "(AdsInsights is kept as conclusions only)"
             )
         data = conclusions(ADSINSIGHTS_SCHEMA, result.structured)
+        if isinstance(data.get("typical_hooks"), list):
+            data["typical_hooks"] = data["typical_hooks"][:MAX_HOOKS]
         r.write(data)
         r.summary(adsinsights_summary(data, category, countries))
     return 0
@@ -372,11 +386,7 @@ def adsinsights_summary(data: dict, category: str, countries: list[str]) -> str:
 def _selftest(args: argparse.Namespace, required: list[str]) -> int:
     """The heartbeat, the `required` tools in its list, then one prompt without tools."""
     client = neuralbox.client(dry_run=args.dry_run)
-    tools = neuralbox.heartbeat(client).get("available_tools")
-    tools = tools if isinstance(tools, list) else []
-    missing = [name for name in required if name not in tools]
-    if missing:
-        raise toolbase.ToolError(f"{PROVIDER}: the heartbeat lists no {', '.join(missing)}")
+    tools = _require_listed(client, required)
     result = neuralbox.respond(client, SELFTEST_PROMPT, max_turns=1)
     _require_success(result)
     if not result.answer.strip():
@@ -399,6 +409,23 @@ def _log_cost(r: toolbase.Run, result: neuralbox.NBResult, action: str) -> None:
         amount = result.cost_usd * costs.USD_EUR
         note = f"nb {action}, {result.cost_usd:g} USD"
     r.log("llm", PROVIDER, amount, ref=result.request_id or "", note=note)
+
+
+def _require_listed(client: Client, tools: list[str]) -> list[str]:
+    """The tools NeuralBox lists (fetched once per client), refusing to go on, before the paid
+    call, when it lists none or lacks one of `tools`."""
+    listed = neuralbox.listed_tools(client)
+    missing = [name for name in tools if name not in listed]
+    if missing:
+        raise toolbase.ToolError(f"{PROVIDER}: the heartbeat lists no {', '.join(missing)}")
+    return listed
+
+
+def _warn_denied(result: neuralbox.NBResult) -> None:
+    """One stderr line naming the tools the agent tried and the block refused, if any."""
+    if result.tools_denied:
+        denied = ", ".join(dict.fromkeys(result.tools_denied))
+        print(f"{COMMAND}: the block denied the agent {denied}", file=sys.stderr)
 
 
 def _require_success(result: neuralbox.NBResult) -> None:
@@ -436,9 +463,13 @@ def _tools(values: list[str] | None) -> list[str] | None:
             if name and name not in names:
                 names.append(name)
     if not names:
-        raise toolbase.UsageError(
-            "--tools names no tool (A,B as NeuralBox's /heartbeat names them)"
-        )
+        raise toolbase.UsageError(f"--tools names no tool (among {', '.join(neuralbox.WHITELIST)})")
+    for name in names:
+        if name not in neuralbox.WHITELIST:
+            raise toolbase.UsageError(
+                f"--tools: {name!r} is not a tool the factory lets NeuralBox use "
+                f"(only {', '.join(neuralbox.WHITELIST)})"
+            )
     return names
 
 

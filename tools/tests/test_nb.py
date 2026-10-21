@@ -18,6 +18,22 @@ WHITELIST = [
     "mcp__tools__ListCategories",
     "mcp__tools__QueryAdsInsights",
 ]
+# What a heartbeat lists by default here: built-ins, tools that spend or read Dolead client data,
+# and the whitelist.
+LISTED = [
+    "Read",
+    "Bash",
+    "WebSearch",
+    "WebFetch",
+    "Skill",
+    "mcp__FacebookAds__CreateCampaign",
+    "mcp__FacebookAds__GetAdInsights",
+    "mcp__HubSpot__GetContact",
+    "mcp__tools__ListDoleadApiCustomers",
+    *WHITELIST,
+]
+# The MCP servers NeuralBox adds to some runs without listing them in its heartbeat.
+UNLISTED_SERVERS = ["mcp__BrowserAutomation", "mcp__Looker", "mcp__Chart"]
 STRUCTURED = {
     "category_resolved": "Home Security",
     "countries": ["FR", "US"],
@@ -54,6 +70,14 @@ ADSINSIGHTS = [
     "--countries",
     "FR,US",
 ]
+# Heartbeats from which no block can be built: no call may follow.
+NO_TOOL_LIST = [
+    pytest.param(httpx.Response(500, json={"detail": "down"}), "HTTP 500", id="500"),
+    pytest.param(httpx.ConnectError("refused"), "network error", id="network-error"),
+    pytest.param({"status": "ok"}, "lists no tools", id="no-list"),
+    pytest.param({"status": "ok", "available_tools": []}, "lists no tools", id="empty-list"),
+    pytest.param({"status": "ok", "available_tools": ["Read", 7]}, "lists no tools", id="odd-list"),
+]
 
 
 def research(root, tool):
@@ -83,15 +107,19 @@ def heartbeat(*tools):
     return {"status": "ok", "server_version": "0.1.0", "available_tools": list(tools)}
 
 
-def wire(monkeypatch, *answers):
-    """Make `neuralbox.client()` a mock client answering each request with the next of `answers`
-    (a JSON body answered 200, or an httpx.Response). Returns the requests sent."""
+def wire(monkeypatch, *answers, beat=None):
+    """Make `neuralbox.client()` a mock client. GET /heartbeat answers `beat` (by default a
+    heartbeat listing LISTED); every other request answers the next of `answers`. An answer is a
+    JSON body (answered 200), an httpx.Response, or an exception to raise. Returns the requests."""
     seen = []
     queue = list(answers)
+    beat = heartbeat(*LISTED) if beat is None else beat
 
     def handler(request):
         seen.append(request)
-        answer = queue.pop(0)
+        answer = beat if request.url.path == "/heartbeat" else queue.pop(0)
+        if isinstance(answer, Exception):
+            raise answer
         return answer if isinstance(answer, httpx.Response) else httpx.Response(200, json=answer)
 
     monkeypatch.setattr(
@@ -109,7 +137,13 @@ def wire(monkeypatch, *answers):
     return seen
 
 
-def body_of(request):
+def posted(seen):
+    return [request for request in seen if request.url.path == "/respond"]
+
+
+def sent(seen):
+    """The body of the one /respond request among `seen`."""
+    [request] = posted(seen)
     return json.loads(request.content)
 
 
@@ -119,13 +153,15 @@ def no_secrets(monkeypatch):
     monkeypatch.setattr(secrets, "get", lambda *a, **k: pytest.fail("a dry run read a secret"))
 
 
-# --- the brief's tests -------------------------------------------------------------------------
+# --- the brief's tests (a heartbeat answer added: every call now carries the block) -----------
 
 
 def test_respond_body_and_headers(root):
     seen = {}
 
     def handler(req):
+        if req.url.path == "/heartbeat":
+            return httpx.Response(200, json=heartbeat("WebSearch", *WHITELIST))
         seen["headers"] = dict(req.headers)
         seen["body"] = json.loads(req.content)
         return httpx.Response(
@@ -146,15 +182,23 @@ def test_respond_body_and_headers(root):
         headers={"X-API-Key": "KEY12345678"},
         transport=httpx.MockTransport(handler),
     )
-    r = neuralbox.respond(c, "ping", allowed_tools=["X"], schema={"type": "object"}, max_turns=2)
+    r = neuralbox.respond(
+        c,
+        "ping",
+        allowed_tools=["mcp__tools__QueryAdsInsights"],
+        schema={"type": "object"},
+        max_turns=2,
+    )
     assert seen["headers"]["x-api-key"] == "KEY12345678"
     b = seen["body"]
     assert (
         b["permission_mode"] == "bypassPermissions"
-        and b["allowed_tools"] == ["X"]
+        and b["allowed_tools"] == ["mcp__tools__QueryAdsInsights"]
         and b["output_format"]["type"] == "json_schema"
         and b["prompt"].endswith("Never print secret values.")
     )
+    assert "WebSearch" in b["disallowed_tools"]
+    assert "mcp__tools__QueryAdsInsights" not in b["disallowed_tools"]
     assert r.structured == {"a": 1} and r.tools_called == ["X"] and r.cost_usd == 0.01
 
 
@@ -169,7 +213,9 @@ def test_nb_ask_logs_cost_and_hides_key(root, monkeypatch, capsys):
             transport=httpx.MockTransport(
                 lambda r: httpx.Response(
                     200,
-                    json={"request_id": "r1", "answer": "ok", "cost_usd": 1.0, "tools_called": []},
+                    json=heartbeat("WebSearch")
+                    if r.url.path == "/heartbeat"
+                    else {"request_id": "r1", "answer": "ok", "cost_usd": 1.0, "tools_called": []},
                 )
             ),
         ),
@@ -199,7 +245,9 @@ def test_adsinsights_persists_structured_only(root, monkeypatch):
             transport=httpx.MockTransport(
                 lambda r: httpx.Response(
                     200,
-                    json={
+                    json=heartbeat(*WHITELIST)
+                    if r.url.path == "/heartbeat"
+                    else {
                         "request_id": "r",
                         "answer": "RAW ROWS HERE",
                         "structured_output": {
@@ -238,9 +286,9 @@ def test_adsinsights_persists_structured_only(root, monkeypatch):
 def test_respond_names_the_factory_and_leaves_out_what_is_not_given(monkeypatch):
     seen = wire(monkeypatch, reply())
     neuralbox.respond(neuralbox.client(), "ping")
-    [request] = seen
-    assert (request.method, request.url.path) == ("POST", "/respond")
-    body = body_of(request)
+    assert [(r.method, r.url.path) for r in seen] == [("GET", "/heartbeat"), ("POST", "/respond")]
+    body = sent(seen)
+    blocked = body.pop("disallowed_tools")
     # NeuralBox refuses a call whose properties lack a project and a user name (422), or a user
     # email it knows (400/403); NeuralBox stops the run before the client gives up on it.
     assert body == {
@@ -254,6 +302,7 @@ def test_respond_names_the_factory_and_leaves_out_what_is_not_given(monkeypatch)
             "user_email": EMAIL,
         },
     }
+    assert set(LISTED) <= set(blocked)
     assert neuralbox.RUN_TIMEOUT_S < neuralbox.TIMEOUT_S
 
 
@@ -268,7 +317,7 @@ def test_respond_sends_the_whitelist_the_schema_and_the_session(monkeypatch):
         max_turns=3,
         session_id="sess-0",
     )
-    body = body_of(seen[0])
+    body = sent(seen)
     assert body["allowed_tools"] == ["mcp__tools__QueryAdsInsights"]
     assert body["output_format"] == {"type": "json_schema", "schema": schema}
     assert (body["max_turns"], body["session_id"]) == (3, "sess-0")
@@ -279,6 +328,61 @@ def test_discipline_is_the_briefs():
         "\n\nIf a tool call fails or a key is missing, say exactly which tool failed. "
         "Never invent numbers. Never print secret values."
     )
+
+
+def test_the_whitelist_is_the_three_adsinsights_tools():
+    assert list(neuralbox.WHITELIST) == WHITELIST == nb.ADSINSIGHTS_TOOLS
+
+
+def test_the_block_denies_every_listed_tool_but_the_whitelist(monkeypatch):
+    seen = wire(monkeypatch, reply())
+    neuralbox.respond(neuralbox.client(), "ping", allowed_tools=WHITELIST)
+    body = sent(seen)
+    blocked = set(body["disallowed_tools"])
+    assert body["allowed_tools"] == WHITELIST
+    assert set(LISTED) - set(WHITELIST) <= blocked  # every listed tool outside the whitelist
+    assert not blocked & set(WHITELIST)
+    # whole servers too, the listed ones holding no whitelisted tool and the unlisted ones
+    assert {"mcp__FacebookAds", "mcp__HubSpot", *UNLISTED_SERVERS} <= blocked
+    assert "mcp__tools" not in blocked  # the whitelist's server: its other tools, one by one
+    assert body["permission_mode"] == "bypassPermissions"
+
+
+def test_without_tools_every_listed_tool_and_server_is_denied(monkeypatch):
+    seen = wire(monkeypatch, reply())
+    neuralbox.respond(neuralbox.client(), "ping")
+    body = sent(seen)
+    assert "allowed_tools" not in body
+    blocked = set(body["disallowed_tools"])
+    assert set(LISTED) <= blocked
+    assert {"mcp__FacebookAds", "mcp__HubSpot", "mcp__tools", *UNLISTED_SERVERS} <= blocked
+
+
+@pytest.mark.parametrize(
+    "tools", [["WebSearch"], ["mcp__FacebookAds__CreateCampaign"], [*WHITELIST, "Bash"]]
+)
+def test_respond_refuses_a_tool_outside_the_whitelist_before_any_request(monkeypatch, tools):
+    seen = wire(monkeypatch)
+    with pytest.raises(ValueError, match="the factory lets NeuralBox use only"):
+        neuralbox.respond(neuralbox.client(), "ping", allowed_tools=tools)
+    assert seen == []
+
+
+@pytest.mark.parametrize(("beat", "needle"), NO_TOOL_LIST)
+def test_no_call_is_made_without_the_heartbeats_tool_list(monkeypatch, beat, needle):
+    seen = wire(monkeypatch, reply(), beat=beat)
+    with pytest.raises(ProviderError, match=needle):
+        neuralbox.respond(neuralbox.client(), "ping", allowed_tools=WHITELIST)
+    assert posted(seen) == []
+
+
+def test_the_heartbeat_is_fetched_once_per_client(monkeypatch):
+    seen = wire(monkeypatch, reply(), reply())
+    c = neuralbox.client()
+    assert neuralbox.listed_tools(c) == LISTED
+    neuralbox.respond(c, "ping")
+    neuralbox.respond(c, "ping", allowed_tools=WHITELIST)
+    assert [r.method for r in seen] == ["GET", "POST", "POST"]
 
 
 def test_respond_keeps_the_tool_names_only(monkeypatch):
@@ -297,7 +401,23 @@ def test_respond_keeps_the_tool_names_only(monkeypatch):
         session_id="sess-1",
         request_id="req-1",
         errors=[],
+        tools_denied=[],
     )
+
+
+def test_respond_tells_the_calls_the_block_denied_from_the_calls_made(monkeypatch):
+    # A denied MCP tool stays visible to the agent; Claude Code refuses the call before it runs,
+    # and NeuralBox still lists the attempt, with the refusal as its output.
+    denied = "Permission to use mcp__SearchAPI__GetLocations has been denied."
+    calls = [
+        {"name": "mcp__SearchAPI__GetLocations", "input": {"q": "paris"}, "output": denied},
+        {"name": WHITELIST[2], "input": {}, "output": "Permission to use it has been denied."},
+        {"name": WHITELIST[0], "input": {}, "output": None},
+    ]
+    wire(monkeypatch, reply(tools_called=calls))
+    result = neuralbox.respond(neuralbox.client(), "ping", allowed_tools=WHITELIST)
+    assert result.tools_called == [WHITELIST[2], WHITELIST[0]]  # another tool's refusal: called
+    assert result.tools_denied == ["mcp__SearchAPI__GetLocations"]
 
 
 def test_respond_reads_a_missing_cost_as_none_and_keeps_the_errors(monkeypatch):
@@ -333,7 +453,7 @@ def test_a_refused_call_is_one_line_and_never_retried(monkeypatch, status):
     seen = wire(monkeypatch, httpx.Response(status, json=body))
     with pytest.raises(ProviderError) as caught:
         neuralbox.respond(neuralbox.client(), "ping")
-    assert len(seen) == 1  # a second attempt would run, and bill, the agent again
+    assert len(posted(seen)) == 1  # a second attempt would run, and bill, the agent again
     message = str(caught.value)
     assert message.startswith(f"neuralbox: HTTP {status}: POST /respond: ")
     assert "\n" not in message and KEY not in message
@@ -352,7 +472,8 @@ def test_the_client_reads_the_url_the_key_and_the_user(monkeypatch):
 
     def handler(request):
         seen.append(request)
-        return httpx.Response(200, json=reply())
+        answer = heartbeat(*LISTED) if request.url.path == "/heartbeat" else reply()
+        return httpx.Response(200, json=answer)
 
     config = {"nb.url": "http://127.0.0.1:3076", "nb.api_key": KEY, "nb.user_email": EMAIL}
     monkeypatch.setattr(secrets, "get", lambda dotpath, *a, **k: config[dotpath])
@@ -363,18 +484,18 @@ def test_the_client_reads_the_url_the_key_and_the_user(monkeypatch):
     )
     c = neuralbox.client()
     neuralbox.respond(c, "ping")
-    [request] = seen
+    [request] = posted(seen)
     assert str(request.url) == "http://127.0.0.1:3076/respond"
     assert request.headers["X-API-Key"] == KEY
-    assert body_of(request)["properties"]["user_email"] == EMAIL
+    assert json.loads(request.content)["properties"]["user_email"] == EMAIL
     assert (c.retries, c.user_email) == (1, EMAIL)
     assert c._http.timeout == httpx.Timeout(600.0)
 
 
 def test_heartbeat_gets_the_tool_list(monkeypatch):
-    seen = wire(monkeypatch, heartbeat("Read", *WHITELIST))
+    seen = wire(monkeypatch, beat=heartbeat("Read", *WHITELIST))
     assert neuralbox.heartbeat(neuralbox.client())["available_tools"] == ["Read", *WHITELIST]
-    assert (seen[0].method, seen[0].url.path) == ("GET", "/heartbeat")
+    assert [(r.method, r.url.path) for r in seen] == [("GET", "/heartbeat")]
 
 
 def test_a_dry_run_client_reads_no_secret_and_answers_from_the_fixtures(no_secrets):
@@ -382,9 +503,9 @@ def test_a_dry_run_client_reads_no_secret_and_answers_from_the_fixtures(no_secre
     assert len(neuralbox.heartbeat(c)["available_tools"]) == 10
     result = neuralbox.respond(c, "anything")
     assert result.answer and result.request_id and result.cost_usd > 0
-    ads = neuralbox.respond(c, "anything", fixture="neuralbox/adsinsights")
+    ads = neuralbox.respond(c, "anything", allowed_tools=WHITELIST, fixture="neuralbox/adsinsights")
     assert ads.structured["category_resolved"] and ads.tools_called
-    assert c.calls == 3
+    assert c.calls == 4  # the heartbeat, its tool list once for the block, two answers
 
 
 # --- the fixtures ------------------------------------------------------------------------------
@@ -411,12 +532,13 @@ def test_ask_writes_the_answer_and_logs_its_cost(root, tmp_path, capsys, monkeyp
     schema = {"type": "object", "properties": {"a": {"type": "integer"}}}
     schema_file = tmp_path / "schema.json"
     schema_file.write_text(json.dumps(schema), encoding="utf-8")
-    calls = [{"name": "mcp__SearchAPI__GoogleSearch", "input": {"q": "x"}, "output": "RAW"}]
+    calls = [{"name": "mcp__tools__QueryAdsInsights", "input": {"q": "x"}, "output": "RAW"}]
     seen = wire(monkeypatch, reply(structured_output={"a": 1}, tools_called=calls))
-    argv = [*ASK, "--tools", "mcp__SearchAPI__GoogleSearch,WebSearch", "--schema", str(schema_file)]
+    argv = [*ASK, "--tools", "mcp__tools__QueryAdsInsights", "--schema", str(schema_file)]
     assert main([*argv, "--max-turns", "3", "--session", "sess-0"]) == 0
-    body = body_of(seen[0])
-    assert body["allowed_tools"] == ["mcp__SearchAPI__GoogleSearch", "WebSearch"]
+    body = sent(seen)
+    assert body["allowed_tools"] == ["mcp__tools__QueryAdsInsights"]
+    assert {"mcp__tools__LookupAdsInsights", "WebSearch"} <= set(body["disallowed_tools"])
     assert body["output_format"]["schema"] == schema
     assert (body["max_turns"], body["session_id"]) == (3, "sess-0")
     [path] = research(root, "nb_ask")
@@ -425,7 +547,8 @@ def test_ask_writes_the_answer_and_logs_its_cost(root, tmp_path, capsys, monkeyp
         "answer": "ok",
         "structured": {"a": 1},
         "cost_usd": 0.25,
-        "tools_called": ["mcp__SearchAPI__GoogleSearch"],
+        "tools_called": ["mcp__tools__QueryAdsInsights"],
+        "tools_denied": [],
         "session_id": "sess-1",
         "request_id": "req-1",
     }
@@ -435,7 +558,7 @@ def test_ask_writes_the_answer_and_logs_its_cost(root, tmp_path, capsys, monkeyp
     assert line["note"] == "nb ask, 0.25 USD"
     out, err = capsys.readouterr()
     assert out.startswith("ok\n") and '"a": 1' in out
-    assert "tools called: mcp__SearchAPI__GoogleSearch" in out
+    assert "tools called: mcp__tools__QueryAdsInsights" in out
     assert err.startswith("nb_ask: wrote ideas/_fixture/research/nb_ask_")
     assert err.rstrip().endswith("0.23 EUR (nb ask, 0.25 USD) logged")
 
@@ -447,8 +570,8 @@ def test_ask_reads_the_prompt_from_a_file_and_sends_it_with_the_discipline(
     prompt.write_text("How many advertisers?\nOne line more.\n", encoding="utf-8")
     seen = wire(monkeypatch, reply())
     assert main(["nb", "ask", "--idea", "_fixture", "--prompt-file", str(prompt)]) == 0
-    sent = body_of(seen[0])["prompt"]
-    assert sent == "How many advertisers?\nOne line more.\n" + neuralbox.DISCIPLINE
+    sent_prompt = sent(seen)["prompt"]
+    assert sent_prompt == "How many advertisers?\nOne line more.\n" + neuralbox.DISCIPLINE
     [path] = research(root, "nb_ask")
     assert json.loads(path.read_text())["prompt"] == "How many advertisers?\nOne line more.\n"
 
@@ -463,6 +586,14 @@ def test_ask_reads_the_prompt_from_a_file_and_sends_it_with_the_discipline(
         (["--prompt", "hi", "--tools", " , "], "--tools"),
         (["--prompt", "hi", "--prompt-file", "f.md"], "not allowed with argument"),
         (["--prompt", "hi", "--max-turns", "0"], "is not 1 or more"),
+        (
+            ["--prompt", "hi", "--tools", "WebSearch"],
+            "--tools: 'WebSearch' is not a tool the factory lets NeuralBox use",
+        ),
+        (
+            ["--prompt", "hi", "--tools", f"{WHITELIST[0]},mcp__FacebookAds__CreateCampaign"],
+            "'mcp__FacebookAds__CreateCampaign' is not a tool the factory lets NeuralBox use",
+        ),
     ],
 )
 def test_ask_refuses_a_command_line_it_cannot_run(root, capsys, monkeypatch, extra, needle):
@@ -517,6 +648,20 @@ def test_a_cost_neuralbox_does_not_report_is_logged_as_planned(root, monkeypatch
     assert line["note"] == "nb ask, cost not reported: the planned 0.5 EUR"
 
 
+@pytest.mark.parametrize("argv", [ASK, ADSINSIGHTS], ids=["ask", "adsinsights"])
+def test_a_call_the_block_denied_is_recorded_as_denied_not_made(root, capsys, monkeypatch, argv):
+    denied = "Permission to use mcp__HubSpot__GetContact has been denied."
+    calls = [{"name": "mcp__HubSpot__GetContact", "input": {}, "output": denied}]
+    wire(monkeypatch, reply(structured_output=STRUCTURED, tools_called=calls))
+    assert main(argv) == 0
+    err = capsys.readouterr().err
+    assert "nb: the block denied the agent mcp__HubSpot__GetContact\n" in err
+    if argv is ASK:
+        [path] = research(root, "nb_ask")
+        data = json.loads(path.read_text(encoding="utf-8"))
+        assert (data["tools_called"], data["tools_denied"]) == ([], ["mcp__HubSpot__GetContact"])
+
+
 def test_a_call_neuralbox_refuses_costs_nothing(root, capsys, monkeypatch):
     log = root / "ideas/_fixture/costs.jsonl"
     before = log.read_text(encoding="utf-8")
@@ -525,6 +670,22 @@ def test_a_call_neuralbox_refuses_costs_nothing(root, capsys, monkeypatch):
     assert log.read_text(encoding="utf-8") == before and research(root, "nb_ask") == []
     [err] = capsys.readouterr().err.splitlines()
     assert err == 'nb: neuralbox: HTTP 403: POST /respond: {"error":"Email domain not allowed"}'
+
+
+@pytest.mark.parametrize("argv", [ASK, ["nb", "ask", "--selftest"]], ids=["ask", "selftest"])
+@pytest.mark.parametrize(("beat", "needle"), NO_TOOL_LIST)
+def test_without_the_heartbeats_tool_list_no_call_is_made(
+    root, capsys, monkeypatch, argv, beat, needle
+):
+    log = root / "ideas/_fixture/costs.jsonl"
+    before = log.read_text(encoding="utf-8")
+    seen = wire(monkeypatch, reply(), beat=beat)
+    assert main(argv) == 1
+    assert posted(seen) == [] and research(root, "nb_") == []
+    assert log.read_text(encoding="utf-8") == before
+    out, err = capsys.readouterr()
+    assert out == "" and err.count("\n") == 1
+    assert err.startswith("nb: neuralbox: ") and needle in err
 
 
 def test_an_unknown_idea_is_refused_before_any_key_or_call(root, capsys, monkeypatch):
@@ -548,8 +709,9 @@ def test_a_real_run_without_the_master_key_stops_on_one_line(root, capsys, argv)
 def test_adsinsights_asks_for_the_aggregations_with_the_whitelist_and_the_schema(root, monkeypatch):
     seen = wire(monkeypatch, reply(structured_output=STRUCTURED))
     assert main(ADSINSIGHTS) == 0
-    body = body_of(seen[0])
+    body = sent(seen)
     assert body["allowed_tools"] == WHITELIST
+    assert set(LISTED) - set(WHITELIST) <= set(body["disallowed_tools"])
     assert body["output_format"] == {"type": "json_schema", "schema": nb.ADSINSIGHTS_SCHEMA}
     assert body["max_turns"] == 8  # two networks
     prompt = body["prompt"]
@@ -571,11 +733,23 @@ def test_adsinsights_asks_for_the_aggregations_with_the_whitelist_and_the_schema
     assert json.loads(path.read_text(encoding="utf-8")) == STRUCTURED
 
 
+def test_adsinsights_makes_no_call_when_the_heartbeat_lacks_a_whitelisted_tool(
+    root, capsys, monkeypatch
+):
+    log = root / "ideas/_fixture/costs.jsonl"
+    before = log.read_text(encoding="utf-8")
+    seen = wire(monkeypatch, reply(structured_output=STRUCTURED), beat=heartbeat(*WHITELIST[:2]))
+    assert main(ADSINSIGHTS) == 1
+    assert posted(seen) == [] and log.read_text(encoding="utf-8") == before
+    [err] = capsys.readouterr().err.splitlines()
+    assert err == "nb: neuralbox: the heartbeat lists no mcp__tools__QueryAdsInsights"
+
+
 def test_adsinsights_passes_the_networks_and_top_asked(root, monkeypatch):
     seen = wire(monkeypatch, reply(structured_output=STRUCTURED))
     networks = "facebook,tiktok,snapchat,native,linkedin,search"
     assert main([*ADSINSIGHTS, "--networks", networks, "--top", "56"]) == 0
-    body = body_of(seen[0])
+    body = sent(seen)
     assert "facebook, tiktok, snapchat, native, linkedin, search" in body["prompt"]
     assert "top=56" in body["prompt"]
     assert body["max_turns"] == 16  # a lookup and two queries per network, with room to answer
@@ -602,6 +776,15 @@ def test_adsinsights_keeps_only_what_the_schema_describes(root, monkeypatch):
     kept = json.loads(text)
     assert kept["networks"][1]["top_companies"] == []
     assert kept["networks"][0]["top_companies"][0] == {"name": "Alarmo Example", "share_pct": 12.7}
+
+
+def test_adsinsights_keeps_five_typical_hooks_at_most(root, capsys, monkeypatch):
+    hooks = [f"hook {n}" for n in range(1, 8)]
+    wire(monkeypatch, reply(structured_output={**STRUCTURED, "typical_hooks": hooks}))
+    assert main(ADSINSIGHTS) == 0
+    [path] = research(root, "nb_adsinsights")
+    assert json.loads(path.read_text(encoding="utf-8"))["typical_hooks"] == hooks[:5]
+    assert "typical hooks: hook 1; hook 2; hook 3; hook 4; hook 5\n" in capsys.readouterr().out
 
 
 def test_adsinsights_without_structured_output_is_logged_and_writes_nothing(
@@ -672,7 +855,7 @@ def test_adsinsights_reads_regions_and_lowercase_codes(root, monkeypatch):
     seen = wire(monkeypatch, reply(structured_output=STRUCTURED))
     argv = ["nb", "adsinsights", "--idea", "_fixture", "--category", "x"]
     assert main([*argv, "--countries", "fr, emea,fr", "--networks", "Search"]) == 0
-    prompt = body_of(seen[0])["prompt"]
+    prompt = sent(seen)["prompt"]
     assert 'countries=["FR", "EMEA"]' in prompt and "in search." in prompt
 
 
@@ -700,35 +883,41 @@ def test_adsinsights_dry_run_answers_from_the_fixture_and_logs_nothing(root, cap
 def test_the_selftest_is_a_heartbeat_and_one_pong(root, capsys, monkeypatch, action):
     log = root / "ideas/_fixture/costs.jsonl"
     before = log.read_text(encoding="utf-8")
-    seen = wire(monkeypatch, heartbeat("Read", *WHITELIST), reply(answer="pong", cost_usd=0.02))
+    beat = heartbeat("Read", *WHITELIST)
+    seen = wire(monkeypatch, reply(answer="pong", cost_usd=0.02), beat=beat)
     assert main(["nb", action, "--selftest"]) == 0
     assert capsys.readouterr().out == "OK neuralbox 4 items; respond cost 0.0184 EUR\n"
     assert [(r.method, r.url.path) for r in seen] == [("GET", "/heartbeat"), ("POST", "/respond")]
-    body = body_of(seen[1])
+    body = sent(seen)
     assert body["prompt"] == "Reply with the single word pong" + neuralbox.DISCIPLINE
     assert body["max_turns"] == 1 and "allowed_tools" not in body
+    assert {"Read", *WHITELIST} <= set(body["disallowed_tools"])  # the pong needs no tool
     assert research(root, "nb_") == [] and log.read_text(encoding="utf-8") == before
 
 
 def test_the_adsinsights_selftest_needs_the_whitelisted_tools(root, capsys, monkeypatch):
-    seen = wire(monkeypatch, heartbeat("Read", WHITELIST[0]))
+    seen = wire(monkeypatch, beat=heartbeat("Read", WHITELIST[0]))
     assert main(["nb", "adsinsights", "--selftest"]) == 1
     [err] = capsys.readouterr().err.splitlines()
     assert err == (
         "nb: neuralbox: the heartbeat lists no mcp__tools__ListCategories, "
         "mcp__tools__QueryAdsInsights"
     )
-    assert len(seen) == 1  # no paid call
+    assert posted(seen) == []  # no paid call
 
 
 def test_a_selftest_neuralbox_answers_with_errors_fails(root, capsys, monkeypatch):
-    wire(monkeypatch, heartbeat("Read"), reply(answer="", errors=["Claude returned an error"]))
+    wire(
+        monkeypatch,
+        reply(answer="", errors=["Claude returned an error"]),
+        beat=heartbeat("Read"),
+    )
     assert main(["nb", "ask", "--selftest"]) == 1
     assert "nb: neuralbox: the run failed: Claude returned an error" in capsys.readouterr().err
 
 
 def test_a_selftest_without_an_answer_fails(root, capsys, monkeypatch):
-    wire(monkeypatch, heartbeat("Read"), reply(answer=" "))
+    wire(monkeypatch, reply(answer=" "), beat=heartbeat("Read"))
     assert main(["nb", "ask", "--selftest"]) == 1
     assert "nb: neuralbox: the selftest's respond call came back without an answer" in (
         capsys.readouterr().err

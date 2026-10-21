@@ -17,11 +17,13 @@ The client is `tools/factory/providers/neuralbox.py`, the command `tools/factory
 
 `nb ask` sends one prompt and writes `ideas/<slug>/research/nb_ask_<ts>.json`:
 
-    {"prompt", "answer", "structured", "cost_usd", "tools_called", "session_id", "request_id"}
+    {"prompt", "answer", "structured", "cost_usd", "tools_called", "tools_denied", "session_id",
+     "request_id"}
 
 `--schema` (a JSON Schema object) makes NeuralBox also answer in that shape (`structured`);
 `--session` resumes the conversation of an earlier answer's `session_id`; `--tools` names the
-tools the agent is given (see the whitelist below).
+tools the agent may use, among the three AdsInsights tools only (see the block below). Without
+`--tools` the agent has no tool at all: a plain question to the model.
 
 `nb adsinsights` asks about one market: the category found with `LookupAdsInsights` (and
 `ListCategories` when needed), then for each network one `QueryAdsInsights` call on the `company`
@@ -63,8 +65,9 @@ network error may have spent money the factory cannot see; NeuralBox's own call 
 AdsInsights is kept in an idea only as aggregated conclusions: counts, shares of named
 advertisers, typical hooks. So `nb adsinsights` writes the structured answer only, cut to what its
 schema describes (anything else NeuralBox returns is dropped), never the answer text, the agent's
-reasoning or what the tools returned. An answer without structured output is not kept at all.
-`tools_called` holds tool names only, never the tools' inputs or outputs.
+reasoning or what the tools returned, and at most five typical hooks. An answer without
+structured output is not kept at all. `tools_called` and `tools_denied` hold tool names only,
+never the tools' inputs or outputs.
 
 `nb ask` keeps its answer as written. AdsInsights therefore goes through `nb adsinsights`, never
 through `nb ask`.
@@ -82,20 +85,63 @@ travels in the `X-API-Key` header only.
 not allowed"). It was then set, through `secrets.save`, to Vlad's Dolead work address, the
 `DEV_EMAIL` of NeuralBox's `.env`. The value lives in `secrets/config.yml.enc` only.
 
-## The whitelist
+## The block
 
-`allowed_tools` names the tools the agent is given, as NeuralBox's `/heartbeat` lists them.
-`nb adsinsights` gives three: `mcp__tools__LookupAdsInsights`, `mcp__tools__ListCategories` and
-`mcp__tools__QueryAdsInsights`. `nb ask --tools` takes any. NeuralBox refuses a bare name
-(`QueryAdsInsights`) with a 400 "Unknown tool": only its built-ins (`Read`, `WebSearch`...) and
-`mcp__<server>__<tool>` names pass.
+NeuralBox can call nothing for the factory but three tools, the whitelist:
+`mcp__tools__LookupAdsInsights`, `mcp__tools__ListCategories` and `mcp__tools__QueryAdsInsights`.
+They read AdsInsights' aggregates on public advertisers and spend nothing. `nb adsinsights` uses
+the three; `nb ask --tools` takes some of them and refuses any other name (exit 2); without
+`--tools`, and in the selftest, a call uses none. The client refuses any other tool too
+(`neuralbox.respond`), whoever calls it.
 
-The whitelist steers the agent but does not fence it. Every call runs in `bypassPermissions` mode,
-where NeuralBox's `allowed_tools` pre-approves the tools it names and denies none (NeuralBox's
-`docs/agents.md`, "Whitelists"). An agent could still reach a tool off the list, so what keeps the
-factory safe is what it asks. The `tools_called` of an answer show what the agent did use.
+Every call carries the block. `allowed_tools` names the whitelisted tools the call uses, as
+NeuralBox's `/heartbeat` lists them. NeuralBox refuses a bare name like `QueryAdsInsights` (400
+"Unknown tool"). `disallowed_tools` denies everything else:
+
+- every tool `/heartbeat` lists (357 on 2026-10-21), the whitelisted ones the call does not use
+  included;
+- every listed MCP server holding none of the tools the call uses (`mcp__FacebookAds`,
+  `mcp__GoogleAds`, `mcp__HubSpot`...), whole, so a tool added to it later is denied too;
+- the MCP servers NeuralBox adds to some runs without listing them (`mcp__BrowserAutomation`,
+  `mcp__Looker`, `mcp__Chart`), whole.
+
+The client fetches the tool list once per run (`GET /heartbeat`) and keeps it. When the heartbeat
+cannot be read or lists no tools, the block cannot be built, so no call is made: one line on
+stderr, exit 1, nothing spent. A run whose whitelisted tools the heartbeat does not list stops
+there too, before the paid call.
+
+**Why a deny list and not a permission mode.** The safer design would deny any tool missing from
+`allowed_tools` through the permission mode alone, without `bypassPermissions`. NeuralBox has no
+such mode. It accepts four (`default`, `acceptEdits`, `bypassPermissions`, `plan`; anything else,
+`dontAsk` included, is a 422). In every mode but `bypassPermissions`, a tool missing from
+`allowed_tools` goes to NeuralBox's own `can_use_tool` (its `filesystem_guard`). That guard lets
+through any tool it has no specific rule against: it ends in `return _allow(input_data)`. So no
+mode denies, and none hangs either. Under `bypassPermissions`, `allowed_tools` alone denies
+nothing (NeuralBox's `docs/agents.md`, "Whitelists"). The deny rules of `disallowed_tools` hold in
+every mode, so calls keep `bypassPermissions` and the deny list is the fence.
+
+**How a denied tool behaves**, measured on 2026-10-21:
+
+- *A built-in in the block is gone from the agent's tools.* Asked to use `WebSearch`, the agent
+  answered "WEBSEARCH NOT AVAILABLE. There is no tool named WebSearch in this session", and
+  called no tool (0.098 EUR).
+- *A denied MCP tool can stay visible to the agent, but its call is refused before it runs.*
+  Told to call `mcp__SearchAPI__GetLocations`, the agent tried. The tool's output was "Permission
+  to use mcp__SearchAPI__GetLocations has been denied.", and nothing was fetched (0.0415 EUR).
+  NeuralBox lists such an attempt among the tools called. The client moves it to `tools_denied`
+  instead, and the command warns on stderr: `nb: the block denied the agent <tool>`.
+
+**What the block cannot reach.** Some Claude Code built-ins are tools NeuralBox neither lists
+nor lets a caller deny: `ToolSearch`, its session and agent tools (`Workflow`, `ListAgents`,
+`ScheduleWakeup`, `CronCreate`...), and its MCP resource readers. NeuralBox refuses any
+non-`mcp__` name outside its own thirteen built-ins (400). None of them spends or reaches Dolead's
+accounts or data by itself. The tools that do (NeuralBox's MCP tools, `Bash`, `WebFetch`,
+`WebSearch`) are all on the deny list, and NeuralBox's own tool servers serve tools only, no
+resources.
 
 ## What never to ask it
+
+The block makes these calls impossible; still, never ask for them:
 
 - **Spending.** NeuralBox's Google, Meta and TikTok Ads tools act on Dolead's ad accounts. The
   factory spends only from its own accounts: never ask NeuralBox to create, change, launch or pay
@@ -103,6 +149,7 @@ factory safe is what it asks. The `tools_called` of an answer show what the agen
 - **Dolead client data.** Its ad-account, CRM, lead and reporting tools hold the data of Dolead's
   clients. Never ask for it, and never put it into an idea file. AdsInsights' aggregates on public
   advertisers are the only Dolead-held data the factory keeps, and only as `nb adsinsights`'
-  conclusions.
+  conclusions. `nb ask` keeps its answer as written, so AdsInsights questions go through
+  `nb adsinsights`, even though `nb ask --tools` can reach the same tools.
 - **Secrets.** Every prompt ends with the same three rules: say exactly which tool failed, never
   invent numbers, never print secret values.
