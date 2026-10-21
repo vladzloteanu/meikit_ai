@@ -781,6 +781,9 @@ def test_reddit_mentions_counts_by_month_and_subreddit_and_keeps_the_newest_hits
         "since": "2026-08-01",
         "until": "2026-10-20",
         "limit": 100,
+        "max_wait_s": 300,
+        "waited_s": 0.0,
+        "skipped_searches": 0,
         "terms": {
             "ad account hacked": {
                 "posts": 2,
@@ -789,6 +792,7 @@ def test_reddit_mentions_counts_by_month_and_subreddit_and_keeps_the_newest_hits
                 "by_subreddit": {"FacebookAds": 3, "PPC": 1},
                 "complete": True,
                 "covered_since": "2026-08-01",
+                "skipped": False,
                 "calls": 4,
                 "waited_s": 0.0,
                 "hits": [
@@ -1055,8 +1059,8 @@ def test_reddit_mentions_summary_names_the_incomplete_terms(root, capsys, monkey
     assert main([*argv, *RANGE]) == 0
     assert capsys.readouterr().out.splitlines()[-1] == (
         '"x": every match fetched only from 2026-09-16 on, so its counts are lower bounds (a '
-        "search came back full, or ran out of calls or waiting time; 2 calls, 0 s waited on "
-        "Arctic Shift)"
+        "search came back full, or ran out of calls or waiting time, or was skipped; 2 calls, "
+        "0 s waited on Arctic Shift)"
     )
 
 
@@ -1066,8 +1070,112 @@ def test_reddit_mentions_summary_says_when_no_day_was_covered(root, capsys, monk
     assert main([*argv, "--since", "2026-10-20", "--until", "2026-10-20"]) == 0
     assert capsys.readouterr().out.splitlines()[-1] == (
         '"x": no day fetched in full, so its counts are lower bounds (a search came back full, '
-        "or ran out of calls or waiting time; 2 calls, 0 s waited on Arctic Shift)"
+        "or ran out of calls or waiting time, or was skipped; 2 calls, 0 s waited on Arctic "
+        "Shift)"
     )
+
+
+def test_the_run_skips_its_remaining_searches_once_its_wait_budget_is_spent(
+    root, capsys, monkeypatch, clock, slept
+):
+    # three terms in one subreddit: six searches; Arctic Shift throttles the first (4 s resets)
+    seen = wire(monkeypatch, arcticshift, timed(clock, *[(0.3, slowed(4))] * 3))
+    argv = ["reddit_mentions", "--idea", "_fixture", "--terms", "a", "b", "c"]
+    argv += ["--subreddits", "PPC", *RANGE, "--max-wait-s", "10"]
+    assert main([*argv, "--json"]) == 0
+    out, err = capsys.readouterr()
+    data = json.loads(out)
+    # the first search waits what it can (4 s, 4 s); a third 4 s would pass 10 s: it stops
+    assert asked(seen) == [("posts", "2026-08-01", "2026-10-21")] * 3 and slept == [4, 4]
+    assert (data["max_wait_s"], data["waited_s"], data["skipped_searches"]) == (10, 8, 5)
+    first, *others = data["terms"].values()
+    assert (first["complete"], first["skipped"], first["calls"], first["waited_s"]) == (
+        False,
+        True,  # its comments search was skipped
+        3,
+        8,
+    )
+    for term in others:  # never searched
+        assert (term["complete"], term["skipped"], term["calls"], term["waited_s"]) == (
+            False,
+            True,
+            0,
+            0,
+        )
+        assert (term["posts"], term["comments"], term["hits"]) == (0, 0, [])
+        assert term["covered_since"] == "2026-10-21"  # no day fetched
+    [path] = research(root, "reddit_mentions")
+    assert json.loads(path.read_text(encoding="utf-8")) == data
+
+
+def test_the_summary_says_how_many_searches_were_skipped(root, capsys, monkeypatch, clock):
+    wire(monkeypatch, arcticshift, timed(clock, *[(0.3, slowed(4))] * 3))
+    argv = ["reddit_mentions", "--idea", "_fixture", "--terms", "a", "b", "c"]
+    assert main([*argv, "--subreddits", "PPC", *RANGE, "--max-wait-s", "10"]) == 0
+    assert capsys.readouterr().out.splitlines()[-4:] == [
+        '"a": no day fetched in full, so its counts are lower bounds (a search came back full, '
+        "or ran out of calls or waiting time, or was skipped; 3 calls, 8 s waited on Arctic "
+        "Shift)",
+        '"b": not searched: the run\'s waiting budget was spent',
+        '"c": not searched: the run\'s waiting budget was spent',
+        "5 searches skipped: the run waited 8 s on Arctic Shift and --max-wait-s 10 could not "
+        "cover another wait",
+    ]
+
+
+def test_the_per_search_budgets_hold_inside_the_run_budget(root, capsys, monkeypatch, clock, slept):
+    # a run budget large enough: the posts search stops at its own 8 calls, and the comments
+    # search still runs
+    replies = [*[(0.3, slowed(1))] * 8, (0.3, data())]
+    seen = wire(monkeypatch, arcticshift, timed(clock, *replies))
+    argv = ["reddit_mentions", "--idea", "_fixture", "--terms", "x", "--subreddits", "PPC"]
+    out = run_json(capsys, [*argv, *RANGE, "--max-wait-s", "1000"])
+    assert len(seen) == 9 and slept == [1] * 7
+    assert (out["skipped_searches"], out["terms"]["x"]["skipped"]) == (0, False)
+
+
+@pytest.mark.parametrize("value", ["-1", "soon", "nan"])
+def test_max_wait_s_is_a_number_of_seconds(root, capsys, monkeypatch, value):
+    monkeypatch.setattr(arcticshift, "client", lambda dry_run=False: pytest.fail("client built"))
+    argv = ["reddit_mentions", "--idea", "_fixture", "--terms", "x", "--subreddits", "PPC"]
+    assert main([*argv, "--max-wait-s", value]) == 2
+    assert "is not a number of seconds" in capsys.readouterr().err
+
+
+def test_a_throttled_selftest_waits_the_reset_once_and_retries(root, capsys, monkeypatch, clock):
+    replies = [(0.3, slowed(12)), (0.5, data(post("a", "2026-10-10"), post("b", "2026-10-11")))]
+    seen = wire(monkeypatch, arcticshift, timed(clock, *replies))
+    slept = []
+    monkeypatch.setattr(time, "sleep", slept.append)
+    assert main(["reddit_mentions", "--selftest"]) == 0
+    assert capsys.readouterr().out == "OK arcticshift 2 items\n"
+    assert slept == [12] and len(seen) == 2
+    assert seen[0].url == seen[1].url  # the same call, once more
+
+
+@pytest.mark.parametrize(("reset", "wait"), [(12, 12), (500, 60), (None, 3)])
+def test_a_selftest_refused_again_fails_saying_what_it_waited(
+    root, capsys, monkeypatch, clock, reset, wait
+):
+    seen = wire(monkeypatch, arcticshift, timed(clock, (0.3, slowed(reset)), (0.3, slowed(reset))))
+    slept = []
+    monkeypatch.setattr(time, "sleep", slept.append)
+    assert main(["reddit_mentions", "--selftest"]) == 1
+    out, err = capsys.readouterr()
+    assert out == "" and slept == [wait] and len(seen) == 2
+    [line] = err.splitlines()
+    assert line.startswith("reddit_mentions: arcticshift: HTTP 422: GET /api/posts/search?")
+    assert line.endswith(f"(refused again after waiting {wait} s on a throttle)")
+
+
+def test_a_selftest_that_times_out_fails_at_once(root, capsys, monkeypatch, clock):
+    seen = wire(monkeypatch, arcticshift, timed(clock, (6.0, slowed(5))))
+    slept = []
+    monkeypatch.setattr(time, "sleep", slept.append)
+    assert main(["reddit_mentions", "--selftest"]) == 1
+    [line] = capsys.readouterr().err.splitlines()
+    assert line.startswith("reddit_mentions: arcticshift: HTTP 422: GET /api/posts/search?")
+    assert slept == [] and len(seen) == 1  # a timeout is no throttle: nothing to wait out
 
 
 def test_reddit_mentions_summary_explains_a_slow_complete_term(root, capsys, monkeypatch, clock):
