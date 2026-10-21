@@ -49,20 +49,24 @@ value per customer and cap are written down.
    - `## Claims checked` — step 6.
    - `## To confirm` — only when provisional: one line per value and what would settle it (usually
      the challenge session).
-6. **Check the pitch's factual claims, cheaply.** List each claim about the world the pitch relies
-   on: that a problem happens, that people complain about it, that a competitor exists, that a
-   price is paid. Check each with the free tools, at most three terms and three subreddits at
-   intake (the Reddit provider throttles; the triage goes wider):
+6. **Check the pitch's factual claims, with the free tools only.** List each claim about the world
+   the pitch relies on: that a problem happens, that people complain about it, that a competitor
+   exists, that a price is paid. The intake checks the first two kinds; "someone advertises on it"
+   and "someone pays" are the triage's questions (its tools cost money) and are written down as
+   `deferred to triage`. At most three terms and three subreddits at intake (the Reddit provider
+   throttles; the triage goes wider):
    - complaints on Reddit:
      `uv run factory reddit_mentions --idea <slug> --terms "<phrase>" [--terms "<phrase>"] --subreddits <a,b,c> --since <90 days ago, YYYY-MM-DD>`
      (`--subreddits` is required: name the subreddits where the buyer actually posts, e.g.
-     `FacebookAds,PPC,marketing` for people who run ads);
-   - complaints on Hacker News: `uv run factory hn_mentions --idea <slug> --terms "<phrase>" --since <YYYY-MM-DD>`;
-   - whether anyone advertises on it: `uv run factory serp_ads --idea <slug> --keywords "<kw>"`.
-   Write one entry per claim: the evidence (counts, one or two quotes with links) and a verdict:
-   `supported`, `weak` or `unchecked (<reason>)`. A claim you could not check stays `unchecked`
-   with the reason (tool missing, provider down, quota): never fill it from memory and never write
-   a new tool for it.
+     `FacebookAds,PPC,marketing` for people who run ads; a run waits out throttles for up to five
+     minutes and then reports what it got, with `complete: false` where it is a lower bound);
+   - complaints on Hacker News: `uv run factory hn_mentions --idea <slug> --terms "<phrase>" --since <12 months ago>`
+     (fast; expect little for consumer or marketing pains).
+   Read the hits, not just the counts. Write one entry per claim: the evidence (counts with their
+   window, whether they are lower bounds, one or two quotes with links) and a verdict: `supported`,
+   `weak`, `unchecked (<reason>)` or `deferred to triage`. A claim you could not check stays
+   `unchecked` with the reason (tool missing, provider down, throttled): never fill it from memory
+   and never write a new tool for it.
 7. **Close the step:** `uv run factory plan mark <slug> 1 done`; append one line to
    `ideas/<slug>/learnings.md` in its format, `- <YYYY-MM-DD> /idea-new: <what the intake lacked, what took longest>`;
    then `uv run factory board`.
