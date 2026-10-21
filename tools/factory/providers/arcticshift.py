@@ -9,29 +9,33 @@ A search returns at most `limit` items (1 to 100), newest first, created after `
 for `permalink` (400 "'permalink' is not a valid field"), the item's link on reddit.com. A score
 is what Arctic Shift stored about 36 hours after the item was posted.
 
-Arctic Shift answers 422 "Timeout. Maybe slow down a bit" both to a search too heavy for its
-database (a year of comments in a busy subreddit) and to a caller it throttles, with the seconds
-to wait in X-RateLimit-Reset. Asking again the same thing does not help a heavy search, so that
-422 is not retried: the search raises SlowDown, and the tool waits and asks a shorter range
-(reddit_mentions halves it). Client retries a 429 and a 5xx. Calls are paced 1 s apart. A dry-run
-client answers from `fixtures/arcticshift/posts_search.json` and `comments_search.json`.
+Arctic Shift answers 422 "Timeout. Maybe slow down a bit" both to a caller it throttles and to a
+search too heavy for its database (a year of comments in a busy subreddit), with the wait in
+X-RateLimit-Reset. Only the time it took tells them apart: a throttle answers at once, a heavy
+search after its 5 s or more of trying (v1). Client does not retry that 422: the search raises
+SlowDown, saying how long the answer took (`throttled` when under 5 s) and the wait asked for,
+and the tool decides (reddit_mentions waits out a throttle and asks again, and halves a range
+that timed out). Client retries a 429 and a 5xx. Calls are paced 1 s apart. A dry-run client
+answers from `fixtures/arcticshift/posts_search.json` and `comments_search.json`.
 """
-
-import math
 
 import httpx
 
+from factory import http
 from factory.http import Client, ProviderError
 
 BASE_URL = "https://arctic-shift.photon-reddit.com"
 PACE_S = 1.0
 MAX_LIMIT = 100  # items a search returns at most
+SLOW_S = 5.0  # a 422 that took this long or more is a search timing out, not a throttle
 
 
 class SlowDown(ProviderError):
-    """Arctic Shift's 422 "Timeout. Maybe slow down a bit": a search too heavy, or too many.
+    """Arctic Shift's 422 "Timeout. Maybe slow down a bit": too many searches, or one too heavy.
 
-    `reset_s` is the wait it asked for in X-RateLimit-Reset, in seconds; None when it gave none.
+    `took_s` is how long the answer took and `throttled` says it came under SLOW_S: a throttle,
+    not a timeout. `reset_s` is the wait asked for in X-RateLimit-Reset, in seconds (a Unix time
+    is read as the seconds until it), None when there is none.
     """
 
     def __init__(self, response: httpx.Response) -> None:
@@ -39,7 +43,15 @@ class SlowDown(ProviderError):
         target = request.url.raw_path.decode("ascii", "replace")  # path and query string
         detail = f"{request.method} {target}: {response.text}"
         super().__init__("arcticshift", response.status_code, detail)
-        self.reset_s = _reset_s(response.headers)
+        self.reset_s = http.wait_seconds(response.headers)
+        try:
+            self.took_s = response.elapsed.total_seconds()
+        except RuntimeError:  # a response httpx did not time (a dry run's)
+            self.took_s = 0.0
+
+    @property
+    def throttled(self) -> bool:
+        return self.took_s < SLOW_S
 
 
 def client(dry_run: bool = False) -> Client:
@@ -100,12 +112,3 @@ def _items(answer: object) -> list[dict]:
     """The objects of the answer's `data` list; nothing when it has none."""
     data = answer.get("data") if isinstance(answer, dict) else None
     return [item for item in data if isinstance(item, dict)] if isinstance(data, list) else []
-
-
-def _reset_s(headers: httpx.Headers) -> float | None:
-    """X-RateLimit-Reset as a number of seconds; None when absent or not one."""
-    try:
-        value = float(headers["X-RateLimit-Reset"])
-    except KeyError, ValueError:
-        return None
-    return value if math.isfinite(value) and value >= 0 else None

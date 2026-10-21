@@ -153,33 +153,76 @@ def test_rdap_404_is_available(monkeypatch):
 SLOW = {"data": None, "error": "Timeout. Maybe slow down a bit"}
 
 
-def test_arctic_shift_slow_down_is_waited_out_then_the_halved_window_answers(
-    root, capsys, monkeypatch, slept
+class Clock:
+    """A fake time.perf_counter, which httpx times each answer with (Response.elapsed)."""
+
+    def __init__(self):
+        self.now = 1000.0
+
+    def __call__(self):
+        return self.now
+
+
+@pytest.fixture
+def clock(monkeypatch):
+    """Answers last what the fake Arctic Shift says; no pacing, so `slept` holds only the
+    search's own waits."""
+    fake = Clock()
+    monkeypatch.setattr(time, "perf_counter", fake)
+    monkeypatch.setattr(arcticshift, "PACE_S", 0.0)
+    return fake
+
+
+def timed(clock, *replies):
+    """A handler answering each request with the next (seconds, response) of `replies`: the
+    request lasts that many seconds on `clock`."""
+    queue = list(replies)
+
+    def handler(request):
+        took, response = queue.pop(0)
+        clock.now += took
+        return response
+
+    return handler
+
+
+class Streamed(httpx.SyncByteStream):
+    """A body httpx reads as it reads a network one, so it times the answer (Response.elapsed);
+    a body given as `json=` is read at once and never timed."""
+
+    def __init__(self, body: bytes):
+        self.body = body
+
+    def __iter__(self):
+        yield self.body
+
+
+def slowed(reset=None):
+    """Arctic Shift's 422, with X-RateLimit-Reset when `reset` is given."""
+    headers = {} if reset is None else {"X-RateLimit-Reset": str(reset)}
+    return httpx.Response(422, headers=headers, stream=Streamed(json.dumps(SLOW).encode()))
+
+
+def data(*items):
+    return httpx.Response(200, json={"data": [raw(item) for item in items]})
+
+
+def test_arctic_shift_slow_down_is_waited_out_then_the_same_window_answers(
+    root, capsys, monkeypatch, clock, slept
 ):
-    # the 422 is not asked again as is: the search waits X-RateLimit-Reset seconds, then asks
-    # the newest half of its window (one result), then the older half
-    monkeypatch.setattr(arcticshift, "PACE_S", 0.0)  # only the search's own waits are slept
-    one = raw(post("1wyvibe", "2026-10-05", title="Ads account hacked"))
-    seen = wire(
-        monkeypatch,
-        arcticshift,
-        replay(
-            httpx.Response(422, json=SLOW, headers={"X-RateLimit-Reset": "12"}),
-            httpx.Response(200, json={"data": [one]}),
-            *[httpx.Response(200, json={"data": []})] * 2,
-        ),
-    )
+    # the brief's case: a fast 422 is a throttle; the search sleeps X-RateLimit-Reset seconds
+    # and asks the same window again, which answers one result
+    one = post("1wyvibe", "2026-10-05", title="Ads account hacked")
+    replies = [(0.4, slowed(12)), (5.5, data(one)), (0.5, data())]
+    seen = wire(monkeypatch, arcticshift, timed(clock, *replies))
     argv = ["reddit_mentions", "--idea", "_fixture", "--terms", "x", "--subreddits", "PPC"]
     out = run_json(capsys, [*argv, *RANGE])
-    assert asked(seen) == [
-        ("posts", "2026-08-01", "2026-10-21"),  # 422
-        ("posts", "2026-09-10", "2026-10-21"),  # the newest half: the one post
-        ("posts", "2026-08-01", "2026-09-10"),  # the older half
-        ("comments", "2026-08-01", "2026-10-21"),
-    ]
+    whole = ("2026-08-01", "2026-10-21")
+    assert asked(seen) == [("posts", *whole), ("posts", *whole), ("comments", *whole)]
     assert slept == [12]
     term = out["terms"]["x"]
     assert (term["posts"], term["comments"], term["complete"]) == (1, 0, True)
+    assert (term["calls"], term["waited_s"]) == (3, 12)
     assert term["hits"][0]["title"] == "Ads account hacked"
 
 
@@ -320,15 +363,23 @@ def test_arcticshift_slow_down_is_a_422_saying_so():
     assert not arcticshift.slow_down(httpx.Response(400, text="slow down"))
 
 
-def test_an_arcticshift_422_raises_slow_down_at_once_with_its_reset(monkeypatch, slept):
-    reply = answer(SLOW, status=422, headers={"X-RateLimit-Reset": "12"})
-    seen = wire(monkeypatch, arcticshift, reply)
+def test_an_arcticshift_422_raises_slow_down_at_once_with_its_reset(monkeypatch, clock, slept):
+    seen = wire(monkeypatch, arcticshift, timed(clock, (0.4, slowed(12))))
     with pytest.raises(arcticshift.SlowDown) as e:
         arcticshift.comments_search(arcticshift.client(), "x", subreddit="PPC")
     assert isinstance(e.value, ProviderError)
     assert (e.value.status, e.value.reset_s, len(seen), slept) == (422, 12.0, 1, [])
+    assert (e.value.took_s, e.value.throttled) == (0.4, True)  # fast: the throttle
     assert str(e.value).startswith("arcticshift: HTTP 422: GET /api/comments/search?body=x&")
     assert str(e.value).endswith('Timeout. Maybe slow down a bit"}')
+
+
+@pytest.mark.parametrize(("took", "throttled"), [(4.99, True), (5.0, False), (11.0, False)])
+def test_a_422_that_took_5_s_or_more_is_a_timeout(monkeypatch, clock, took, throttled):
+    wire(monkeypatch, arcticshift, timed(clock, (took, slowed(5))))
+    with pytest.raises(arcticshift.SlowDown) as e:
+        arcticshift.posts_search(arcticshift.client(), "x", subreddit="PPC")
+    assert (e.value.took_s, e.value.throttled) == (pytest.approx(took), throttled)
 
 
 @pytest.mark.parametrize(
@@ -336,11 +387,13 @@ def test_an_arcticshift_422_raises_slow_down_at_once_with_its_reset(monkeypatch,
     [
         ({}, None),
         ({"X-RateLimit-Reset": "soon"}, None),
-        ({"X-RateLimit-Reset": "-5"}, None),
+        ({"X-RateLimit-Reset": "-5"}, 0.0),
         ({"X-RateLimit-Reset": "7.5"}, 7.5),
+        ({"X-RateLimit-Reset": "1800000050"}, 50.0),  # a Unix time: 50 s from now
     ],
 )
 def test_slow_down_carries_the_reset_seconds_arctic_shift_sent(monkeypatch, headers, reset):
+    monkeypatch.setattr(time, "time", lambda: 1_800_000_000.0)
     wire(monkeypatch, arcticshift, answer(SLOW, status=422, headers=headers))
     with pytest.raises(arcticshift.SlowDown) as e:
         arcticshift.posts_search(arcticshift.client(), "x", subreddit="PPC")
@@ -703,6 +756,7 @@ def test_reddit_mentions_searches_each_term_subreddit_and_kind_once_over_the_ran
     assert {r.url.params["query" if "posts" in r.url.path else "body"] for r in seen} == {"x"}
     term = out["terms"]["x"]
     assert (term["complete"], term["covered_since"]) == (True, "2026-08-01")
+    assert (term["calls"], term["waited_s"]) == (4, 0)
 
 
 def test_reddit_mentions_default_range_is_the_12_months_up_to_today(root, capsys, monkeypatch):
@@ -735,6 +789,8 @@ def test_reddit_mentions_counts_by_month_and_subreddit_and_keeps_the_newest_hits
                 "by_subreddit": {"FacebookAds": 3, "PPC": 1},
                 "complete": True,
                 "covered_since": "2026-08-01",
+                "calls": 4,
+                "waited_s": 0.0,
                 "hits": [
                     {
                         "kind": "comment",
@@ -821,33 +877,95 @@ def test_a_full_answer_ends_its_search_and_leaves_the_term_incomplete(root, caps
     assert [kind for kind, _, _ in asked(seen)] == ["posts", "comments"]
 
 
-@pytest.mark.parametrize(("headers", "wait"), [({}, 3), ({"X-RateLimit-Reset": "120"}, 30)])
-def test_a_422_waits_3_s_without_a_reset_and_30_s_at_most(
-    root, capsys, monkeypatch, slept, headers, wait
+@pytest.mark.parametrize(
+    ("reset", "wait"),
+    [(None, 3), (60, 60), (500, 120), (1_800_000_050, 50)],  # the last: a Unix time
+)
+def test_a_throttle_is_waited_out_in_full_up_to_120_s(
+    root, capsys, monkeypatch, clock, slept, reset, wait
 ):
-    monkeypatch.setattr(arcticshift, "PACE_S", 0.0)
-    replies = replay(
-        httpx.Response(422, json=SLOW, headers=headers),
-        *[httpx.Response(200, json={"data": []})] * 3,
-    )
-    wire(monkeypatch, arcticshift, replies)
+    monkeypatch.setattr(time, "time", lambda: 1_800_000_000.0)
+    replies = [(0.3, slowed(reset)), (0.3, data()), (0.3, data())]
+    seen = wire(monkeypatch, arcticshift, timed(clock, *replies))
     argv = ["reddit_mentions", "--idea", "_fixture", "--terms", "x", "--subreddits", "PPC"]
-    assert main([*argv, *RANGE]) == 0
-    assert slept == [wait]
+    out = run_json(capsys, [*argv, *RANGE])
+    assert slept == [wait] and len(seen) == 3
+    assert (out["terms"]["x"]["complete"], out["terms"]["x"]["waited_s"]) == (True, wait)
 
 
-def test_a_search_stops_after_8_calls_and_keeps_what_it_fetched(root, capsys, monkeypatch, slept):
-    # Arctic Shift times out on more than 10 days; 6 days answer one item each
-    monkeypatch.setattr(arcticshift, "PACE_S", 0.0)
+def test_a_slow_422_is_a_timeout_and_halves_the_window(root, capsys, monkeypatch, clock, slept):
+    replies = [(6.2, slowed(5)), (4.0, data()), (4.0, data()), (1.0, data())]
+    seen = wire(monkeypatch, arcticshift, timed(clock, *replies))
+    argv = ["reddit_mentions", "--idea", "_fixture", "--terms", "x", "--subreddits", "PPC"]
+    out = run_json(capsys, [*argv, *RANGE])
+    assert asked(seen) == [
+        ("posts", "2026-08-01", "2026-10-21"),  # 6.2 s: a timeout
+        ("posts", "2026-09-10", "2026-10-21"),  # the newest half
+        ("posts", "2026-08-01", "2026-09-10"),  # the older half
+        ("comments", "2026-08-01", "2026-10-21"),
+    ]
+    assert slept == [5]  # its reset waited out before the halved window
+    term = out["terms"]["x"]
+    assert (term["complete"], term["calls"], term["waited_s"]) == (True, 4, 5)
+
+
+def test_a_search_stops_when_its_8_calls_are_spent(root, capsys, monkeypatch, clock, slept):
+    replies = [*[(0.3, slowed(10))] * 8, (0.3, data())]  # posts: throttled 8 times
+    seen = wire(monkeypatch, arcticshift, timed(clock, *replies))
+    argv = ["reddit_mentions", "--idea", "_fixture", "--terms", "x", "--subreddits", "PPC"]
+    out = run_json(capsys, [*argv, *RANGE])
+    whole = ("2026-08-01", "2026-10-21")
+    assert asked(seen) == [*[("posts", *whole)] * 8, ("comments", *whole)]  # the same window
+    assert slept == [10] * 7  # no wait after the last call
+    term = out["terms"]["x"]
+    assert (term["complete"], term["covered_since"]) == (False, "2026-10-21")
+    assert (term["calls"], term["waited_s"]) == (9, 70)
+
+
+def test_a_search_stops_when_its_240_s_of_waiting_are_spent_keeping_what_it_fetched(
+    root, capsys, monkeypatch, clock, slept
+):
+    found = post("a1", "2026-10-01")
+    replies = [
+        (6.0, slowed(10)),  # a timeout: wait 10 s, halve
+        (1.0, data(found)),  # the newest half: one post
+        (0.3, slowed(120)),  # the older half, throttled: wait 120 s (130 in all)
+        (0.3, slowed(120)),  # again: 120 s more would make 250, past 240: stop
+        (0.3, data()),  # the comments
+    ]
+    seen = wire(monkeypatch, arcticshift, timed(clock, *replies))
+    argv = ["reddit_mentions", "--idea", "_fixture", "--terms", "x", "--subreddits", "PPC"]
+    assert main([*argv, *RANGE, "--json"]) == 0
+    out = json.loads(capsys.readouterr().out)
+    assert asked(seen) == [
+        ("posts", "2026-08-01", "2026-10-21"),
+        ("posts", "2026-09-10", "2026-10-21"),
+        ("posts", "2026-08-01", "2026-09-10"),
+        ("posts", "2026-08-01", "2026-09-10"),
+        ("comments", "2026-08-01", "2026-10-21"),
+    ]
+    assert slept == [10, 120]
+    term = out["terms"]["x"]
+    assert (term["posts"], term["complete"], term["covered_since"]) == (1, False, "2026-09-10")
+    assert (term["calls"], term["waited_s"]) == (5, 130)
+    [path] = research(root, "reddit_mentions")  # the run went on and wrote what it found
+    assert json.loads(path.read_text(encoding="utf-8")) == out
+
+
+def test_timeouts_halve_down_until_the_calls_are_spent_keeping_what_was_fetched(
+    root, capsys, monkeypatch, clock, slept
+):
+    # Arctic Shift times out (6 s) on more than 10 days; 6 days answer one item each
     made = iter(range(1000))
 
     def handler(request):
         after = date.fromisoformat(request.url.params["after"])
         before = date.fromisoformat(request.url.params["before"])
         if (before - after).days > 10:
-            return httpx.Response(422, json=SLOW, headers={"X-RateLimit-Reset": "5"})
+            clock.now += 6.0
+            return slowed(5)
         make = post if request.url.path == "/api/posts/search" else comment
-        return httpx.Response(200, json={"data": [raw(make(f"i{next(made)}", after.isoformat()))]})
+        return data(make(f"i{next(made)}", after.isoformat()))
 
     seen = wire(monkeypatch, arcticshift, handler)
     argv = ["reddit_mentions", "--idea", "_fixture", "--terms", "x", "--subreddits", "PPC"]
@@ -855,10 +973,10 @@ def test_a_search_stops_after_8_calls_and_keeps_what_it_fetched(root, capsys, mo
     out = json.loads(capsys.readouterr().out)
     posts = [(after, before) for kind, after, before in asked(seen) if kind == "posts"]
     assert posts == [
-        ("2026-08-01", "2026-10-21"),  # 81 days: 422
-        ("2026-09-10", "2026-10-21"),  # 41: 422
-        ("2026-09-30", "2026-10-21"),  # 21: 422
-        ("2026-10-10", "2026-10-21"),  # 11: 422
+        ("2026-08-01", "2026-10-21"),  # 81 days: a timeout
+        ("2026-09-10", "2026-10-21"),  # 41: a timeout
+        ("2026-09-30", "2026-10-21"),  # 21: a timeout
+        ("2026-10-10", "2026-10-21"),  # 11: a timeout
         ("2026-10-15", "2026-10-21"),  # 6: one post
         ("2026-10-09", "2026-10-15"),
         ("2026-10-03", "2026-10-09"),
@@ -868,14 +986,13 @@ def test_a_search_stops_after_8_calls_and_keeps_what_it_fetched(root, capsys, mo
     term = out["terms"]["x"]
     assert (term["posts"], term["comments"], term["complete"]) == (4, 4, False)
     assert term["covered_since"] == "2026-09-27"
+    assert (term["calls"], term["waited_s"]) == (16, 40)
     assert term["by_month"] == {"2026-09": 2, "2026-10": 6}
-    [path] = research(root, "reddit_mentions")  # the run went on and wrote what it found
-    assert json.loads(path.read_text(encoding="utf-8")) == out
 
 
-def test_a_one_day_window_that_times_out_ends_its_search(root, capsys, monkeypatch, slept):
-    monkeypatch.setattr(arcticshift, "PACE_S", 0.0)  # only the search's own waits are slept
-    seen = wire(monkeypatch, arcticshift, answer(SLOW, status=422))
+def test_a_one_day_window_that_times_out_ends_its_search(root, capsys, monkeypatch, clock, slept):
+    replies = [(6.0, slowed(5)), (6.0, slowed(5))]
+    seen = wire(monkeypatch, arcticshift, timed(clock, *replies))
     argv = ["reddit_mentions", "--idea", "_fixture", "--terms", "x", "--subreddits", "PPC"]
     out = run_json(capsys, [*argv, "--since", "2026-10-20", "--until", "2026-10-20"])
     assert asked(seen) == [
@@ -937,18 +1054,29 @@ def test_reddit_mentions_summary_names_the_incomplete_terms(root, capsys, monkey
     argv = ["reddit_mentions", "--idea", "_fixture", "--terms", "x", "--subreddits", "PPC"]
     assert main([*argv, *RANGE]) == 0
     assert capsys.readouterr().out.splitlines()[-1] == (
-        '"x": every match fetched only from 2026-09-16 on (a search came back full, or Arctic '
-        "Shift kept saying slow down), so its counts are lower bounds"
+        '"x": every match fetched only from 2026-09-16 on, so its counts are lower bounds (a '
+        "search came back full, or ran out of calls or waiting time; 2 calls, 0 s waited on "
+        "Arctic Shift)"
     )
 
 
-def test_reddit_mentions_summary_says_when_no_day_was_covered(root, capsys, monkeypatch):
-    wire(monkeypatch, arcticshift, answer(SLOW, status=422))
+def test_reddit_mentions_summary_says_when_no_day_was_covered(root, capsys, monkeypatch, clock):
+    wire(monkeypatch, arcticshift, timed(clock, (6.0, slowed(5)), (6.0, slowed(5))))
     argv = ["reddit_mentions", "--idea", "_fixture", "--terms", "x", "--subreddits", "PPC"]
     assert main([*argv, "--since", "2026-10-20", "--until", "2026-10-20"]) == 0
     assert capsys.readouterr().out.splitlines()[-1] == (
-        '"x": no day fetched in full (a search came back full, or Arctic Shift kept saying slow '
-        "down), so its counts are lower bounds"
+        '"x": no day fetched in full, so its counts are lower bounds (a search came back full, '
+        "or ran out of calls or waiting time; 2 calls, 0 s waited on Arctic Shift)"
+    )
+
+
+def test_reddit_mentions_summary_explains_a_slow_complete_term(root, capsys, monkeypatch, clock):
+    replies = [(0.4, slowed(42)), (0.5, data()), (0.5, data())]
+    wire(monkeypatch, arcticshift, timed(clock, *replies))
+    argv = ["reddit_mentions", "--idea", "_fixture", "--terms", "x", "--subreddits", "PPC"]
+    assert main([*argv, *RANGE]) == 0
+    assert capsys.readouterr().out.splitlines()[-1] == (
+        '"x": complete after 3 calls and 42 s waited on Arctic Shift'
     )
 
 

@@ -224,11 +224,11 @@ class Client:
         )
 
 
-def _wait_hint(headers: httpx.Headers) -> float:
-    """The provider's own wait in seconds, capped at 300; 0 when it gives none.
+def wait_seconds(headers: httpx.Headers) -> float | None:
+    """The provider's own wait in seconds, not capped; None when it gives none.
 
     Retry-After is a number of seconds. X-RateLimit-Reset is one too, unless it is 100000 or
-    more: then it is the Unix time at which the limit resets.
+    more: then it is the Unix time at which the limit resets. A time already past is 0.
     """
     for name in ("Retry-After", "X-RateLimit-Reset"):
         try:
@@ -239,8 +239,14 @@ def _wait_hint(headers: httpx.Headers) -> float:
             continue
         if name == "X-RateLimit-Reset" and value >= EPOCH_FROM:
             value -= time.time()
-        return min(max(value, 0.0), MAX_HINT_S)
-    return 0.0
+        return max(value, 0.0)
+    return None
+
+
+def _wait_hint(headers: httpx.Headers) -> float:
+    """The provider's own wait in seconds (`wait_seconds`), capped at 300; 0 when it gives none."""
+    wait = wait_seconds(headers)
+    return 0.0 if wait is None else min(wait, MAX_HINT_S)
 
 
 def _scrub(text: str) -> str:

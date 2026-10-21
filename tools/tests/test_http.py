@@ -110,6 +110,24 @@ def test_rate_limit_reset_is_seconds_or_a_unix_time(monkeypatch):
     assert slept == [7, 50]
 
 
+@pytest.mark.parametrize(
+    ("headers", "wait"),
+    [
+        ({}, None),
+        ({"X-RateLimit-Reset": "nope"}, None),
+        ({"Retry-After": "7"}, 7.0),
+        ({"X-RateLimit-Reset": "12"}, 12.0),
+        ({"X-RateLimit-Reset": "900"}, 900.0),  # not capped: the caller caps it
+        ({"X-RateLimit-Reset": "1800000050"}, 50.0),  # a Unix time: 50 s from now
+        ({"X-RateLimit-Reset": "1799999000"}, 0.0),  # already past
+        ({"Retry-After": "x", "X-RateLimit-Reset": "4"}, 4.0),
+    ],
+)
+def test_wait_seconds_is_the_providers_own_wait_or_none(monkeypatch, headers, wait):
+    monkeypatch.setattr(time, "time", lambda: 1_800_000_000.0)
+    assert http.wait_seconds(httpx.Headers(headers)) == wait
+
+
 def test_network_errors_count_as_failed_attempts(monkeypatch):
     slept = []
     monkeypatch.setattr(time, "sleep", slept.append)

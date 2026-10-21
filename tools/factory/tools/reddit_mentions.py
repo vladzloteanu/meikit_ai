@@ -11,27 +11,32 @@ searches text only within named subreddits, so --subreddits is required.
 
 Each term, subreddit and kind (posts, comments) is one search: one call over the whole range for
 its newest 100 items, and 100 back means more exist, so the search ends there. Arctic Shift
-answers 422 "Timeout. Maybe slow down a bit" both to a search too heavy for it and to a caller it
-throttles: the search then waits (X-RateLimit-Reset seconds, 30 at most; 3 without one), halves
-its window and goes on from the newest half, then older, in windows of the size that answered,
-for 8 calls at most. What a search fetched is always kept. The research JSON is
+answers 422 "Timeout. Maybe slow down a bit" both to a caller it throttles and to a search too
+heavy for it; the time the answer took tells them apart. A throttle (under 5 s) is waited out in
+full, X-RateLimit-Reset seconds (120 at most, 3 without one), and the same window asked again. A
+timeout (5 s or more) halves the window: its reset is waited out, the newest half asked, then the
+older ranges in windows of the size that answered. A search makes 8 calls at most and waits 240 s
+at most in all; when either runs out it stops, and what it fetched is kept. The research JSON is
 
     {"subreddits", "since", "until", "limit",
      "terms": {term: {"posts", "comments", "by_month": {"YYYY-MM": n},
-                      "by_subreddit": {subreddit: n}, "complete", "covered_since",
+                      "by_subreddit": {subreddit: n}, "complete", "covered_since", "calls",
+                      "waited_s",
                       "hits": [{"kind", "subreddit", "title", "url", "score", "created",
                                 "snippet"}]}}}
 
 `posts` and `comments` count the items fetched; `by_month` counts both together by the month
 (UTC) they were created, `by_subreddit` by subreddit, the most first. `covered_since` is the first
 day from which every search of the term fetched every match; `complete` says it is --since. When
-it is not (a search came back full, or ran out of calls), the counts are lower bounds. `hits` are
+it is not (a search came back full, or ran out of calls or waiting time), the counts are lower
+bounds. `calls` and `waited_s` are what the term's searches cost in Arctic Shift calls and in
+seconds waiting on its resets: what makes a run slow. `hits` are
 the term's newest --limit items: `kind` is post or comment, `url` the item on reddit.com (its
 permalink, else its rebuilt path), `created` its day, `snippet` the start of its text (null for a
 post with none); a comment has no title. Deleted and removed comments, and those of bots
 (AutoModerator, "I am a bot"), are left out, as in v1. Arctic Shift is free: no cost is logged.
 The summary is one row per term, `term | posts | comments | top subreddits`, then a line for each
-incomplete term.
+term that is incomplete or waited on Arctic Shift.
 """
 
 import argparse
@@ -39,6 +44,7 @@ import math
 import re
 import time
 from collections import Counter
+from dataclasses import dataclass
 from datetime import UTC, date, datetime, timedelta
 
 from factory import tables, toolbase
@@ -51,8 +57,9 @@ REDDIT = "https://www.reddit.com"
 KINDS = ("post", "comment")
 PAGE = arcticshift.MAX_LIMIT  # a call's items at most: 100 back means more exist
 MAX_CALLS = 8  # the calls one search (a term, a subreddit, a kind) makes at most
+MAX_WAITED_S = 240.0  # the seconds one search waits on Arctic Shift at most, in all
 WAIT_S = 3.0  # the wait after a 422 without X-RateLimit-Reset
-MAX_WAIT_S = 30.0  # the longest wait after a 422
+MAX_WAIT_S = 120.0  # the longest single wait after a 422
 TOP_SUBREDDITS = 3
 COLUMNS = ["term", "posts", "comments", "top subreddits"]
 SELFTEST_QUERY = "ad account"
@@ -149,19 +156,28 @@ def collect(
     }
 
 
-def search(
-    client: Client, kind: str, term: str, subreddit: str, start: date, end: date
-) -> tuple[list[dict], date]:
+@dataclass
+class Search:
+    """What one search (a term, a subreddit, a kind) found and cost."""
+
+    items: list[dict]  # newest first, each once
+    covered: date  # the first day from which every match was fetched
+    calls: int = 0
+    waited_s: float = 0.0
+
+
+def search(client: Client, kind: str, term: str, subreddit: str, start: date, end: date) -> Search:
     """The items of `kind` (post or comment) matching `term` in `subreddit` created from `start`
-    to `end` (excluded), newest first, each once; and the first day from which every match was
-    fetched (`start` when all were). One call asks the whole range; a full answer (PAGE items)
-    ends the search; a 422 is waited out and the window halved, the newest half first; the
-    search goes on, older, in windows of the size that answered, MAX_CALLS calls at most."""
+    to `end` (excluded), and what finding them cost. One call asks the whole range; a full answer
+    (PAGE items) ends the search. A throttled 422 is waited out in full and the same window asked
+    again; a 422 that timed out is waited out and the window halved, the newest half first, the
+    search then going on older in windows of the size that answered. MAX_CALLS calls and
+    MAX_WAITED_S seconds of waiting at most: whichever runs out first ends the search."""
     find = arcticshift.posts_search if kind == "post" else arcticshift.comments_search
     found: dict[str, dict] = {}
     covered = end  # every match created from `covered` to `end` is in `found`
     days = (end - start).days  # the window asked next
-    calls = 0
+    calls, waited = 0, 0.0
     while covered > start and calls < MAX_CALLS:
         after = max(start, covered - timedelta(days=days))
         calls += 1
@@ -176,10 +192,15 @@ def search(
             )
         except arcticshift.SlowDown as exc:
             window = (covered - after).days
-            if window <= 1 or calls >= MAX_CALLS:
-                break  # a day cannot be halved; or no call is left to wait for
-            time.sleep(WAIT_S if exc.reset_s is None else min(exc.reset_s, MAX_WAIT_S))
-            days = math.ceil(window / 2)
+            wait = WAIT_S if exc.reset_s is None else min(exc.reset_s, MAX_WAIT_S)
+            if calls >= MAX_CALLS or waited + wait > MAX_WAITED_S:
+                break  # no call left, or no time left to wait
+            if not exc.throttled:  # a timeout: ask half the window
+                if window <= 1:
+                    break  # a day cannot be halved
+                days = math.ceil(window / 2)
+            time.sleep(wait)
+            waited += wait
             continue
         for item in page:
             if isinstance(item.get("id"), str):
@@ -190,7 +211,7 @@ def search(
                 covered = max(after, _first_full_day(min(times)))
             break
         covered = after
-    return list(found.values()), covered
+    return Search(list(found.values()), covered, calls, waited)
 
 
 def summary(data: dict) -> str:
@@ -208,16 +229,21 @@ def summary(data: dict) -> str:
     ]
     lines = [tables.render(rows, COLUMNS)]
     for term, found in data["terms"].items():
-        if found["complete"]:
-            continue
-        if found["covered_since"] > data["until"]:
-            seen = "no day fetched in full"
-        else:
-            seen = f"every match fetched only from {found['covered_since']} on"
-        lines.append(
-            f'"{term}": {seen} (a search came back full, or Arctic Shift kept saying slow down), '
-            "so its counts are lower bounds"
-        )
+        cost = f"{found['calls']} calls, {found['waited_s']:g} s waited on Arctic Shift"
+        if not found["complete"]:
+            if found["covered_since"] > data["until"]:
+                seen = "no day fetched in full"
+            else:
+                seen = f"every match fetched only from {found['covered_since']} on"
+            lines.append(
+                f'"{term}": {seen}, so its counts are lower bounds (a search came back full, or '
+                f"ran out of calls or waiting time; {cost})"
+            )
+        elif found["waited_s"]:
+            lines.append(
+                f'"{term}": complete after {found["calls"]} calls and {found["waited_s"]:g} s '
+                "waited on Arctic Shift"
+            )
     return "\n".join(lines)
 
 
@@ -227,11 +253,14 @@ def _term(
     """One term's entry in the research JSON: its posts and comments in every subreddit."""
     items: dict[tuple[str, str], dict] = {}
     covered_since = since
+    calls, waited = 0, 0.0
     for subreddit in subreddits:
         for kind in KINDS:
-            found, covered = search(client, kind, term, subreddit, since, end)
-            covered_since = max(covered_since, covered)
-            for raw in found:
+            found = search(client, kind, term, subreddit, since, end)
+            covered_since = max(covered_since, found.covered)
+            calls += found.calls
+            waited += found.waited_s
+            for raw in found.items:
                 item = _item(kind, raw)
                 if item is not None:
                     items[(kind, item["id"])] = item
@@ -243,6 +272,8 @@ def _term(
         "by_subreddit": _most_first(Counter(item["subreddit"] for item in newest)),
         "complete": covered_since == since,
         "covered_since": covered_since.isoformat(),
+        "calls": calls,
+        "waited_s": round(waited, 1),
         "hits": [_hit(item) for item in newest[:limit]],
     }
 
