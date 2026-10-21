@@ -1,0 +1,19 @@
+{
+  "status": "ok",
+  "server_version": "0.1.0",
+  "available_tools": [
+    "Read",
+    "Glob",
+    "Grep",
+    "WebSearch",
+    "WebFetch",
+    "TodoWrite",
+    "Skill",
+    "mcp__tools__ListCategories",
+    "mcp__tools__LookupAdsInsights",
+    "mcp__tools__QueryAdsInsights"
+  ],
+  "available_skills": [],
+  "active_chats": 0,
+  "max_concurrent_chats": 5
+}

@@ -1,0 +1,111 @@
+{
+  "request_id": "req_dryrun_adsinsights_01",
+  "answer": "category_resolved: Home Security; not_found: False",
+  "explanation": "Placeholder for the agent's reasoning text, which nb adsinsights never keeps.",
+  "structured_output": {
+    "category_resolved": "Home Security",
+    "countries": [
+      "FR",
+      "US"
+    ],
+    "networks": [
+      {
+        "network": "facebook",
+        "total_reach": 18400000,
+        "advertisers_count": 214,
+        "top_companies": [
+          {
+            "name": "Alarmo Example",
+            "share_pct": 14.2
+          },
+          {
+            "name": "Securis Example",
+            "share_pct": 9.6
+          },
+          {
+            "name": "Domovia Example",
+            "share_pct": 6.1
+          }
+        ],
+        "caveats": [
+          "reach numbers are per network and never comparable across networks"
+        ]
+      },
+      {
+        "network": "search",
+        "total_reach": 96000,
+        "advertisers_count": 41,
+        "top_companies": [
+          {
+            "name": "Securis Example",
+            "share_pct": 22.5
+          },
+          {
+            "name": "Veilleo Example",
+            "share_pct": 11.8
+          }
+        ],
+        "caveats": [
+          "search reach is estimated monthly paid clicks"
+        ]
+      }
+    ],
+    "typical_hooks": [
+      "free installation",
+      "24/7 remote monitoring",
+      "insurance discount",
+      "no commitment"
+    ],
+    "not_found": false
+  },
+  "session_id": "sess_dryrun_adsinsights_01",
+  "answer_status": null,
+  "tools_called": [
+    {
+      "name": "mcp__tools__LookupAdsInsights",
+      "input": {
+        "what": "categories",
+        "q": "home security"
+      },
+      "output": "placeholder for the tool's raw answer, never kept"
+    },
+    {
+      "name": "mcp__tools__QueryAdsInsights",
+      "input": {
+        "section": "aggregations",
+        "network": "facebook",
+        "tile": "company"
+      },
+      "output": "placeholder for the tool's raw answer, never kept"
+    },
+    {
+      "name": "mcp__tools__QueryAdsInsights",
+      "input": {
+        "section": "aggregations",
+        "network": "search",
+        "tile": "company"
+      },
+      "output": "placeholder for the tool's raw answer, never kept"
+    },
+    {
+      "name": "mcp__tools__QueryAdsInsights",
+      "input": {
+        "section": "copy",
+        "network": "facebook",
+        "copy_kind": "all"
+      },
+      "output": "placeholder for the tool's raw answer, never kept"
+    },
+    {
+      "name": "mcp__tools__QueryAdsInsights",
+      "input": {
+        "section": "copy",
+        "network": "search",
+        "copy_kind": "all"
+      },
+      "output": "placeholder for the tool's raw answer, never kept"
+    }
+  ],
+  "cost_usd": 0.155,
+  "errors": []
+}

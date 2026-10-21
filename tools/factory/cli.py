@@ -27,6 +27,7 @@ TOOL_MODULES: list[str] = [
     "hn_mentions",
     "pricing_scan",
     "domain_check",
+    "nb",
 ]
 
 

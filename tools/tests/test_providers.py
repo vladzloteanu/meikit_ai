@@ -143,6 +143,7 @@ def test_fixtures_carry_no_request_metadata_or_key_param():
         "algolia": 1,
         "firecrawl": 1,
         "rdap": 2,
+        "neuralbox": 3,
     }
     for file in files:
         text = file.read_text(encoding="utf-8")

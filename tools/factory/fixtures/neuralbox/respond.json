@@ -1,0 +1,11 @@
+{
+  "request_id": "req_dryrun_respond_01",
+  "answer": "pong",
+  "explanation": null,
+  "structured_output": null,
+  "session_id": "sess_dryrun_respond_01",
+  "answer_status": null,
+  "tools_called": [],
+  "cost_usd": 0.0665,
+  "errors": []
+}

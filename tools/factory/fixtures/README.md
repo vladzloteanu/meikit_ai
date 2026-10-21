@@ -35,6 +35,9 @@ links inside the texts too, so no anonymised author can be found by looking an I
 - `firecrawl/scrape.json`: captured 2026-10-21 from `pricing_scan --selftest` — query `POST /v1/scrape` with `{"url": "https://example.com", "formats": ["markdown"], "onlyMainContent": true}` (metadata kept: title, language, URLs, status, content type)
 - `rdap/taken.json`: captured 2026-10-21 from `domain_check --selftest` — query `GET https://rdap.org/domain/example.com`, answered 200 by Verisign (notices, links and DNSSEC data dropped); a dry run answers every .com with it
 - `rdap/available.json`: hand-written 2026-10-21, `{"_status": 404}`: the registry's 404 for a domain nobody holds, served with an empty body; a dry run answers every domain but a .com with it
+- `neuralbox/heartbeat.json`: trimmed 2026-10-21 from the local NeuralBox's `GET /heartbeat` (357 tools, 62 skills): 10 of its tools kept, built-ins and the three AdsInsights tools `nb adsinsights` is given; no skill names, no versions but the server's
+- `neuralbox/respond.json`: hand-authored 2026-10-21 in the shape of NeuralBox's `ChatResponse` for the selftest's call (`POST /respond`, "Reply with the single word pong", one turn), with the cost that call reported (0.0665 USD); request and session IDs synthetic
+- `neuralbox/adsinsights.json`: hand-authored 2026-10-21 in the shape of NeuralBox's `ChatResponse` for an `nb adsinsights` call, with the cost a real one reported (0.155 USD for home security, FR, facebook and search): every company is invented (`... Example`), and the tools' inputs and outputs are placeholders that the tool must drop
 
 The hand-authored files use the documented field names and nesting, and their
 `search_parameters` carry the queries `scripts/capture-fixtures.py` makes. Every advertiser,
