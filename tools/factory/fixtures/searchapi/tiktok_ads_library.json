@@ -1,0 +1,84 @@
+{
+  "search_parameters": {
+    "engine": "tiktok_ads_library",
+    "q": "ad account hacked"
+  },
+  "search_information": {
+    "total_results": 11
+  },
+  "ads": [
+    {
+      "position": 1,
+      "id": "1900000000000001",
+      "advertiser": "Kestrelmark Security",
+      "title": "Ad account hacked? Do these 3 things in the first hour",
+      "format": "video",
+      "first_shown_datetime": "2026-09-12T00:00:00Z",
+      "last_shown_datetime": "2026-10-18T00:00:00Z",
+      "video_link": "https://cdn.example/tiktok/video/1900000000000001.mp4",
+      "cover_image": "https://cdn.example/tiktok/cover/1900000000000001.jpeg",
+      "estimated_audience": "10K-100K",
+      "estimated_audience_min": 10000,
+      "estimated_audience_max": 100000
+    },
+    {
+      "position": 2,
+      "id": "1900000000000002",
+      "advertiser": "Brindlewick Ad Recovery",
+      "title": "Locked out of your ad account? We help you get it back",
+      "format": "video",
+      "first_shown_datetime": "2026-10-02T00:00:00Z",
+      "last_shown_datetime": "2026-10-19T00:00:00Z",
+      "video_link": "https://cdn.example/tiktok/video/1900000000000002.mp4",
+      "cover_image": "https://cdn.example/tiktok/cover/1900000000000002.jpeg",
+      "estimated_audience": "1K-10K",
+      "estimated_audience_min": 1000,
+      "estimated_audience_max": 10000
+    },
+    {
+      "position": 3,
+      "id": "1900000000000003",
+      "advertiser": "Pellucid Account Care",
+      "title": "Hacked ad account checklist: save this before you need it",
+      "format": "image",
+      "first_shown_datetime": "2026-08-20T00:00:00Z",
+      "last_shown_datetime": "2026-09-30T00:00:00Z",
+      "image_urls": [
+        "https://cdn.example/tiktok/image/1900000000000003-1.jpeg",
+        "https://cdn.example/tiktok/image/1900000000000003-2.jpeg"
+      ],
+      "estimated_audience": "10K-100K",
+      "estimated_audience_min": 10000,
+      "estimated_audience_max": 100000
+    },
+    {
+      "position": 4,
+      "id": "1900000000000004",
+      "advertiser": "Vantorra Digital",
+      "title": "Stop hackers spending your ad budget",
+      "format": "video",
+      "first_shown_datetime": "2026-07-03T00:00:00Z",
+      "last_shown_datetime": "2026-07-31T00:00:00Z",
+      "video_link": "https://cdn.example/tiktok/video/1900000000000004.mp4",
+      "cover_image": "https://cdn.example/tiktok/cover/1900000000000004.jpeg",
+      "estimated_audience": "0-1K",
+      "estimated_audience_min": 0,
+      "estimated_audience_max": 1000
+    },
+    {
+      "position": 5,
+      "id": "1900000000000005",
+      "advertiser": "Fenwright Digital",
+      "title": "Your ad account was hacked. Now what?",
+      "format": "image",
+      "first_shown_datetime": "2026-10-10T00:00:00Z",
+      "last_shown_datetime": "2026-10-17T00:00:00Z",
+      "image_urls": [
+        "https://cdn.example/tiktok/image/1900000000000005-1.jpeg"
+      ],
+      "estimated_audience": "1K-10K",
+      "estimated_audience_min": 1000,
+      "estimated_audience_max": 10000
+    }
+  ]
+}

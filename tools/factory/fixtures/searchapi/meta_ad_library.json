@@ -1,0 +1,350 @@
+{
+  "search_parameters": {
+    "engine": "meta_ad_library",
+    "q": "ad account security",
+    "country": "ALL"
+  },
+  "search_information": {
+    "total_results": 1460
+  },
+  "ads": [
+    {
+      "ad_archive_id": "9000000000001001",
+      "is_active": true,
+      "page_id": "900000000000101",
+      "page_is_deleted": false,
+      "snapshot": {
+        "page_id": "900000000000101",
+        "page_is_deleted": false,
+        "page_profile_uri": "https://www.facebook.com/900000000000101/",
+        "page_name": "Kestrelmark Security",
+        "page_profile_picture_url": "https://cdn.example/meta/pages/900000000000101.jpg",
+        "caption": "kestrelmark.example",
+        "cta_text": "Learn more",
+        "cards": [
+          {
+            "body": "Find the weak spots before a hacker does.",
+            "cta_type": "LEARN_MORE",
+            "caption": "kestrelmark.example",
+            "link_description": "10-point check, read-only access",
+            "link_url": "https://kestrelmark.example/ad-account-security?utm_source=facebook&utm_medium=paid",
+            "title": "Free ad account security check",
+            "cta_text": "Learn more",
+            "image_crops": [],
+            "original_image_url": "https://cdn.example/meta/creatives/9000000000001001-1.jpg",
+            "resized_image_url": "https://cdn.example/meta/creatives/9000000000001001-1-600x600.jpg",
+            "watermarked_resized_image_url": ""
+          }
+        ],
+        "body": {
+          "text": "Your ad account is a target. Turn on login alerts, audit every admin and get a free 10-point ad account security check in five minutes."
+        },
+        "cta_type": "LEARN_MORE",
+        "display_format": "DCO",
+        "link_url": "https://kestrelmark.example/ad-account-security?utm_source=facebook&utm_medium=paid",
+        "images": [],
+        "page_categories": [
+          "Software"
+        ],
+        "page_like_count": 4210,
+        "title": "Is your ad account an easy target?",
+        "videos": [],
+        "is_reshared": false,
+        "extra_links": [],
+        "extra_texts": [],
+        "extra_images": [],
+        "extra_videos": [],
+        "ec_certificates": []
+      },
+      "has_user_reported": false,
+      "menu_items": [],
+      "page_name": "Kestrelmark Security",
+      "impressions_with_index": {
+        "impressions_index": -1
+      },
+      "gated_type": "ELIGIBLE",
+      "categories": [
+        "UNKNOWN"
+      ],
+      "is_aaa_eligible": true,
+      "contains_digital_created_media": false,
+      "currency": "",
+      "end_date": "2026-10-20T07:00:00Z",
+      "publisher_platform": [
+        "FACEBOOK",
+        "INSTAGRAM"
+      ],
+      "start_date": "2026-09-08T07:00:00Z",
+      "contains_sensitive_content": false,
+      "regional_regulation_data": {
+        "finserv": {
+          "is_deemed_finserv": false,
+          "is_limited_delivery": false
+        },
+        "tw_anti_scam": {
+          "is_limited_delivery": false
+        }
+      },
+      "hide_data_status": "NONE",
+      "targeted_or_reached_countries": [],
+      "ad_details_token": "eyJhZF9hcmNoaXZlX2lkIjoiOTAwMDAwMDAwMDAwMTAwMSIsInBhZ2VfaWQiOiI5MDAwMDAwMDAwMDAxMDEifQ=="
+    },
+    {
+      "ad_archive_id": "9000000000001002",
+      "is_active": true,
+      "page_id": "900000000000102",
+      "page_is_deleted": false,
+      "snapshot": {
+        "page_id": "900000000000102",
+        "page_is_deleted": false,
+        "page_profile_uri": "https://www.facebook.com/900000000000102/",
+        "page_name": "Brindlewick Ad Recovery",
+        "page_profile_picture_url": "https://cdn.example/meta/pages/900000000000102.jpg",
+        "caption": "brindlewick-recovery.example",
+        "cta_text": "Get quote",
+        "cards": [
+          {
+            "body": "Lock it down, then get it back.",
+            "cta_type": "GET_QUOTE",
+            "caption": "brindlewick-recovery.example",
+            "link_description": "Response within 2 hours",
+            "link_url": "https://brindlewick-recovery.example/ad-account-security?utm_source=facebook&utm_medium=paid",
+            "title": "Hacked ad account help",
+            "cta_text": "Get quote",
+            "image_crops": [],
+            "original_image_url": "https://cdn.example/meta/creatives/9000000000001002-1.jpg",
+            "resized_image_url": "https://cdn.example/meta/creatives/9000000000001002-1-600x600.jpg",
+            "watermarked_resized_image_url": ""
+          }
+        ],
+        "body": {
+          "text": "Hacked ad account? Stop the spend first. Our responders lock down your Business Manager and prepare the appeal with you, seven days a week."
+        },
+        "cta_type": "GET_QUOTE",
+        "display_format": "DCO",
+        "link_url": "https://brindlewick-recovery.example/ad-account-security?utm_source=facebook&utm_medium=paid",
+        "images": [],
+        "page_categories": [
+          "Marketing agency"
+        ],
+        "page_like_count": 1875,
+        "title": "Hacked ad account? Stop the spend first.",
+        "videos": [],
+        "is_reshared": false,
+        "extra_links": [],
+        "extra_texts": [],
+        "extra_images": [],
+        "extra_videos": [],
+        "ec_certificates": []
+      },
+      "has_user_reported": false,
+      "menu_items": [],
+      "page_name": "Brindlewick Ad Recovery",
+      "impressions_with_index": {
+        "impressions_index": -1
+      },
+      "gated_type": "ELIGIBLE",
+      "categories": [
+        "UNKNOWN"
+      ],
+      "is_aaa_eligible": true,
+      "contains_digital_created_media": false,
+      "currency": "",
+      "end_date": "2026-10-20T07:00:00Z",
+      "publisher_platform": [
+        "FACEBOOK",
+        "INSTAGRAM",
+        "MESSENGER"
+      ],
+      "start_date": "2026-10-01T07:00:00Z",
+      "contains_sensitive_content": false,
+      "regional_regulation_data": {
+        "finserv": {
+          "is_deemed_finserv": false,
+          "is_limited_delivery": false
+        },
+        "tw_anti_scam": {
+          "is_limited_delivery": false
+        }
+      },
+      "hide_data_status": "NONE",
+      "targeted_or_reached_countries": [],
+      "ad_details_token": "eyJhZF9hcmNoaXZlX2lkIjoiOTAwMDAwMDAwMDAwMTAwMiIsInBhZ2VfaWQiOiI5MDAwMDAwMDAwMDAxMDIifQ=="
+    },
+    {
+      "ad_archive_id": "9000000000001003",
+      "is_active": false,
+      "page_id": "900000000000103",
+      "page_is_deleted": false,
+      "snapshot": {
+        "page_id": "900000000000103",
+        "page_is_deleted": false,
+        "page_profile_uri": "https://www.facebook.com/900000000000103/",
+        "page_name": "Pellucid Account Care",
+        "page_profile_picture_url": "https://cdn.example/meta/pages/900000000000103.jpg",
+        "caption": "pellucidcare.example",
+        "cta_text": "Learn more",
+        "cards": [
+          {
+            "body": "No exceptions, including the agency.",
+            "cta_type": "LEARN_MORE",
+            "caption": "pellucidcare.example",
+            "link_description": "Ad account security checklist",
+            "link_url": "https://pellucidcare.example/ad-account-security?utm_source=facebook&utm_medium=paid",
+            "title": "1. Two-factor for every admin",
+            "cta_text": "Learn more",
+            "image_crops": [],
+            "original_image_url": "https://cdn.example/meta/creatives/9000000000001003-1.jpg",
+            "resized_image_url": "https://cdn.example/meta/creatives/9000000000001003-1-600x600.jpg",
+            "watermarked_resized_image_url": ""
+          },
+          {
+            "body": "So one stolen login cannot lock you out.",
+            "cta_type": "LEARN_MORE",
+            "caption": "pellucidcare.example",
+            "link_description": "Ad account security checklist",
+            "link_url": "https://pellucidcare.example/ad-account-security?utm_source=facebook&utm_medium=paid",
+            "title": "2. A backup admin you trust",
+            "cta_text": "Learn more",
+            "image_crops": [],
+            "original_image_url": "https://cdn.example/meta/creatives/9000000000001003-2.jpg",
+            "resized_image_url": "https://cdn.example/meta/creatives/9000000000001003-2-600x600.jpg",
+            "watermarked_resized_image_url": ""
+          }
+        ],
+        "body": {
+          "text": "5 settings that keep hijackers out of your ad account. Swipe through the checklist and fix them tonight."
+        },
+        "cta_type": "LEARN_MORE",
+        "display_format": "CAROUSEL",
+        "link_url": "https://pellucidcare.example/ad-account-security?utm_source=facebook&utm_medium=paid",
+        "images": [],
+        "page_categories": [
+          "Internet company"
+        ],
+        "page_like_count": 932,
+        "title": "5 settings that keep hijackers out",
+        "videos": [],
+        "is_reshared": false,
+        "extra_links": [],
+        "extra_texts": [],
+        "extra_images": [],
+        "extra_videos": [],
+        "ec_certificates": []
+      },
+      "has_user_reported": false,
+      "menu_items": [],
+      "page_name": "Pellucid Account Care",
+      "impressions_with_index": {
+        "impressions_index": -1
+      },
+      "gated_type": "ELIGIBLE",
+      "categories": [
+        "UNKNOWN"
+      ],
+      "is_aaa_eligible": false,
+      "contains_digital_created_media": false,
+      "currency": "",
+      "end_date": "2026-08-29T07:00:00Z",
+      "publisher_platform": [
+        "FACEBOOK"
+      ],
+      "start_date": "2026-07-14T07:00:00Z",
+      "contains_sensitive_content": false,
+      "regional_regulation_data": {
+        "finserv": {
+          "is_deemed_finserv": false,
+          "is_limited_delivery": false
+        },
+        "tw_anti_scam": {
+          "is_limited_delivery": false
+        }
+      },
+      "hide_data_status": "NONE",
+      "targeted_or_reached_countries": [],
+      "ad_details_token": "eyJhZF9hcmNoaXZlX2lkIjoiOTAwMDAwMDAwMDAwMTAwMyIsInBhZ2VfaWQiOiI5MDAwMDAwMDAwMDAxMDMifQ=="
+    },
+    {
+      "ad_archive_id": "9000000000001004",
+      "is_active": true,
+      "page_id": "900000000000104",
+      "page_is_deleted": false,
+      "snapshot": {
+        "page_id": "900000000000104",
+        "page_is_deleted": false,
+        "page_profile_uri": "https://www.facebook.com/900000000000104/",
+        "page_name": "Vantorra Digital",
+        "page_profile_picture_url": "https://cdn.example/meta/pages/900000000000104.jpg",
+        "caption": "vantorra.example",
+        "cta_text": "Download",
+        "cards": [
+          {
+            "body": "Roles, alerts and an incident plan for agency teams.",
+            "cta_type": "DOWNLOAD",
+            "caption": "vantorra.example",
+            "link_description": "Free PDF, 24 pages",
+            "link_url": "https://vantorra.example/ad-account-security?utm_source=facebook&utm_medium=paid",
+            "title": "Ad account security playbook",
+            "cta_text": "Download",
+            "image_crops": [],
+            "original_image_url": "https://cdn.example/meta/creatives/9000000000001004-1.jpg",
+            "resized_image_url": "https://cdn.example/meta/creatives/9000000000001004-1-600x600.jpg",
+            "watermarked_resized_image_url": ""
+          }
+        ],
+        "body": {
+          "text": "Agencies: one compromised login can drain every client budget. Download our ad account security playbook for teams."
+        },
+        "cta_type": "DOWNLOAD",
+        "display_format": "DCO",
+        "link_url": "https://vantorra.example/ad-account-security?utm_source=facebook&utm_medium=paid",
+        "images": [],
+        "page_categories": [
+          "Advertising/marketing"
+        ],
+        "page_like_count": 12640,
+        "title": "The ad account security playbook for agencies",
+        "videos": [],
+        "is_reshared": false,
+        "extra_links": [],
+        "extra_texts": [],
+        "extra_images": [],
+        "extra_videos": [],
+        "ec_certificates": []
+      },
+      "has_user_reported": false,
+      "menu_items": [],
+      "page_name": "Vantorra Digital",
+      "impressions_with_index": {
+        "impressions_index": -1
+      },
+      "gated_type": "ELIGIBLE",
+      "categories": [
+        "UNKNOWN"
+      ],
+      "is_aaa_eligible": true,
+      "contains_digital_created_media": false,
+      "currency": "",
+      "end_date": "2026-10-20T07:00:00Z",
+      "publisher_platform": [
+        "FACEBOOK",
+        "INSTAGRAM",
+        "AUDIENCE_NETWORK"
+      ],
+      "start_date": "2026-09-22T07:00:00Z",
+      "contains_sensitive_content": false,
+      "regional_regulation_data": {
+        "finserv": {
+          "is_deemed_finserv": false,
+          "is_limited_delivery": false
+        },
+        "tw_anti_scam": {
+          "is_limited_delivery": false
+        }
+      },
+      "hide_data_status": "NONE",
+      "targeted_or_reached_countries": [],
+      "ad_details_token": "eyJhZF9hcmNoaXZlX2lkIjoiOTAwMDAwMDAwMDAwMTAwNCIsInBhZ2VfaWQiOiI5MDAwMDAwMDAwMDAxMDQifQ=="
+    }
+  ]
+}

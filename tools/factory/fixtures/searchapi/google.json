@@ -1,0 +1,183 @@
+{
+  "search_parameters": {
+    "engine": "google",
+    "q": "facebook ad account hacked",
+    "gl": "us"
+  },
+  "search_information": {
+    "query_displayed": "facebook ad account hacked",
+    "total_results": 18600000,
+    "time_taken_displayed": 0.36
+  },
+  "ads": [
+    {
+      "position": 1,
+      "block_position": "top",
+      "title": "Hacked Ad Account? - Stop Unauthorized Ad Spend Today",
+      "source": "Brindlewick Ad Recovery",
+      "link": "https://www.brindlewick-recovery.example/hacked-ad-account",
+      "domain": "www.brindlewick-recovery.example",
+      "displayed_link": "https://www.brindlewick-recovery.example",
+      "snippet": "Lock down your Business Manager, remove unknown admins and file the appeal in one call. Specialists available 7 days a week.",
+      "snippet_highlighted_words": [
+        "Business Manager"
+      ],
+      "sitelinks": {
+        "expanded": [
+          {
+            "title": "Disabled Ad Account Appeals",
+            "snippet": "Prepare a clear appeal for a disabled or restricted ad account.",
+            "link": "https://www.brindlewick-recovery.example/appeals"
+          },
+          {
+            "title": "Free Account Security Check",
+            "snippet": "A 10-point review of admins, payment methods and login alerts.",
+            "link": "https://www.brindlewick-recovery.example/security-check"
+          }
+        ]
+      },
+      "favicon": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==",
+      "advertiser_info_token": "QVUtZXhhbXBsZS1hZHZlcnRpc2VyLTAwMQ"
+    },
+    {
+      "position": 2,
+      "block_position": "top",
+      "title": "Ad Account Security Monitoring - Alerts Before Hackers Spend",
+      "source": "Kestrelmark Security",
+      "link": "https://kestrelmark.example/ad-account-monitoring",
+      "domain": "kestrelmark.example",
+      "displayed_link": "https://kestrelmark.example/ad-account-monitoring",
+      "snippet": "Get an alert the minute a new admin, payment method or campaign appears in your ad accounts. Try it free for 14 days.",
+      "snippet_highlighted_words": [
+        "ad accounts"
+      ],
+      "sitelinks": {
+        "expanded": [
+          {
+            "title": "How It Works",
+            "snippet": "Connect your ad accounts in two minutes, read-only access.",
+            "link": "https://kestrelmark.example/how-it-works"
+          },
+          {
+            "title": "Pricing",
+            "snippet": "Plans for single brands and for agencies.",
+            "link": "https://kestrelmark.example/pricing"
+          }
+        ]
+      },
+      "favicon": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==",
+      "advertiser_info_token": "QVUtZXhhbXBsZS1hZHZlcnRpc2VyLTAwMg"
+    },
+    {
+      "position": 3,
+      "block_position": "bottom",
+      "title": "Recover A Hacked Business Account - Fixed-Fee Recovery Service",
+      "source": "Pellucid Account Care",
+      "link": "https://www.pellucidcare.example/recovery",
+      "domain": "www.pellucidcare.example",
+      "displayed_link": "https://www.pellucidcare.example",
+      "snippet": "Hacked page or ad account? We document the takeover and walk you through every recovery step. Fixed fee, no surprises.",
+      "snippet_highlighted_words": [
+        "Hacked",
+        "ad account"
+      ],
+      "favicon": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==",
+      "advertiser_info_token": "QVUtZXhhbXBsZS1hZHZlcnRpc2VyLTAwMw"
+    }
+  ],
+  "organic_results": [
+    {
+      "position": 1,
+      "title": "Recover a hacked ad account | Business Help Center",
+      "link": "https://help.adplatform.example/business/help/recover-hacked-ad-account",
+      "source": "Business Help Center",
+      "domain": "help.adplatform.example",
+      "displayed_link": "https://help.adplatform.example › business › help",
+      "snippet": "If you think someone else has access to your ad account, secure your login first, then review the admins, payment methods and recent campaigns in your business settings.",
+      "snippet_highlighted_words": [
+        "ad account"
+      ],
+      "sitelinks": {
+        "inline": [
+          {
+            "title": "Secure your account",
+            "link": "https://help.adplatform.example/business/help/secure-account"
+          },
+          {
+            "title": "Report unauthorized charges",
+            "link": "https://help.adplatform.example/business/help/unauthorized-charges"
+          }
+        ]
+      },
+      "favicon": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
+    },
+    {
+      "position": 2,
+      "title": "My ad account got hacked and they spent $3,800 overnight",
+      "link": "https://forum.marketers.example/t/ad-account-hacked-spent-overnight/48213",
+      "source": "Marketers Forum",
+      "domain": "forum.marketers.example",
+      "displayed_link": "https://forum.marketers.example › ad-account-hacked-spe...",
+      "snippet": "Someone added a new admin to our Business Manager at 3am and launched ads in a currency we never use. Support has not answered in six days ...",
+      "snippet_highlighted_words": [
+        "Business Manager"
+      ],
+      "date": "Sep 18, 2026",
+      "favicon": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
+    },
+    {
+      "position": 3,
+      "title": "What to do when your Facebook ad account is hacked: a 2026 checklist",
+      "link": "https://kestrelmark.example/blog/facebook-ad-account-hacked-checklist",
+      "source": "Kestrelmark Security",
+      "domain": "kestrelmark.example",
+      "displayed_link": "https://kestrelmark.example › blog › facebook-ad-account...",
+      "snippet": "Remove unknown admins, revoke partner access, dispute the charges with your bank and appeal any disabled Facebook ad account, in that order.",
+      "snippet_highlighted_words": [
+        "Facebook ad account"
+      ],
+      "date": "Aug 2, 2026",
+      "favicon": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
+    },
+    {
+      "position": 4,
+      "title": "Hijacked ad accounts are the new phishing payday",
+      "link": "https://www.adindustryweekly.example/2026/07/hijacked-ad-accounts",
+      "source": "Ad Industry Weekly",
+      "domain": "www.adindustryweekly.example",
+      "displayed_link": "https://www.adindustryweekly.example › 2026/07 › hijacke...",
+      "snippet": "Small advertisers report fake policy-violation emails that lead to stolen logins, followed by thousands in unauthorized ad spend.",
+      "snippet_highlighted_words": [
+        "ad"
+      ],
+      "date": "Jul 9, 2026",
+      "favicon": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
+    },
+    {
+      "position": 5,
+      "title": "Ad account hacked and disabled - how long does the review take?",
+      "link": "https://community.adplatform.example/questions/ad-account-hacked-disabled-review",
+      "source": "Business Community",
+      "domain": "community.adplatform.example",
+      "displayed_link": "https://community.adplatform.example › questions",
+      "snippet": "My ad account was disabled after the hacker's ads were rejected. I submitted the review form twice. Has anyone gotten their account back?",
+      "snippet_highlighted_words": [
+        "ad account"
+      ],
+      "favicon": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
+    },
+    {
+      "position": 6,
+      "title": "How to protect your Business Manager from account takeovers",
+      "link": "https://www.pellucidcare.example/guides/business-manager-takeover",
+      "source": "Pellucid Account Care",
+      "domain": "www.pellucidcare.example",
+      "displayed_link": "https://www.pellucidcare.example › guides",
+      "snippet": "Two-factor authentication for every admin, a backup admin and alerts on payment changes stop most ad account takeovers before any money is spent.",
+      "snippet_highlighted_words": [
+        "ad account"
+      ],
+      "favicon": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
+    }
+  ]
+}

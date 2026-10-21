@@ -1,0 +1,257 @@
+[
+  {
+    "block_type": "sitelinks",
+    "block_position": 1,
+    "keyword": "hootsuite",
+    "position": 1,
+    "prev_pos": 1,
+    "volume": 40500,
+    "cpc": 3.89,
+    "competition": 0.39,
+    "url": "https://www.hootsuite.com/",
+    "difficulty": 93,
+    "total_sites": null,
+    "traffic": 13895,
+    "traffic_percent": 9.33,
+    "price": 54051.55,
+    "serp_features": [
+      "reviews",
+      "sitelinks",
+      "video",
+      "related_searches"
+    ],
+    "intents": [
+      "I",
+      "N"
+    ]
+  },
+  {
+    "block_type": null,
+    "block_position": 8,
+    "keyword": "instagram story",
+    "position": 8,
+    "prev_pos": 8,
+    "volume": 201000,
+    "cpc": 0.55,
+    "competition": 0,
+    "url": "https://blog.hootsuite.com/instagram-stories/",
+    "difficulty": 93,
+    "total_sites": null,
+    "traffic": 5733,
+    "traffic_percent": 3.85,
+    "price": 3153.15,
+    "serp_features": [
+      "video",
+      "related_searches"
+    ],
+    "intents": [
+      "I"
+    ]
+  },
+  {
+    "block_type": null,
+    "block_position": 17,
+    "keyword": "threads",
+    "position": 17,
+    "prev_pos": 17,
+    "volume": 201000,
+    "cpc": 0.15,
+    "competition": 0.02,
+    "url": "https://blog.hootsuite.com/instagram-threads/",
+    "difficulty": 93,
+    "total_sites": null,
+    "traffic": 4556,
+    "traffic_percent": 3.06,
+    "price": 683.4,
+    "serp_features": [
+      "reviews",
+      "video",
+      "related_searches"
+    ],
+    "intents": [
+      "I"
+    ]
+  },
+  {
+    "block_type": null,
+    "block_position": 9,
+    "keyword": "linktree",
+    "position": 9,
+    "prev_pos": 9,
+    "volume": 450000,
+    "cpc": 0.5,
+    "competition": 0.22,
+    "url": "https://blog.hootsuite.com/link-tree-for-instagram/",
+    "difficulty": 92,
+    "total_sites": null,
+    "traffic": 3148,
+    "traffic_percent": 2.11,
+    "price": 1574,
+    "serp_features": [
+      "reviews",
+      "sitelinks",
+      "video",
+      "knowledge_graph",
+      "related_searches"
+    ],
+    "intents": [
+      "I",
+      "N"
+    ]
+  },
+  {
+    "block_type": null,
+    "block_position": 25,
+    "keyword": "ads google ads",
+    "position": 25,
+    "prev_pos": 25,
+    "volume": 301000,
+    "cpc": 28.71,
+    "competition": 0.5,
+    "url": "https://blog.hootsuite.com/google-ads/",
+    "difficulty": 100,
+    "total_sites": null,
+    "traffic": 2817,
+    "traffic_percent": 1.89,
+    "price": 80876.07,
+    "serp_features": [
+      "video",
+      "sge",
+      "related_searches"
+    ],
+    "intents": [
+      "I"
+    ]
+  },
+  {
+    "block_type": null,
+    "block_position": 25,
+    "keyword": "instagram reels download",
+    "position": 25,
+    "prev_pos": 25,
+    "volume": 60500,
+    "cpc": 0.02,
+    "competition": 0,
+    "url": "https://blog.hootsuite.com/download-instagram-reels/",
+    "difficulty": 69,
+    "total_sites": null,
+    "traffic": 2433,
+    "traffic_percent": 1.63,
+    "price": 48.66,
+    "serp_features": [
+      "reviews",
+      "video",
+      "digital_complaints",
+      "related_searches"
+    ],
+    "intents": [
+      "I",
+      "N"
+    ]
+  },
+  {
+    "block_type": null,
+    "block_position": 4,
+    "keyword": "username generator",
+    "position": 4,
+    "prev_pos": 4,
+    "volume": 90500,
+    "cpc": 0.12,
+    "competition": 0,
+    "url": "https://www.hootsuite.com/social-media-tools/username-generator",
+    "difficulty": 91,
+    "total_sites": null,
+    "traffic": 2408,
+    "traffic_percent": 1.62,
+    "price": 288.96,
+    "serp_features": [
+      "reviews",
+      "video",
+      "people_also_ask",
+      "images",
+      "related_searches"
+    ],
+    "intents": [
+      "I"
+    ]
+  },
+  {
+    "block_type": null,
+    "block_position": 4,
+    "keyword": "tiktok emoji",
+    "position": 4,
+    "prev_pos": 4,
+    "volume": 49500,
+    "cpc": 0,
+    "competition": 0,
+    "url": "https://blog.hootsuite.com/tiktok-secret-emojis/",
+    "difficulty": 81,
+    "total_sites": null,
+    "traffic": 1935,
+    "traffic_percent": 1.3,
+    "price": 0,
+    "serp_features": [
+      "reviews",
+      "video",
+      "related_searches"
+    ],
+    "intents": [
+      "I"
+    ]
+  },
+  {
+    "block_type": null,
+    "block_position": 14,
+    "keyword": "gif",
+    "position": 13,
+    "prev_pos": 13,
+    "volume": 1220000,
+    "cpc": 0.18,
+    "competition": 0,
+    "url": "https://blog.hootsuite.com/social-media-definitions/gif/",
+    "difficulty": 100,
+    "total_sites": null,
+    "traffic": 1924,
+    "traffic_percent": 1.29,
+    "price": 346.32,
+    "serp_features": [
+      "reviews",
+      "sitelinks",
+      "video",
+      "people_also_ask",
+      "images",
+      "knowledge_graph",
+      "related_searches"
+    ],
+    "intents": [
+      "I",
+      "N"
+    ]
+  },
+  {
+    "block_type": null,
+    "block_position": 28,
+    "keyword": "instagram reel download",
+    "position": 28,
+    "prev_pos": 28,
+    "volume": 40500,
+    "cpc": 0.02,
+    "competition": 0,
+    "url": "https://blog.hootsuite.com/download-instagram-reels/",
+    "difficulty": 62,
+    "total_sites": null,
+    "traffic": 1748,
+    "traffic_percent": 1.17,
+    "price": 34.96,
+    "serp_features": [
+      "reviews",
+      "video",
+      "digital_complaints",
+      "related_searches"
+    ],
+    "intents": [
+      "I",
+      "N"
+    ]
+  }
+]

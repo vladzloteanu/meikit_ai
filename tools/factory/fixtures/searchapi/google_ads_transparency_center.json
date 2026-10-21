@@ -1,0 +1,88 @@
+{
+  "search_parameters": {
+    "engine": "google_ads_transparency_center",
+    "domain": "hootsuite.com",
+    "region": "US",
+    "num": "5"
+  },
+  "search_information": {
+    "total_results": 200
+  },
+  "ad_creatives": [
+    {
+      "position": 1,
+      "id": "CR09000000000000000101",
+      "target_domain": "hootsuite.com",
+      "advertiser": {
+        "id": "AR09000000000000000001",
+        "name": "Quarrytown Media LLC"
+      },
+      "first_shown_datetime": "2026-08-11T14:02:51Z",
+      "last_shown_datetime": "2026-10-19T22:47:03Z",
+      "total_days_shown": 69,
+      "format": "text",
+      "details_link": "https://adstransparency.google.com/advertiser/AR09000000000000000001/creative/CR09000000000000000101?region=US",
+      "details_script_link": "https://displayads-formats.googleusercontent.com/ads/preview/content.js?client=ads-integrity-transparency"
+    },
+    {
+      "position": 2,
+      "id": "CR09000000000000000102",
+      "target_domain": "hootsuite.com",
+      "advertiser": {
+        "id": "AR09000000000000000001",
+        "name": "Quarrytown Media LLC"
+      },
+      "first_shown_datetime": "2026-09-03T09:15:20Z",
+      "last_shown_datetime": "2026-10-20T03:10:44Z",
+      "total_days_shown": 47,
+      "format": "image",
+      "details_link": "https://adstransparency.google.com/advertiser/AR09000000000000000001/creative/CR09000000000000000102?region=US",
+      "details_script_link": "https://displayads-formats.googleusercontent.com/ads/preview/content.js?client=ads-integrity-transparency"
+    },
+    {
+      "position": 3,
+      "id": "CR09000000000000000103",
+      "target_domain": "hootsuite.com",
+      "advertiser": {
+        "id": "AR09000000000000000002",
+        "name": "Ombrella Social Ltd"
+      },
+      "first_shown_datetime": "2026-06-24T17:40:05Z",
+      "last_shown_datetime": "2026-09-30T11:05:37Z",
+      "total_days_shown": 98,
+      "format": "video",
+      "details_link": "https://adstransparency.google.com/advertiser/AR09000000000000000002/creative/CR09000000000000000103?region=US",
+      "details_script_link": "https://displayads-formats.googleusercontent.com/ads/preview/content.js?client=ads-integrity-transparency"
+    },
+    {
+      "position": 4,
+      "id": "CR09000000000000000104",
+      "target_domain": "hootsuite.com",
+      "advertiser": {
+        "id": "AR09000000000000000002",
+        "name": "Ombrella Social Ltd"
+      },
+      "first_shown_datetime": "2026-10-06T08:21:12Z",
+      "last_shown_datetime": "2026-10-20T16:58:29Z",
+      "total_days_shown": 14,
+      "format": "text",
+      "details_link": "https://adstransparency.google.com/advertiser/AR09000000000000000002/creative/CR09000000000000000104?region=US",
+      "details_script_link": "https://displayads-formats.googleusercontent.com/ads/preview/content.js?client=ads-integrity-transparency"
+    },
+    {
+      "position": 5,
+      "id": "CR09000000000000000105",
+      "target_domain": "hootsuite.com",
+      "advertiser": {
+        "id": "AR09000000000000000003",
+        "name": "Fenwright Digital Inc."
+      },
+      "first_shown_datetime": "2026-05-02T12:44:09Z",
+      "last_shown_datetime": "2026-07-15T19:30:56Z",
+      "total_days_shown": 74,
+      "format": "image",
+      "details_link": "https://adstransparency.google.com/advertiser/AR09000000000000000003/creative/CR09000000000000000105?region=US",
+      "details_script_link": "https://displayads-formats.googleusercontent.com/ads/preview/content.js?client=ads-integrity-transparency"
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "organic": {
+    "base_domain": "hootsuite.com",
+    "price_sum": 380898.95,
+    "traffic_sum": 148931,
+    "keywords_new_count": 2459,
+    "keywords_down_count": 171,
+    "keywords_up_count": 596,
+    "keywords_equal_count": 438192,
+    "keywords_lost_count": 18594,
+    "keywords_count": 316895,
+    "top1_5": 43486,
+    "top6_10": 33349,
+    "top11_20": 59381,
+    "top21_50": 136365,
+    "top51_100": 168377,
+    "year": 2026,
+    "month": 10
+  },
+  "adv": {
+    "base_domain": "hootsuite.com",
+    "price_sum": 302.2,
+    "traffic_sum": 56,
+    "keywords_new_count": 2,
+    "keywords_down_count": 0,
+    "keywords_up_count": 0,
+    "keywords_equal_count": 118,
+    "keywords_lost_count": 0,
+    "keywords_count": 116,
+    "top1_2": 99,
+    "top3_5": 20,
+    "top6_8": 1,
+    "top9_11": 0,
+    "year": 2026,
+    "month": 10
+  }
+}

@@ -1,0 +1,71 @@
+{
+  "search_parameters": {
+    "engine": "linkedin_ad_library",
+    "q": "ad account security"
+  },
+  "search_information": {
+    "total_results": 57
+  },
+  "ads": [
+    {
+      "position": 1,
+      "advertiser": {
+        "name": "Kestrelmark Security",
+        "thumbnail": "https://cdn.example/linkedin/logos/kestrelmark-100x100.png"
+      },
+      "ad_type": "image",
+      "content": {
+        "headline": "One leaked password can drain a quarter's ad budget. See how security teams watch ad account permissions.",
+        "image": "https://cdn.example/linkedin/creatives/900000101.jpg",
+        "cta": "Learn more"
+      },
+      "link": "https://www.linkedin.com/ad-library/detail/900000101?trk=ad_library_ad_preview_content_image",
+      "id": "900000101"
+    },
+    {
+      "position": 2,
+      "advertiser": {
+        "name": "Vantorra Digital",
+        "thumbnail": "https://cdn.example/linkedin/logos/vantorra-100x100.png"
+      },
+      "ad_type": "image",
+      "content": {
+        "headline": "Agencies: audit who can spend from every client ad account in 10 minutes.",
+        "image": "https://cdn.example/linkedin/creatives/900000102.jpg",
+        "cta": "Download"
+      },
+      "link": "https://www.linkedin.com/ad-library/detail/900000102?trk=ad_library_ad_preview_content_image",
+      "id": "900000102"
+    },
+    {
+      "position": 3,
+      "advertiser": {
+        "name": "Pellucid Account Care",
+        "thumbnail": "https://cdn.example/linkedin/logos/pellucid-100x100.png"
+      },
+      "ad_type": "image",
+      "content": {
+        "headline": "Ad account security checklist for marketing teams: 12 controls on one page.",
+        "image": "https://cdn.example/linkedin/creatives/900000103.jpg",
+        "cta": "Download"
+      },
+      "link": "https://www.linkedin.com/ad-library/detail/900000103?trk=ad_library_ad_preview_content_image",
+      "id": "900000103"
+    },
+    {
+      "position": 4,
+      "advertiser": {
+        "name": "Fenwright Digital",
+        "thumbnail": "https://cdn.example/linkedin/logos/fenwright-100x100.png"
+      },
+      "ad_type": "image",
+      "content": {
+        "headline": "Webinar: what we learned from 40 hijacked ad accounts.",
+        "image": "https://cdn.example/linkedin/creatives/900000104.jpg",
+        "cta": "Register"
+      },
+      "link": "https://www.linkedin.com/ad-library/detail/900000104?trk=ad_library_ad_preview_content_image",
+      "id": "900000104"
+    }
+  ]
+}
