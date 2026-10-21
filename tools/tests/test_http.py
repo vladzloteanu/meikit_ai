@@ -171,6 +171,17 @@ def test_json_calls_accept_any_2xx_and_refuse_non_json():
         c.get_json("/a")
 
 
+def test_decode_reads_a_response_get_returned_like_get_json():
+    c = Client(
+        "t",
+        "https://x.test",
+        transport=replay(httpx.Response(200, json={"a": 1}), httpx.Response(404, text="gone")),
+    )
+    assert c.decode(c.get("/a")) == {"a": 1}
+    with pytest.raises(ProviderError, match=r"^t: HTTP 404: GET /b: gone$"):
+        c.decode(c.get("/b"))
+
+
 QUOTA_BODY = {
     "error": "You have used all of the searches for the month. Please upgrade your plan on SearchApi.io."
 }

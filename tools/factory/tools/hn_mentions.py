@@ -33,7 +33,6 @@ from factory.providers import algolia_hn
 
 TOOL = "hn_mentions"
 PROVIDER = "algolia"
-MAX_TIME = 4102444800  # 2100-01-01: a later Unix time is garbage
 HN_ITEM = "https://news.ycombinator.com/item?id="
 TAGS = {"story": "stories", "comment": "comments"}  # Algolia's tag -> the count it makes
 DEFAULT_LIMIT = 100
@@ -166,7 +165,7 @@ def _item(tag: str, hit: dict) -> dict | None:
     """A story or a comment as the term counts it; None for a hit without an id or a time. What
     it is comes from its own tags, else from the tag searched."""
     item_id, created = hit.get("objectID"), hit.get("created_at_i")
-    if not isinstance(item_id, str) or not _is_time(created):
+    if not isinstance(item_id, str) or not toolbase.is_time(created):
         return None
     tags = hit.get("_tags") if isinstance(hit.get("_tags"), list) else []
     kind = next((name for name in TAGS if name in tags), tag)
@@ -202,12 +201,9 @@ def _plain(text: object) -> str | None:
 
 
 def _unix_range(since: date, until: date) -> tuple[int, int]:
-    """The Unix times of the midnight (UTC) starting `since` and of the one ending `until`."""
+    """Algolia's strict bounds for the days from `since` to `until`, both included: the second
+    before the midnight (UTC) starting `since`, so its first second counts, and the midnight
+    ending `until`."""
     start = datetime.combine(since, time(), UTC)
     end = datetime.combine(until + timedelta(days=1), time(), UTC)
-    return int(start.timestamp()), int(end.timestamp())
-
-
-def _is_time(value: object) -> bool:
-    """A Unix time a day can be read from: a number from 1970 to 2100 (not NaN, not a bool)."""
-    return isinstance(value, int | float) and not isinstance(value, bool) and 0 <= value < MAX_TIME
+    return int(start.timestamp()) - 1, int(end.timestamp())

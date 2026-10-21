@@ -3,7 +3,8 @@
     factory pricing_scan --idea S --urls U ...
 
 Firecrawl scrapes each page's main content as markdown, one call a page (PRICE_TABLE_EUR:
-0.01 EUR each), and the page is read for its offer. The research JSON is
+0.01 EUR each, billed for the scrapes it answers), and the page is read for its offer. The
+research JSON is
 
     {"pages": [{"url", "title", "headline", "prices": [str], "cta", "offer_shape"}]}
 
@@ -30,7 +31,9 @@ COLUMNS = ["url", "offer_shape", "prices", "cta"]
 SELFTEST_URL = "https://example.com"
 
 # A price: a currency then an amount, or an amount then a currency, then what it is per, all on
-# one line (a space may be a no-break one: `19\u202f€`).
+# one line (a space may be a no-break one: `19\u202f€`). An amount written before its currency
+# starts after neither a digit nor a letter (not `026 150 €` inside `2026 150 €`), and its
+# currency is not followed by a digit (`Tier 1 $9` holds `$9`, not `1 $`).
 _SP = r"[ \t\u00a0\u202f]"
 _THOUSANDS = rf"(?:[,.]|{_SP})\d{{3}}"  # 1,299  1.299  1 299
 _AMOUNT = rf"(?:\d{{1,3}}{_THOUSANDS}+(?:[.,]\d{{1,2}})?|\d+(?:[.,]\d{{1,2}})?)"
@@ -41,15 +44,21 @@ _UNIT = (
 )
 _PER = rf"(?:{_SP}?/{_SP}?{_UNIT}|{_SP}(?:per|par|a){_SP}{_UNIT})"
 PRICE = re.compile(
-    rf"(?:[$€£]{_SP}?{_AMOUNT}|{_AMOUNT}{_SP}?{_CURRENCY_AFTER})"
+    rf"(?:[$€£]{_SP}?{_AMOUNT}|(?<!\w){_AMOUNT}{_SP}?{_CURRENCY_AFTER}(?!{_SP}?\d))"
     rf"(?:{_SP}?(?:HT|TTC)\b)?(?:{_PER}{{1,2}})?",
     re.IGNORECASE,
 )
-# What makes a price, or a page with prices, a subscription.
+# What makes a price a subscription, in the price itself or right after it.
 RECURRING = re.compile(
     r"/\s?(?:mo|month|mois|yr|year|an|année)s?\b"
-    r"|\b(?:per|a|par)\s(?:month|mois|year|an|année|annum)\b"
-    r"|\b(?:monthly|yearly|annually|mensuel(?:le)?|annuel(?:le)?)\b",
+    r"|\b(?:per|a|par|each|every|chaque|le)\s(?:month|mois|year|an|année|annum)\b"
+    r"|\b(?:monthly|yearly|annually|mensuel(?:le)?s?|annuel(?:le)?s?)\b",
+    re.IGNORECASE,
+)
+AFTER_PRICE = 40  # characters after a price read for what it recurs by
+# A negation earlier in the same clause: "no monthly fees", "sans abonnement mensuel".
+NEGATION = re.compile(
+    r"\b(?:no|not|non|without|never|zero|sans|pas\s+d[e']?|aucun(?:e)?)\b[^.;:!?\n]{0,20}$",
     re.IGNORECASE,
 )
 QUOTE = re.compile(r"\b(?:quotes?|devis|(?:contact|talk\s+to)\s+(?:our\s+)?sales)\b", re.IGNORECASE)
@@ -96,7 +105,7 @@ def run(args: argparse.Namespace) -> int:
             data = collect(client, urls)
             r.write(data)
         finally:
-            r.log_cost(PROVIDER, client.calls)
+            r.log_cost(PROVIDER, client.ok_calls)  # the scrapes Firecrawl answered
         r.summary(summary(data))
     return 0
 
@@ -134,11 +143,17 @@ def extract_prices(md: str) -> list[str]:
 
 
 def guess_offer_shape(prices: list[str], md: str) -> str:
-    """`subscription` when a price, or a page with prices, says per month or per year (`/mo`,
-    `month`, `mois`, `/yr`...); `quote` when there is no price and the page asks for a quote or
-    a sales contact (`quote`, `devis`, `contact sales`); `one_shot` for prices none of which
-    recurs; `unknown` otherwise."""
-    if any(RECURRING.search(price) for price in prices) or (prices and RECURRING.search(md)):
+    """`subscription` when a price says per month or per year (`/mo`, `month`, `mois`, `/yr`...),
+    in itself or in the 40 characters after it in `md`, unless a negation comes first there ("no
+    monthly fees"); `quote` when there is no price and the page asks for a quote or a sales
+    contact (`quote`, `devis`, `contact sales`); `one_shot` for prices none of which recurs;
+    `unknown` otherwise. What the page says elsewhere does not count."""
+    after = (
+        md[match.end() : match.end() + AFTER_PRICE]
+        for match in PRICE.finditer(md)
+        if " ".join(match.group(0).split()) in prices
+    )
+    if any(_recurs(price) for price in prices) or any(_recurs(text) for text in after):
         return "subscription"
     if not prices and QUOTE.search(md):
         return "quote"
@@ -168,6 +183,11 @@ def cta(md: str) -> str | None:
 def summary(data: dict) -> str:
     rows = [{**page, "prices": ", ".join(page["prices"])} for page in data["pages"]]
     return tables.render(rows, COLUMNS)
+
+
+def _recurs(text: str) -> bool:
+    """Whether `text` says per month or per year, with no negation before it in its clause."""
+    return any(not NEGATION.search(text[: m.start()]) for m in RECURRING.finditer(text))
 
 
 def _urls(values: list[str]) -> list[str]:

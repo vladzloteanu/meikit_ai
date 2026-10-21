@@ -10,7 +10,7 @@ from factory import costs, secrets, toolbase
 from factory.cli import main
 from factory.http import FIXTURES, Client, ProviderError
 from factory.providers import algolia_hn, arcticshift, firecrawl, rdap
-from factory.tools import pricing_scan, reddit_mentions
+from factory.tools import pricing_scan
 
 TODAY = date(2026, 10, 21)
 FIRECRAWL_KEY = "fc-test-key-123456"
@@ -117,30 +117,70 @@ def test_guess_offer_shape():
     assert pricing_scan.guess_offer_shape([], "Contact sales for a quote") == "quote"
 
 
+REGISTRY = "rdap.registry.example"
+NO_SERVICE = {"errorCode": 404, "title": "No RDAP service is available for this resource"}
+
+
+def rdap_org(answers):
+    """A fake rdap.org: it redirects a lookup to the registry's RDAP server, which answers
+    `answers[domain]` (a status, or a (status, body) pair); a domain whose answer is "none" gets
+    rdap.org's own 404, as a TLD without an RDAP server does."""
+
+    def handler(request):
+        domain = request.url.path.rsplit("/", 1)[1]
+        reply = answers[domain]
+        if request.url.host == "rdap.org":
+            if reply == "none":
+                return httpx.Response(404, json=NO_SERVICE)
+            location = f"https://{REGISTRY}/rdap/domain/{domain}"
+            return httpx.Response(302, headers={"Location": location})
+        status, body = reply if isinstance(reply, tuple) else (reply, {})
+        return httpx.Response(status, json=body)
+
+    return handler
+
+
 def test_rdap_404_is_available(monkeypatch):
-    seen = wire(monkeypatch, rdap, answer({"errorCode": 404, "title": "Not Found"}, status=404))
+    seen = wire(monkeypatch, rdap, rdap_org({"zzqx-free-name.com": 404}))
     assert rdap.status(rdap.client(), "zzqx-free-name.com") == "available"
-    assert len(seen) == 1  # a 404 is an answer, never retried
+    asked = [(r.url.host, r.url.path) for r in seen]
+    assert asked == [  # the registry's 404 is an answer, never retried
+        ("rdap.org", "/domain/zzqx-free-name.com"),
+        (REGISTRY, "/rdap/domain/zzqx-free-name.com"),
+    ]
 
 
-def test_arctic_shift_slow_down_is_retried_after_the_reset(monkeypatch, slept):
+SLOW = {"data": None, "error": "Timeout. Maybe slow down a bit"}
+
+
+def test_arctic_shift_slow_down_is_waited_out_then_the_halved_window_answers(
+    root, capsys, monkeypatch, slept
+):
+    # the 422 is not asked again as is: the search waits X-RateLimit-Reset seconds, then asks
+    # the newest half of its window (one result), then the older half
+    monkeypatch.setattr(arcticshift, "PACE_S", 0.0)  # only the search's own waits are slept
+    one = raw(post("1wyvibe", "2026-10-05", title="Ads account hacked"))
     seen = wire(
         monkeypatch,
         arcticshift,
         replay(
-            httpx.Response(
-                422,
-                json={"data": None, "error": "Timeout. Maybe slow down a bit"},
-                headers={"X-RateLimit-Reset": "12"},
-            ),
-            httpx.Response(200, json={"data": [{"id": "1wyvibe", "title": "Ads account hacked"}]}),
+            httpx.Response(422, json=SLOW, headers={"X-RateLimit-Reset": "12"}),
+            httpx.Response(200, json={"data": [one]}),
+            *[httpx.Response(200, json={"data": []})] * 2,
         ),
     )
-    posts = arcticshift.posts_search(
-        arcticshift.client(), "ad account hacked", subreddit="FacebookAds"
-    )
-    assert posts == [{"id": "1wyvibe", "title": "Ads account hacked"}] and len(seen) == 2
-    assert slept[0] == 12  # the header's seconds, then the 1 s pacing
+    argv = ["reddit_mentions", "--idea", "_fixture", "--terms", "x", "--subreddits", "PPC"]
+    out = run_json(capsys, [*argv, *RANGE])
+    assert asked(seen) == [
+        ("posts", "2026-08-01", "2026-10-21"),  # 422
+        ("posts", "2026-09-10", "2026-10-21"),  # the newest half: the one post
+        ("posts", "2026-08-01", "2026-09-10"),  # the older half
+        ("comments", "2026-08-01", "2026-10-21"),
+    ]
+    assert slept == [12]
+    term = out["terms"]["x"]
+    assert (term["posts"], term["comments"], term["complete"]) == (1, 0, True)
+    assert term["hits"][0]["title"] == "Ads account hacked"
 
 
 # --- prices and offers -------------------------------------------------------------------------
@@ -161,6 +201,13 @@ def test_arctic_shift_slow_down_is_retried_after_the_reset(monkeypatch, slept):
         ("£12 per seat per month", ["£12 per seat per month"]),
         ("Solo $29/mo, Team $99/user/month, Solo $29/mo", ["$29/mo", "$99/user/month"]),
         ("Version 2.5 of 2026: 30 days free, 4.9/5 stars", []),
+        # a currency after an amount is not followed by a digit: "1 $" is no price
+        ("Tier 1 $9/mo, Tier 2 $29/mo", ["$9/mo", "$29/mo"]),
+        ("Tier 1 $ 9/mo", ["$ 9/mo"]),
+        # an amount starts after neither a digit nor a letter: not "026 150" inside "2026 150";
+        # HT stays, since a price before VAT is 20 % less than one with it
+        ("Offre 2026 150 € HT", ["150 € HT"]),
+        ("Pack A29 €, Pack2 39 €", ["39 €"]),
     ],
 )
 def test_extract_prices_reads_each_way_a_price_is_written(text, prices):
@@ -173,7 +220,17 @@ def test_extract_prices_reads_each_way_a_price_is_written(text, prices):
         (["$29/mo"], "", "subscription"),
         (["19 € par mois"], "", "subscription"),
         (["$290/yr"], "", "subscription"),
-        (["$29"], "Billed monthly, cancel anytime.", "subscription"),
+        # what the 40 characters after a price say counts...
+        (["$29"], "Solo $29, billed monthly, cancel anytime.", "subscription"),
+        (["$29"], "Pro: $29 every month", "subscription"),
+        (["29 €"], "Formule 29 € le mois", "subscription"),
+        # ...never what the page says elsewhere
+        (["$29"], "Billed monthly. Solo: $29.", "one_shot"),
+        (["$29"], "Solo $29." + " filler" * 6 + " Billed monthly.", "one_shot"),
+        # a negation next to the marker: not a subscription
+        (["$199"], "Lifetime: $199, no monthly fees.", "one_shot"),
+        (["49 €"], "Licence 49 € sans abonnement mensuel", "one_shot"),
+        (["$29"], "Solo $29. No setup fee. Billed monthly.", "subscription"),
         (["$199"], "Pay once, use it forever.", "one_shot"),
         (["$499"], "Enterprise? Contact sales.", "one_shot"),
         ([], "Contact sales for a quote", "quote"),
@@ -245,16 +302,14 @@ def test_arcticshift_searches_the_posts_and_comments_of_a_subreddit(monkeypatch)
         "before": "2026-10-22",
         "limit": "50",
         "sort": "desc",
-        "fields": "id,author,created_utc,title,selftext,score,num_comments,subreddit",
-    }
+    }  # no `fields`: Arctic Shift refuses `permalink` in it, and only whole items carry one
     assert dict(seen[1].url.params) == {
         "body": "ad account hacked",
         "subreddit": "PPC",
         "limit": "100",
         "sort": "desc",
-        "fields": "id,author,created_utc,body,link_id,score,subreddit",
     }
-    assert c.pace_s == 1.0 and c.retry_on is arcticshift.slow_down
+    assert c.pace_s == 1.0 and c.retry_on is None  # a 422 is the search's to handle
 
 
 def test_arcticshift_slow_down_is_a_422_saying_so():
@@ -263,6 +318,40 @@ def test_arcticshift_slow_down_is_a_422_saying_so():
     )
     assert not arcticshift.slow_down(httpx.Response(422, text='{"error":"Invalid sort"}'))
     assert not arcticshift.slow_down(httpx.Response(400, text="slow down"))
+
+
+def test_an_arcticshift_422_raises_slow_down_at_once_with_its_reset(monkeypatch, slept):
+    reply = answer(SLOW, status=422, headers={"X-RateLimit-Reset": "12"})
+    seen = wire(monkeypatch, arcticshift, reply)
+    with pytest.raises(arcticshift.SlowDown) as e:
+        arcticshift.comments_search(arcticshift.client(), "x", subreddit="PPC")
+    assert isinstance(e.value, ProviderError)
+    assert (e.value.status, e.value.reset_s, len(seen), slept) == (422, 12.0, 1, [])
+    assert str(e.value).startswith("arcticshift: HTTP 422: GET /api/comments/search?body=x&")
+    assert str(e.value).endswith('Timeout. Maybe slow down a bit"}')
+
+
+@pytest.mark.parametrize(
+    ("headers", "reset"),
+    [
+        ({}, None),
+        ({"X-RateLimit-Reset": "soon"}, None),
+        ({"X-RateLimit-Reset": "-5"}, None),
+        ({"X-RateLimit-Reset": "7.5"}, 7.5),
+    ],
+)
+def test_slow_down_carries_the_reset_seconds_arctic_shift_sent(monkeypatch, headers, reset):
+    wire(monkeypatch, arcticshift, answer(SLOW, status=422, headers=headers))
+    with pytest.raises(arcticshift.SlowDown) as e:
+        arcticshift.posts_search(arcticshift.client(), "x", subreddit="PPC")
+    assert e.value.reset_s == reset
+
+
+def test_an_arcticshift_5xx_is_retried(monkeypatch):
+    replies = replay(httpx.Response(503), httpx.Response(200, json={"data": [{"id": "a"}]}))
+    seen = wire(monkeypatch, arcticshift, replies)
+    assert arcticshift.posts_search(arcticshift.client(), "x", subreddit="PPC") == [{"id": "a"}]
+    assert len(seen) == 2
 
 
 def test_arcticshift_refusal_is_one_provider_error_without_retry(monkeypatch):
@@ -322,26 +411,30 @@ def test_a_firecrawl_error_never_shows_the_key(monkeypatch):
 
 
 @pytest.mark.parametrize(
-    ("status", "body", "expected", "requests"),
+    ("reply", "expected", "registry_asked"),
     [
-        (200, {"objectClassName": "domain", "ldhName": "EXAMPLE.COM"}, "taken", 1),
-        (404, {"errorCode": 404, "title": "Not Found"}, "available", 1),
-        (404, {}, "available", 1),
-        # rdap.org's own answer for a TLD without an RDAP server (.io): nothing about the domain
-        (
-            404,
-            {"errorCode": 404, "title": "No RDAP service is available for this resource"},
-            "unknown",
-            1,
-        ),
-        (400, {"errorCode": 400}, "unknown", 1),
-        (503, {}, "unknown", 3),  # retried, then given up
+        ((200, {"objectClassName": "domain", "ldhName": "EXAMPLE.COM"}), "taken", 1),
+        ((404, {"errorCode": 404, "title": "Not Found"}), "available", 1),
+        (404, "available", 1),
+        # the registry answered: what its body says does not matter
+        ((404, NO_SERVICE), "available", 1),
+        # rdap.org's own 404, for a TLD without an RDAP server (.io): nothing about the domain
+        ("none", "unknown", 0),
+        ((400, {"errorCode": 400}), "unknown", 1),
+        (503, "unknown", 3),  # retried, then given up
     ],
 )
-def test_rdap_status_reads_the_registry_answer(monkeypatch, status, body, expected, requests):
-    seen = wire(monkeypatch, rdap, answer(body, status=status))
+def test_rdap_status_reads_the_registry_answer(monkeypatch, reply, expected, registry_asked):
+    seen = wire(monkeypatch, rdap, rdap_org({"example.com": reply}))
     assert rdap.status(rdap.client(), "example.com") == expected
-    assert str(seen[0].url) == "https://rdap.org/domain/example.com" and len(seen) == requests
+    assert str(seen[0].url) == "https://rdap.org/domain/example.com"
+    assert sum(1 for r in seen if r.url.host == REGISTRY) == registry_asked
+
+
+def test_rdap_org_answering_404_itself_is_unknown_whatever_it_says(monkeypatch):
+    # no redirect: rdap.org answered, not a registry, so its 404 says nothing about the domain
+    seen = wire(monkeypatch, rdap, answer({"errorCode": 404, "title": "Not Found"}, status=404))
+    assert rdap.status(rdap.client(), "example.io") == "unknown" and len(seen) == 1
 
 
 def test_an_rdap_dry_run_takes_a_com_and_frees_the_rest(no_secrets):
@@ -437,7 +530,6 @@ SELFTESTS = [
                 "after": "2026-09-21",
                 "limit": "10",
                 "sort": "desc",
-                "fields": "id,author,created_utc,title,selftext,score,num_comments,subreddit",
             },
         ),
     ),
@@ -452,7 +544,7 @@ SELFTESTS = [
             {
                 "query": "ad account",
                 "tags": "story",
-                "numericFilters": f"created_at_i>{YEAR_START},created_at_i<{YEAR_END}",
+                "numericFilters": f"created_at_i>{YEAR_START - 1},created_at_i<{YEAR_END}",
                 "hitsPerPage": "10",
                 "typoTolerance": "false",
             },
@@ -497,7 +589,7 @@ def test_the_pricing_scan_selftest_scrapes_example_com(monkeypatch, capsys):
 
 
 def test_a_domain_check_selftest_finding_example_com_free_fails(root, capsys, monkeypatch):
-    wire(monkeypatch, rdap, answer({}, status=404))
+    wire(monkeypatch, rdap, rdap_org({"example.com": 404}))
     assert main(["domain_check", "--selftest"]) == 1
     out, err = capsys.readouterr()
     assert out == "" and err == "domain_check: rdap: example.com came back available, not taken\n"
@@ -556,6 +648,16 @@ ITEMS = [
 RANGE = ["--since", "2026-08-01", "--until", "2026-10-20"]
 
 
+def raw(item):
+    """An item of ITEMS as Arctic Shift answers it, without the fake's `kind`."""
+    return {key: value for key, value in item.items() if key != "kind"}
+
+
+def asked(seen):
+    """(kind, after, before) of each Arctic Shift search sent."""
+    return [(r.url.path.split("/")[2], r.url.params["after"], r.url.params["before"]) for r in seen]
+
+
 def arctic(items):
     """A fake Arctic Shift over `items`: a search answers the items of its kind and subreddit
     created from `after` to `before`, both included, newest first, at most `limit` of them."""
@@ -576,17 +678,7 @@ def arctic(items):
     return handler
 
 
-def test_windows_are_anchored_at_the_start_newest_first():
-    assert reddit_mentions.windows(date(2026, 8, 1), date(2026, 10, 21), 60) == [
-        (date(2026, 9, 30), date(2026, 10, 21)),
-        (date(2026, 8, 1), date(2026, 9, 30)),
-    ]
-    assert reddit_mentions.windows(date(2026, 1, 1), date(2026, 1, 2), 7) == [
-        (date(2026, 1, 1), date(2026, 1, 2))
-    ]
-
-
-def test_reddit_mentions_walks_posts_by_60_days_and_comments_by_7_newest_first(
+def test_reddit_mentions_searches_each_term_subreddit_and_kind_once_over_the_range(
     root, capsys, monkeypatch
 ):
     seen = wire(monkeypatch, arcticshift, answer({"data": []}))
@@ -597,23 +689,20 @@ def test_reddit_mentions_walks_posts_by_60_days_and_comments_by_7_newest_first(
         "--terms",
         "x",
         "--subreddits",
-        "r/FacebookAds",
+        "r/FacebookAds,PPC",
     ]
-    assert main([*argv, *RANGE]) == 0
-    calls = [(r.url.path, r.url.params["after"], r.url.params["before"]) for r in seen]
-    assert calls[:2] == [
-        ("/api/posts/search", "2026-09-30", "2026-10-21"),
-        ("/api/posts/search", "2026-08-01", "2026-09-30"),
+    out = run_json(capsys, [*argv, *RANGE])
+    whole = ("2026-08-01", "2026-10-21")  # --until is included
+    assert [(r.url.params["subreddit"], *a) for r, a in zip(seen, asked(seen), strict=True)] == [
+        ("FacebookAds", "posts", *whole),  # r/ is dropped
+        ("FacebookAds", "comments", *whole),
+        ("PPC", "posts", *whole),
+        ("PPC", "comments", *whole),
     ]
-    comments = calls[2:]
-    assert {path for path, _, _ in comments} == {"/api/comments/search"} and len(comments) == 12
-    assert comments[:2] == [
-        ("/api/comments/search", "2026-10-17", "2026-10-21"),
-        ("/api/comments/search", "2026-10-10", "2026-10-17"),
-    ]
-    assert comments[-1] == ("/api/comments/search", "2026-08-01", "2026-08-08")
-    assert {r.url.params["subreddit"] for r in seen} == {"FacebookAds"}  # r/ is dropped
+    assert {(r.url.params["limit"], r.url.params["sort"]) for r in seen} == {("100", "desc")}
     assert {r.url.params["query" if "posts" in r.url.path else "body"] for r in seen} == {"x"}
+    term = out["terms"]["x"]
+    assert (term["complete"], term["covered_since"]) == (True, "2026-08-01")
 
 
 def test_reddit_mentions_default_range_is_the_12_months_up_to_today(root, capsys, monkeypatch):
@@ -621,10 +710,10 @@ def test_reddit_mentions_default_range_is_the_12_months_up_to_today(root, capsys
     argv = ["reddit_mentions", "--idea", "_fixture", "--terms", "x", "--subreddits", "PPC"]
     out = run_json(capsys, argv)
     assert (out["since"], out["until"]) == ("2025-10-21", "2026-10-21")
-    posts = [r for r in seen if r.url.path == "/api/posts/search"]
-    assert posts[0].url.params["before"] == "2026-10-22"
-    assert posts[-1].url.params["after"] == "2025-10-21"
-    assert (len(posts), len(seen) - len(posts)) == (7, 53)
+    assert asked(seen) == [
+        ("posts", "2025-10-21", "2026-10-22"),
+        ("comments", "2025-10-21", "2026-10-22"),
+    ]
 
 
 def test_reddit_mentions_counts_by_month_and_subreddit_and_keeps_the_newest_hits(
@@ -645,6 +734,7 @@ def test_reddit_mentions_counts_by_month_and_subreddit_and_keeps_the_newest_hits
                 "by_month": {"2026-08": 1, "2026-09": 1, "2026-10": 2},
                 "by_subreddit": {"FacebookAds": 3, "PPC": 1},
                 "complete": True,
+                "covered_since": "2026-08-01",
                 "hits": [
                     {
                         "kind": "comment",
@@ -712,28 +802,89 @@ def test_reddit_mentions_uses_the_permalink_an_item_carries(root, capsys, monkey
     assert hit["url"] == "https://www.reddit.com/r/FacebookAds/comments/p9/locked_out/"
 
 
-def test_reddit_mentions_stops_a_search_at_limit_and_marks_the_term_incomplete(
-    root, capsys, monkeypatch
+def test_a_full_answer_ends_its_search_and_leaves_the_term_incomplete(root, capsys, monkeypatch):
+    # 100 posts back: more exist, older than the oldest (2026-09-15 10:00), never asked for
+    full = [raw(post(f"p{n}", "2026-09-15", at=36000 + n * 60)) for n in range(100)]
+    seen = wire(
+        monkeypatch,
+        arcticshift,
+        lambda request: httpx.Response(
+            200, json={"data": full if "posts" in request.url.path else []}
+        ),
+    )
+    argv = ["reddit_mentions", "--idea", "_fixture", "--terms", "x", "--subreddits", "PPC"]
+    out = run_json(capsys, [*argv, *RANGE, "--limit", "3"])
+    term = out["terms"]["x"]
+    assert (term["posts"], term["comments"], term["complete"]) == (100, 0, False)
+    assert term["covered_since"] == "2026-09-16"  # the first day fetched in full
+    assert len(term["hits"]) == 3  # --limit caps the hits, not the search
+    assert [kind for kind, _, _ in asked(seen)] == ["posts", "comments"]
+
+
+@pytest.mark.parametrize(("headers", "wait"), [({}, 3), ({"X-RateLimit-Reset": "120"}, 30)])
+def test_a_422_waits_3_s_without_a_reset_and_30_s_at_most(
+    root, capsys, monkeypatch, slept, headers, wait
 ):
+    monkeypatch.setattr(arcticshift, "PACE_S", 0.0)
+    replies = replay(
+        httpx.Response(422, json=SLOW, headers=headers),
+        *[httpx.Response(200, json={"data": []})] * 3,
+    )
+    wire(monkeypatch, arcticshift, replies)
+    argv = ["reddit_mentions", "--idea", "_fixture", "--terms", "x", "--subreddits", "PPC"]
+    assert main([*argv, *RANGE]) == 0
+    assert slept == [wait]
+
+
+def test_a_search_stops_after_8_calls_and_keeps_what_it_fetched(root, capsys, monkeypatch, slept):
+    # Arctic Shift times out on more than 10 days; 6 days answer one item each
+    monkeypatch.setattr(arcticshift, "PACE_S", 0.0)
     made = iter(range(1000))
 
     def handler(request):
-        limit = int(request.url.params["limit"])
-        if request.url.path == "/api/posts/search":
-            items = [post(f"p{next(made)}", "2026-10-10") for _ in range(limit)]
-        else:
-            items = [comment(f"c{next(made)}", "2026-10-10")]
-        return httpx.Response(200, json={"data": items})
+        after = date.fromisoformat(request.url.params["after"])
+        before = date.fromisoformat(request.url.params["before"])
+        if (before - after).days > 10:
+            return httpx.Response(422, json=SLOW, headers={"X-RateLimit-Reset": "5"})
+        make = post if request.url.path == "/api/posts/search" else comment
+        return httpx.Response(200, json={"data": [raw(make(f"i{next(made)}", after.isoformat()))]})
 
     seen = wire(monkeypatch, arcticshift, handler)
     argv = ["reddit_mentions", "--idea", "_fixture", "--terms", "x", "--subreddits", "PPC"]
-    out = run_json(
-        capsys, [*argv, "--since", "2026-09-01", "--until", "2026-10-20", "--limit", "3"]
-    )
+    assert main([*argv, *RANGE, "--json"]) == 0
+    out = json.loads(capsys.readouterr().out)
+    posts = [(after, before) for kind, after, before in asked(seen) if kind == "posts"]
+    assert posts == [
+        ("2026-08-01", "2026-10-21"),  # 81 days: 422
+        ("2026-09-10", "2026-10-21"),  # 41: 422
+        ("2026-09-30", "2026-10-21"),  # 21: 422
+        ("2026-10-10", "2026-10-21"),  # 11: 422
+        ("2026-10-15", "2026-10-21"),  # 6: one post
+        ("2026-10-09", "2026-10-15"),
+        ("2026-10-03", "2026-10-09"),
+        ("2026-09-27", "2026-10-03"),  # the 8th call: the search stops, its posts kept
+    ]
+    assert len(seen) == 16 and slept == [5] * 8  # the comments search went the same way
     term = out["terms"]["x"]
-    assert (term["posts"], term["comments"], term["complete"]) == (3, 3, False)
-    asked = [(r.url.path.split("/")[2], r.url.params["limit"]) for r in seen]
-    assert asked == [("posts", "3"), ("comments", "3"), ("comments", "2"), ("comments", "1")]
+    assert (term["posts"], term["comments"], term["complete"]) == (4, 4, False)
+    assert term["covered_since"] == "2026-09-27"
+    assert term["by_month"] == {"2026-09": 2, "2026-10": 6}
+    [path] = research(root, "reddit_mentions")  # the run went on and wrote what it found
+    assert json.loads(path.read_text(encoding="utf-8")) == out
+
+
+def test_a_one_day_window_that_times_out_ends_its_search(root, capsys, monkeypatch, slept):
+    monkeypatch.setattr(arcticshift, "PACE_S", 0.0)  # only the search's own waits are slept
+    seen = wire(monkeypatch, arcticshift, answer(SLOW, status=422))
+    argv = ["reddit_mentions", "--idea", "_fixture", "--terms", "x", "--subreddits", "PPC"]
+    out = run_json(capsys, [*argv, "--since", "2026-10-20", "--until", "2026-10-20"])
+    assert asked(seen) == [
+        ("posts", "2026-10-20", "2026-10-21"),
+        ("comments", "2026-10-20", "2026-10-21"),
+    ]
+    assert slept == []  # a day cannot be halved: nothing more to ask, nothing to wait for
+    term = out["terms"]["x"]
+    assert (term["posts"], term["complete"], term["covered_since"]) == (0, False, "2026-10-21")
 
 
 def test_a_reddit_dry_run_counts_each_fixture_item_once(root, capsys, no_secrets):
@@ -780,12 +931,25 @@ def test_reddit_mentions_summary_is_one_row_per_term(root, capsys, monkeypatch):
     ]
 
 
-def test_reddit_mentions_summary_names_the_terms_stopped_at_limit(root, capsys, monkeypatch):
-    wire(monkeypatch, arcticshift, arctic(ITEMS))
-    argv = ["reddit_mentions", "--idea", "_fixture", "--terms", "x", "--subreddits", "FacebookAds"]
-    assert main([*argv, *RANGE, "--limit", "1"]) == 0
-    out = capsys.readouterr().out.splitlines()
-    assert out[-1] == 'stopped at --limit 1: the counts of "x" are lower bounds'
+def test_reddit_mentions_summary_names_the_incomplete_terms(root, capsys, monkeypatch):
+    full = [raw(post(f"p{n}", "2026-09-15", at=36000 + n * 60)) for n in range(100)]
+    wire(monkeypatch, arcticshift, answer({"data": full}))
+    argv = ["reddit_mentions", "--idea", "_fixture", "--terms", "x", "--subreddits", "PPC"]
+    assert main([*argv, *RANGE]) == 0
+    assert capsys.readouterr().out.splitlines()[-1] == (
+        '"x": every match fetched only from 2026-09-16 on (a search came back full, or Arctic '
+        "Shift kept saying slow down), so its counts are lower bounds"
+    )
+
+
+def test_reddit_mentions_summary_says_when_no_day_was_covered(root, capsys, monkeypatch):
+    wire(monkeypatch, arcticshift, answer(SLOW, status=422))
+    argv = ["reddit_mentions", "--idea", "_fixture", "--terms", "x", "--subreddits", "PPC"]
+    assert main([*argv, "--since", "2026-10-20", "--until", "2026-10-20"]) == 0
+    assert capsys.readouterr().out.splitlines()[-1] == (
+        '"x": no day fetched in full (a search came back full, or Arctic Shift kept saying slow '
+        "down), so its counts are lower bounds"
+    )
 
 
 @pytest.mark.parametrize(
@@ -794,7 +958,6 @@ def test_reddit_mentions_summary_names_the_terms_stopped_at_limit(root, capsys, 
         (["--terms", "x"], "--subreddits is required"),
         (["--terms", "x", "--subreddits", " , r/ "], "--subreddits is required"),
         (["--subreddits", "PPC"], "no term: give --terms T ..."),
-        (["--terms", "x", "--subreddits", "PPC", "--limit", "101"], "at most 100"),
         (["--terms", "x", "--subreddits", "PPC", "--limit", "0"], "is not 1 or more"),
         (
             [
@@ -893,7 +1056,8 @@ def test_hn_mentions_asks_stories_then_comments_of_each_term(root, capsys, monke
         ("business manager", "story"),
         ("business manager", "comment"),
     ]
-    since, until = ts("2026-08-01"), ts("2026-10-21")
+    # Algolia's bounds are strict: the second before --since, so its first second counts
+    since, until = ts("2026-08-01") - 1, ts("2026-10-21")
     assert {r.url.params["numericFilters"] for r in seen} == {
         f"created_at_i>{since},created_at_i<{until}"
     }
@@ -1114,7 +1278,7 @@ def test_pricing_scan_logs_one_firecrawl_call_per_page(root, monkeypatch):
     }
 
 
-def test_pricing_scan_logs_the_scrapes_made_before_a_failure(root, capsys, monkeypatch):
+def test_pricing_scan_bills_only_the_scrapes_answered_before_a_failure(root, capsys, monkeypatch):
     ok = scrapes(PAGES)
     replies = iter([ok, *[lambda request: httpx.Response(500, text="boom")] * 3])
     wire(monkeypatch, firecrawl, lambda request: next(replies)(request))
@@ -1122,14 +1286,27 @@ def test_pricing_scan_logs_the_scrapes_made_before_a_failure(root, capsys, monke
     argv = ["pricing_scan", "--idea", "_fixture", "--urls", "https://watch.example/pricing"]
     assert main([*argv, "https://enterprise.example"]) == 1
     assert research(root, "pricing_scan") == []
-    assert costs.total("_fixture", kind="api") == round(before + 0.02, 4)
+    # two scrapes asked: the first answered (billed), the second refused after its retries
+    assert costs.total("_fixture", kind="api") == round(before + 0.01, 4)
     err = capsys.readouterr().err.splitlines()
     assert (
-        err[0] == "pricing_scan: 0.02 EUR (2 firecrawl calls at 0.01 EUR) logged before the failure"
+        err[0] == "pricing_scan: 0.01 EUR (1 firecrawl call at 0.01 EUR) logged before the failure"
     )
     assert (
         err[1].startswith("pricing_scan: firecrawl: HTTP 500: POST /v1/scrape: ") and len(err) == 2
     )
+
+
+@pytest.mark.parametrize("status", [500, 402])
+def test_a_scrape_firecrawl_refuses_is_not_billed(root, capsys, monkeypatch, status):
+    wire(monkeypatch, firecrawl, answer({"success": False, "error": "refused"}, status=status))
+    log = root / "ideas/_fixture/costs.jsonl"
+    before = log.read_text(encoding="utf-8")
+    assert main(["pricing_scan", "--idea", "_fixture", "--urls", "https://example.com"]) == 1
+    assert log.read_text(encoding="utf-8") == before  # no cost line
+    assert research(root, "pricing_scan") == []
+    [err] = capsys.readouterr().err.splitlines()
+    assert err.startswith(f"pricing_scan: firecrawl: HTTP {status}: POST /v1/scrape: ")
 
 
 def test_pricing_scan_plans_one_scrape_per_page_against_the_cap(root, capsys):
@@ -1168,20 +1345,6 @@ def test_pricing_scan_asks_each_page_once(root, capsys, monkeypatch):
 # --- domain_check ------------------------------------------------------------------------------
 
 
-def registries(statuses):
-    """A fake rdap.org answering each domain with its status in `statuses`; "none" is rdap.org's
-    own 404 for a TLD without an RDAP server."""
-
-    def handler(request):
-        status = statuses[request.url.path.rsplit("/", 1)[1]]
-        if status == "none":
-            body = {"errorCode": 404, "title": "No RDAP service is available for this resource"}
-            return httpx.Response(404, json=body)
-        return httpx.Response(status, json={})
-
-    return handler
-
-
 STATUSES = {
     "meikit.com": 200,
     "meikit.io": "none",
@@ -1192,7 +1355,7 @@ STATUSES = {
 
 
 def test_domain_check_asks_each_tld_and_names_the_lab_address(root, capsys, monkeypatch):
-    seen = wire(monkeypatch, rdap, registries(STATUSES))
+    seen = wire(monkeypatch, rdap, rdap_org(STATUSES))
     out = run_json(capsys, ["domain_check", "--idea", "_fixture", "--name", " Meikit "])
     assert out == {
         "name": "meikit",
@@ -1205,11 +1368,12 @@ def test_domain_check_asks_each_tld_and_names_the_lab_address(root, capsys, monk
         },
         "lab": "meikit.meikit.ai",
     }
-    assert [r.url.path for r in seen] == [f"/domain/{domain}" for domain in STATUSES]
+    asked = [r.url.path for r in seen if r.url.host == "rdap.org"]
+    assert asked == [f"/domain/{domain}" for domain in STATUSES]
 
 
 def test_domain_check_summary_is_one_row_per_domain_then_the_lab(root, capsys, monkeypatch):
-    wire(monkeypatch, rdap, registries(STATUSES))
+    wire(monkeypatch, rdap, rdap_org(STATUSES))
     assert (
         main(["domain_check", "--idea", "_fixture", "--name", "meikit", "--tlds", ".IO, dev,,io"])
         == 0

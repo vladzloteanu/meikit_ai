@@ -376,3 +376,24 @@ def test_snippet_is_the_start_of_the_text_on_one_line():
     assert len(cut) <= 300 and cut.endswith("…") and cut.startswith("word word")
     assert toolbase.snippet("abcdef", width=4) == "abc…"
     assert [toolbase.snippet(text) for text in (None, "", " \n ", 3)] == [None, None, None, None]
+
+
+@pytest.mark.parametrize(
+    ("value", "ok"),
+    [
+        (0, True),
+        (1792414581, True),
+        (1792414581.5, True),
+        (toolbase.MAX_TIME - 1, True),
+        (toolbase.MAX_TIME, False),  # 2100-01-01: later is garbage
+        (1e20, False),  # datetime.fromtimestamp would raise
+        (-1, False),
+        (float("nan"), False),
+        (float("inf"), False),
+        (True, False),
+        ("1792414581", False),
+        (None, False),
+    ],
+)
+def test_is_time_is_a_unix_time_a_day_can_be_read_from(value, ok):
+    assert toolbase.is_time(value) is ok

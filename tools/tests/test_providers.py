@@ -163,3 +163,20 @@ def test_the_reddit_and_hn_fixtures_name_no_user():
         authors = [tag for tag in hit["_tags"] if tag.startswith("author_")]
         assert authors == [f"author_{hit['author']}"]
         assert "_highlightResult" not in hit
+
+
+def test_the_reddit_and_hn_fixture_ids_are_synthetic():
+    # no real item id: an anonymised author cannot be found by looking one up
+    posts = json.loads((FIXTURES / "arcticshift/posts_search.json").read_text(encoding="utf-8"))
+    comments = json.loads(
+        (FIXTURES / "arcticshift/comments_search.json").read_text(encoding="utf-8")
+    )
+    assert all(re.fullmatch(r"post_\d\d", item["id"]) for item in posts["data"])
+    assert all(re.fullmatch(r"cmt_\d\d", item["id"]) for item in comments["data"])
+    assert all(re.fullmatch(r"t3_(post|thread)_\d\d", c["link_id"]) for c in comments["data"])
+    hn = json.loads((FIXTURES / "algolia/search_by_date.json").read_text(encoding="utf-8"))
+    for hit in hn["hits"]:
+        assert int(hit["objectID"]) == hit["story_id"] >= 900_000_001  # beyond any HN item
+        assert [t for t in hit["_tags"] if t.startswith("story_")] == [f"story_{hit['story_id']}"]
+        linked = re.findall(r"item\?id=(\d+)", hit.get("story_text") or "")
+        assert all(int(item) >= 900_000_001 for item in linked)

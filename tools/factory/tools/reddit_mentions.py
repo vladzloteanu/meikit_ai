@@ -9,30 +9,37 @@ body does (the comments' search keeps a quoted phrase whole: '"ad account" hacke
 --since to --until, both included (UTC; by default the 12 months up to today). Arctic Shift
 searches text only within named subreddits, so --subreddits is required.
 
-Each term, subreddit and kind is searched newest first, 60 days of posts or 7 days of comments a
-call (a longer comment search times out in a busy subreddit; v1's windows), until --limit items
-(at most 100) are found or the range is done: a year is 7 post calls and 53 comment calls a term
-and subreddit, paced 1 s apart. The research JSON is
+Each term, subreddit and kind (posts, comments) is one search: one call over the whole range for
+its newest 100 items, and 100 back means more exist, so the search ends there. Arctic Shift
+answers 422 "Timeout. Maybe slow down a bit" both to a search too heavy for it and to a caller it
+throttles: the search then waits (X-RateLimit-Reset seconds, 30 at most; 3 without one), halves
+its window and goes on from the newest half, then older, in windows of the size that answered,
+for 8 calls at most. What a search fetched is always kept. The research JSON is
 
     {"subreddits", "since", "until", "limit",
      "terms": {term: {"posts", "comments", "by_month": {"YYYY-MM": n},
-                      "by_subreddit": {subreddit: n}, "complete",
+                      "by_subreddit": {subreddit: n}, "complete", "covered_since",
                       "hits": [{"kind", "subreddit", "title", "url", "score", "created",
                                 "snippet"}]}}}
 
-`posts` and `comments` count the items found; `by_month` counts both together by the month (UTC)
-they were created, `by_subreddit` by subreddit, the most first. `complete` is false when a search
-stopped at --limit: the counts are then lower bounds. `hits` are the term's newest --limit items:
-`kind` is post or comment, `url` the item on reddit.com, `created` its day, `snippet` the start of
-its text (null for a post with none); a comment has no title. Deleted and removed comments, and
-those of bots (AutoModerator, "I am a bot"), are left out, as in v1. Arctic Shift is free: no cost
-is logged. The summary is one row per term: `term | posts | comments | top subreddits`.
+`posts` and `comments` count the items fetched; `by_month` counts both together by the month
+(UTC) they were created, `by_subreddit` by subreddit, the most first. `covered_since` is the first
+day from which every search of the term fetched every match; `complete` says it is --since. When
+it is not (a search came back full, or ran out of calls), the counts are lower bounds. `hits` are
+the term's newest --limit items: `kind` is post or comment, `url` the item on reddit.com (its
+permalink, else its rebuilt path), `created` its day, `snippet` the start of its text (null for a
+post with none); a comment has no title. Deleted and removed comments, and those of bots
+(AutoModerator, "I am a bot"), are left out, as in v1. Arctic Shift is free: no cost is logged.
+The summary is one row per term, `term | posts | comments | top subreddits`, then a line for each
+incomplete term.
 """
 
 import argparse
+import math
 import re
+import time
 from collections import Counter
-from datetime import date, timedelta
+from datetime import UTC, date, datetime, timedelta
 
 from factory import tables, toolbase
 from factory.http import Client
@@ -40,9 +47,12 @@ from factory.providers import arcticshift
 
 TOOL = "reddit_mentions"
 PROVIDER = "arcticshift"
-MAX_TIME = 4102444800  # 2100-01-01: a later Unix time is garbage
 REDDIT = "https://www.reddit.com"
-WINDOW_DAYS = {"post": 60, "comment": 7}  # days a search covers, by kind (v1)
+KINDS = ("post", "comment")
+PAGE = arcticshift.MAX_LIMIT  # a call's items at most: 100 back means more exist
+MAX_CALLS = 8  # the calls one search (a term, a subreddit, a kind) makes at most
+WAIT_S = 3.0  # the wait after a 422 without X-RateLimit-Reset
+MAX_WAIT_S = 30.0  # the longest wait after a 422
 TOP_SUBREDDITS = 3
 COLUMNS = ["term", "posts", "comments", "top subreddits"]
 SELFTEST_QUERY = "ad account"
@@ -93,9 +103,8 @@ def add_parser(sub: argparse._SubParsersAction) -> None:
     parser.add_argument(
         "--limit",
         type=toolbase.positive_int,
-        default=arcticshift.MAX_LIMIT,
-        help="the most items a search of one term in one subreddit keeps, and the most hits of a "
-        "term (default and at most: %(default)s)",
+        default=100,
+        help="the most hits of a term kept in the research file (default: %(default)s)",
     )
     toolbase.add_common(parser)
 
@@ -118,10 +127,6 @@ def run(args: argparse.Namespace) -> int:
         raise toolbase.UsageError("no term: give --terms T ...")
     subreddits = _subreddits(args.subreddits or [])
     since, until = toolbase.date_range(args.since, args.until)
-    if args.limit > arcticshift.MAX_LIMIT:
-        raise toolbase.UsageError(
-            f"--limit is at most {arcticshift.MAX_LIMIT}, the items Arctic Shift returns a call"
-        )
     with toolbase.run(args, tool=TOOL) as r:
         client = arcticshift.client(dry_run=r.dry_run)
         data = collect(client, terms, subreddits, since, until, args.limit)
@@ -144,43 +149,48 @@ def collect(
     }
 
 
-def walk(
-    client: Client, kind: str, term: str, subreddit: str, start: date, end: date, limit: int
-) -> tuple[list[dict], bool]:
-    """Up to `limit` distinct items of `kind` (post or comment) matching `term` in `subreddit`,
-    created from `start` to `end` (excluded), searched in windows of WINDOW_DAYS[kind] days,
-    newest first; and whether the whole range was searched (false when a window answered all it
-    was asked for, so the search stopped at `limit`). An item two windows answer (one created on
-    their boundary) is kept once."""
-    search = arcticshift.posts_search if kind == "post" else arcticshift.comments_search
+def search(
+    client: Client, kind: str, term: str, subreddit: str, start: date, end: date
+) -> tuple[list[dict], date]:
+    """The items of `kind` (post or comment) matching `term` in `subreddit` created from `start`
+    to `end` (excluded), newest first, each once; and the first day from which every match was
+    fetched (`start` when all were). One call asks the whole range; a full answer (PAGE items)
+    ends the search; a 422 is waited out and the window halved, the newest half first; the
+    search goes on, older, in windows of the size that answered, MAX_CALLS calls at most."""
+    find = arcticshift.posts_search if kind == "post" else arcticshift.comments_search
     found: dict[str, dict] = {}
-    for after, before in windows(start, end, WINDOW_DAYS[kind]):
-        want = limit - len(found)
-        page = search(
-            client,
-            term,
-            subreddit=subreddit,
-            after=after.isoformat(),
-            before=before.isoformat(),
-            limit=want,
-        )
+    covered = end  # every match created from `covered` to `end` is in `found`
+    days = (end - start).days  # the window asked next
+    calls = 0
+    while covered > start and calls < MAX_CALLS:
+        after = max(start, covered - timedelta(days=days))
+        calls += 1
+        try:
+            page = find(
+                client,
+                term,
+                subreddit=subreddit,
+                after=after.isoformat(),
+                before=covered.isoformat(),
+                limit=PAGE,
+            )
+        except arcticshift.SlowDown as exc:
+            window = (covered - after).days
+            if window <= 1 or calls >= MAX_CALLS:
+                break  # a day cannot be halved; or no call is left to wait for
+            time.sleep(WAIT_S if exc.reset_s is None else min(exc.reset_s, MAX_WAIT_S))
+            days = math.ceil(window / 2)
+            continue
         for item in page:
             if isinstance(item.get("id"), str):
                 found.setdefault(item["id"], item)
-        if len(page) >= want:
-            return list(found.values()), False
-    return list(found.values()), True
-
-
-def windows(start: date, end: date, days: int) -> list[tuple[date, date]]:
-    """The days from `start` to `end` (excluded) cut into windows of `days`, anchored at `start`
-    (the newest may be shorter), newest first."""
-    cuts = []
-    day = start
-    while day < end:
-        cuts.append((day, min(end, day + timedelta(days=days))))
-        day += timedelta(days=days)
-    return cuts[::-1]
+        if len(page) >= PAGE:  # full: older matches in this window were not returned
+            times = [i["created_utc"] for i in page if toolbase.is_time(i.get("created_utc"))]
+            if times:
+                covered = max(after, _first_full_day(min(times)))
+            break
+        covered = after
+    return list(found.values()), covered
 
 
 def summary(data: dict) -> str:
@@ -196,26 +206,31 @@ def summary(data: dict) -> str:
         }
         for term, found in data["terms"].items()
     ]
-    text = tables.render(rows, COLUMNS)
-    stopped = [f'"{term}"' for term, found in data["terms"].items() if not found["complete"]]
-    if stopped:
-        text += (
-            f"\nstopped at --limit {data['limit']}: the counts of {', '.join(stopped)} are lower "
-            "bounds"
+    lines = [tables.render(rows, COLUMNS)]
+    for term, found in data["terms"].items():
+        if found["complete"]:
+            continue
+        if found["covered_since"] > data["until"]:
+            seen = "no day fetched in full"
+        else:
+            seen = f"every match fetched only from {found['covered_since']} on"
+        lines.append(
+            f'"{term}": {seen} (a search came back full, or Arctic Shift kept saying slow down), '
+            "so its counts are lower bounds"
         )
-    return text
+    return "\n".join(lines)
 
 
 def _term(
-    client: Client, term: str, subreddits: list[str], start: date, end: date, limit: int
+    client: Client, term: str, subreddits: list[str], since: date, end: date, limit: int
 ) -> dict:
     """One term's entry in the research JSON: its posts and comments in every subreddit."""
     items: dict[tuple[str, str], dict] = {}
-    complete = True
+    covered_since = since
     for subreddit in subreddits:
-        for kind in WINDOW_DAYS:
-            found, done = walk(client, kind, term, subreddit, start, end, limit)
-            complete = complete and done
+        for kind in KINDS:
+            found, covered = search(client, kind, term, subreddit, since, end)
+            covered_since = max(covered_since, covered)
             for raw in found:
                 item = _item(kind, raw)
                 if item is not None:
@@ -226,7 +241,8 @@ def _term(
         "comments": sum(1 for item in newest if item["kind"] == "comment"),
         "by_month": dict(sorted(Counter(toolbase.month_of(i["ts"]) for i in newest).items())),
         "by_subreddit": _most_first(Counter(item["subreddit"] for item in newest)),
-        "complete": complete,
+        "complete": covered_since == since,
+        "covered_since": covered_since.isoformat(),
         "hits": [_hit(item) for item in newest[:limit]],
     }
 
@@ -235,7 +251,7 @@ def _item(kind: str, raw: dict) -> dict | None:
     """A post or a comment as the term counts it; None for a comment left out (deleted, removed,
     a bot's) and for an item without an id or a creation time."""
     item_id, created = raw.get("id"), raw.get("created_utc")
-    if not isinstance(item_id, str) or not _is_time(created):
+    if not isinstance(item_id, str) or not toolbase.is_time(created):
         return None
     subreddit = raw.get("subreddit") if isinstance(raw.get("subreddit"), str) else ""
     if kind == "post":
@@ -295,10 +311,12 @@ def _subreddits(values: list[str]) -> list[str]:
     return names
 
 
+def _first_full_day(timestamp: float) -> date:
+    """The first day (UTC) that starts at or after `timestamp`."""
+    moment = datetime.fromtimestamp(timestamp, UTC)
+    day = moment.date()
+    return day if moment == datetime.combine(day, datetime.min.time(), UTC) else day + timedelta(1)
+
+
 def _most_first(counts: Counter) -> dict[str, int]:
     return dict(sorted(counts.items(), key=lambda item: (-item[1], item[0])))
-
-
-def _is_time(value: object) -> bool:
-    """A Unix time a day can be read from: a number from 1970 to 2100 (not NaN, not a bool)."""
-    return isinstance(value, int | float) and not isinstance(value, bool) and 0 <= value < MAX_TIME

@@ -1,167 +1,167 @@
 {
   "hits": [
     {
-      "objectID": "50151867",
+      "objectID": "900000001",
       "created_at": "2026-10-19T12:56:21Z",
       "created_at_i": 1792414581,
       "title": "Show HN: LaunchWindow – Modern macOS App Grid; but Good",
       "points": 1,
       "num_comments": 0,
-      "story_id": 50151867,
+      "story_id": 900000001,
       "story_text": "Hi guys, Im user, A quite popular Minecraft Addons&#x2F;Mods Developer with over 1.2 million downloads, making Mac Apps for 6 months.<p>Problem:\nI got a Mac recently and was really disappointed by the lack of any modern apple style app grid, Sure we got a lot of LaunchPad apps, but none follow the new design while adding back the features that make it great. Almost all are fullscreen Launchpad alt…",
       "author": "user1",
       "_tags": [
         "story",
         "author_user1",
-        "story_50151867",
+        "story_900000001",
         "show_hn"
       ]
     },
     {
-      "objectID": "50087803",
+      "objectID": "900000002",
       "created_at": "2026-10-14T13:51:10Z",
       "created_at_i": 1791985870,
       "title": "Show HN: Tweet Analyzer – Analyze your tweet draft based on X's ranking signals",
       "points": 2,
       "num_comments": 0,
-      "story_id": 50087803,
+      "story_id": 900000002,
       "story_text": "I built this tool with a lot of help from Claude, for both the code and the research, so I hope you&#x27;ll take that into account.<p>Once you&#x27;ve pasted in a tweet draft, you get a score with suggested improvements for the hook, specificity, answerability, and bait phrases for your draft, as well as a compare feature for two drafts. It&#x27;s free and doesn&#x27;t require an account.<p>The ch…",
       "author": "user2",
       "_tags": [
         "story",
         "author_user2",
-        "story_50087803",
+        "story_900000002",
         "show_hn"
       ]
     },
     {
-      "objectID": "49936229",
+      "objectID": "900000003",
       "created_at": "2026-10-02T17:34:52Z",
       "created_at_i": 1790962492,
       "title": "Strength cues account for most of the variance in men's attractiveness",
       "points": 2,
       "num_comments": 0,
-      "story_id": 49936229,
+      "story_id": 900000003,
       "author": "user3",
       "_tags": [
         "story",
         "author_user3",
-        "story_49936229"
+        "story_900000003"
       ]
     },
     {
-      "objectID": "49922003",
+      "objectID": "900000004",
       "created_at": "2026-10-01T14:16:18Z",
       "created_at_i": 1790864178,
       "title": "Show HN: SVPN News – Tracks high-engagement news, filters noise",
       "points": 1,
       "num_comments": 0,
-      "story_id": 49922003,
+      "story_id": 900000004,
       "story_text": "Hello HN, I built this because I wanted to know what&#x27;s getting a lot of attention in the news, without having to see all the rage that goes with it, and without an ad-driven algorithm telling me what I should be looking at.<p>There&#x27;s two separate products being built here:<p>1. <a href=\"https:&#x2F;&#x2F;news.user4.com\" rel=\"nofollow\">https:&#x2F;&#x2F;news.user4.com</a> (This Show HN)…",
       "author": "user4",
       "_tags": [
         "story",
         "author_user4",
-        "story_49922003",
+        "story_900000004",
         "show_hn"
       ]
     },
     {
-      "objectID": "49796249",
+      "objectID": "900000005",
       "created_at": "2026-09-22T02:45:47Z",
       "created_at_i": 1790045147,
       "title": "Turn ad-hoc subagents into durable, accountable AI teams",
       "points": 4,
       "num_comments": 0,
-      "story_id": 49796249,
+      "story_id": 900000005,
       "author": "user5",
       "_tags": [
         "story",
         "author_user5",
-        "story_49796249"
+        "story_900000005"
       ]
     },
     {
-      "objectID": "49749716",
+      "objectID": "900000006",
       "created_at": "2026-09-18T02:56:04Z",
       "created_at_i": 1789700164,
       "title": "Show HN: Jinx – a link shortener you host free on GitHub Pages",
       "points": 9,
       "num_comments": 4,
-      "story_id": 49749716,
+      "story_id": 900000006,
       "story_text": "Jinx is just links, a small static website on GitHub to share short links to your stuff. Add your links to one file, turn on GitHub Pages, and point your own domain at it. I built it because the options all seemed wrong for a small team: paid shorteners charge monthly for what&#x27;s essentially a lookup table; free self-hosted ones (YOURLS, Shlink, etc.) still need a server and a database to main…",
       "author": "user6",
       "_tags": [
         "story",
         "author_user6",
-        "story_49749716",
+        "story_900000006",
         "show_hn"
       ]
     },
     {
-      "objectID": "49465318",
+      "objectID": "900000007",
       "created_at": "2026-08-27T14:18:37Z",
       "created_at_i": 1787840317,
       "title": "Show HN: Turn ad-hoc subagents into durable, accountable AI teams",
       "points": 2,
       "num_comments": 0,
-      "story_id": 49465318,
+      "story_id": 900000007,
       "author": "user5",
       "_tags": [
         "story",
         "author_user5",
-        "story_49465318",
+        "story_900000007",
         "show_hn"
       ]
     },
     {
-      "objectID": "49409084",
+      "objectID": "900000008",
       "created_at": "2026-08-23T14:24:14Z",
       "created_at_i": 1787495054,
       "title": "Show HN: Self-Hosted Social Media Agents with Raspberry Pi",
       "points": 1,
       "num_comments": 0,
-      "story_id": 49409084,
-      "story_text": "A while back I posted about a project I was working on for a real-time voice agent that runs ads on Meta to build conviction and prioritize side gig&#x2F;business ideas (<a href=\"https:&#x2F;&#x2F;news.ycombinator.com&#x2F;item?id=48900788\">https:&#x2F;&#x2F;news.ycombinator.com&#x2F;item?id=48900788</a>); you yammer away and it automates market research, problem statements and hypotheses. I&#x27;…",
+      "story_id": 900000008,
+      "story_text": "A while back I posted about a project I was working on for a real-time voice agent that runs ads on Meta to build conviction and prioritize side gig&#x2F;business ideas (<a href=\"https:&#x2F;&#x2F;news.ycombinator.com&#x2F;item?id=900000011\">https:&#x2F;&#x2F;news.ycombinator.com&#x2F;item?id=900000011</a>); you yammer away and it automates market research, problem statements and hypotheses. I&#x27;…",
       "author": "user7",
       "_tags": [
         "story",
         "author_user7",
-        "story_49409084",
+        "story_900000008",
         "show_hn"
       ]
     },
     {
-      "objectID": "49396175",
+      "objectID": "900000009",
       "created_at": "2026-08-22T02:54:13Z",
       "created_at_i": 1787367253,
       "title": "Ask HN: How to Claude Like Anthropic",
       "points": 3,
       "num_comments": 1,
-      "story_id": 49396175,
+      "story_id": 900000009,
       "story_text": "I just received an email from Anthropic. Besides the usual new feature ad, there is a piece that I find quite amusing:<p>&gt; How to Claude like Anthropic<p>&gt; &quot;My daily driver currently looks like: two lead agents that keep each other accountable and restart the other if either fails. These delegate to tech lead or PM agents for the 8-10 projects I&#x27;m running at any one time, and each…",
       "author": "user8",
       "_tags": [
         "story",
         "author_user8",
-        "story_49396175",
+        "story_900000009",
         "ask_hn"
       ]
     },
     {
-      "objectID": "49298614",
+      "objectID": "900000010",
       "created_at": "2026-08-14T13:46:16Z",
       "created_at_i": 1786715176,
       "title": "Show HN: Atlas – like GeoGuessr but multiple choice, daily, no sign-up",
       "points": 2,
       "num_comments": 0,
-      "story_id": 49298614,
+      "story_id": 900000010,
       "story_text": "Been building atlas the past few months. A mobile webapp game, like Geoguessr, but with answer options (correct vs two decoys) which makes it a bit quicker.<p>You&#x27;re dropped somewhere and have to guess correctly as fast as possible. Every day at midnight UTC 5 new places will appear, same 5 for everyone in the world. So that’s the global league table.<p>Every place you get right fills in your…",
       "author": "user9",
       "_tags": [
         "story",
         "author_user9",
-        "story_49298614",
+        "story_900000010",
         "show_hn"
       ]
     }

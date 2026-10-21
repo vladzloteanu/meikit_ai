@@ -15,8 +15,9 @@ parameters that carry its credentials) and adds what every research API here nee
 - errors: `ProviderError` names the provider and the status and never quotes a secret.
 
 `get` and `post` return the final response whatever its status (RDAP reads a 404 as an answer);
-`get_json` and `post_json` decode a 2xx body and raise ProviderError for anything else. Every
-sleep goes through `time.sleep`, which the tests replace.
+`get_json` and `post_json` decode a 2xx body and raise ProviderError for anything else, as
+`decode` does for a response `get` returned (Arctic Shift looks at its 422 first). Every sleep
+goes through `time.sleep`, which the tests replace.
 """
 
 import json
@@ -125,11 +126,11 @@ class Client:
 
     def get_json(self, path: str, params: dict | None = None, *, fixture: str | None = None) -> Any:
         """The decoded body of a 2xx GET; ProviderError for any other final status."""
-        return self._decode(self.get(path, params, fixture=fixture))
+        return self.decode(self.get(path, params, fixture=fixture))
 
     def post_json(self, path: str, json: Any = None, *, fixture: str | None = None) -> Any:
         """The decoded body of a 2xx POST; ProviderError for any other final status."""
-        return self._decode(self.post(path, json, fixture=fixture))
+        return self.decode(self.post(path, json, fixture=fixture))
 
     def close(self) -> None:
         if self._http is not None:
@@ -205,7 +206,9 @@ class Client:
         hint = _wait_hint(response.headers) if response is not None else 0.0
         return max(2.0 * attempt, hint)
 
-    def _decode(self, response: httpx.Response) -> Any:
+    def decode(self, response: httpx.Response) -> Any:
+        """The decoded body of `response`, a 2xx; ProviderError for any other status, or a body
+        that is not JSON."""
         if not response.is_success:
             raise self._error(response, response.text)
         try:

@@ -57,6 +57,7 @@ DEFAULT_PHASE = "triage"
 STAMP_FORMAT = "%Y%m%d-%H%M%S"
 DRY_RUN_SUFFIX = ".dryrun.json"  # a dry run's research file, so it never passes for real research
 SNIPPET_WIDTH = 300  # characters of an item's text a research file keeps
+MAX_TIME = 4102444800  # 2100-01-01 UTC: a later Unix time is garbage
 
 
 class ToolError(Exception):
@@ -330,6 +331,12 @@ def date_range(since: date | None, until: date | None) -> tuple[date, date]:
     if since > until:
         raise UsageError(f"--since {since} is after --until {until}")
     return since, until
+
+
+def is_time(value: object) -> bool:
+    """Whether `value` is a Unix time a day can be read from: a number from 1970 to 2100, not
+    NaN and not a bool (datetime.fromtimestamp raises on a time far out of range)."""
+    return isinstance(value, int | float) and not isinstance(value, bool) and 0 <= value < MAX_TIME
 
 
 def day_of(timestamp: float) -> str:
