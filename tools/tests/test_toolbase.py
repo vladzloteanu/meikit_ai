@@ -134,6 +134,25 @@ def test_a_second_run_in_the_same_second_does_not_overwrite_the_first(root, stam
     assert research(root) == ["demo_20261021-101203-2.json", NAME]
 
 
+def test_a_dry_run_marks_its_file_name_and_its_json(root, stamp, tmp_path, capsys):
+    tool = make_tool(lambda r: r.write({"n": 1}))
+    assert tool(args_for("--idea", "_fixture", "--dry-run", "--json")) == 0
+    assert tool(args_for("--idea", "_fixture", "--dry-run")) == 0
+    assert research(root) == [
+        "demo_20261021-101203-2.dryrun.json",
+        "demo_20261021-101203.dryrun.json",
+    ]
+    for name in research(root):
+        path = root / "ideas/_fixture/research" / name
+        assert json.loads(path.read_text(encoding="utf-8")) == {"dry_run": True, "n": 1}
+    assert json.loads(capsys.readouterr().out) == {"dry_run": True, "n": 1}  # what --json printed
+    out = tmp_path / "given.json"  # --out keeps the path given, the JSON still says dry_run
+    assert tool(args_for("--idea", "_fixture", "--dry-run", "--out", str(out))) == 0
+    assert json.loads(out.read_text(encoding="utf-8")) == {"dry_run": True, "n": 1}
+    assert tool(args_for("--idea", "_fixture", "--out", str(out))) == 0  # a real run: no flag
+    assert json.loads(out.read_text(encoding="utf-8")) == {"n": 1}
+
+
 def test_write_goes_to_out_when_given(root, tmp_path):
     out = tmp_path / "elsewhere" / "result.json"
     assert (

@@ -24,9 +24,12 @@ Entering `toolbase.run` refuses a missing or unknown idea, and a planned spend t
 idea past its cap unless --force, before any key is read or any call made; the cap is checked in a
 dry run too. `r.write` puts the research JSON in
 `ideas/<slug>/research/<tool>_<YYYYMMDD-HHMMSS>.json` (or --out) through a `.tmp` file renamed
-into place, so no half-written file is ever left.
-`r.log_cost` appends to the idea's costs.jsonl what the calls cost by `costs.PRICE_TABLE_EUR`, the
-calls made before a failure included; a dry run answers from the fixtures and logs nothing.
+into place, so no half-written file is ever left. `r.log_cost` appends to the idea's costs.jsonl
+what the calls cost by `costs.PRICE_TABLE_EUR`, the calls made before a failure included.
+
+A dry run answers from the fixtures and logs nothing. Its file is
+`<tool>_<YYYYMMDD-HHMMSS>.dryrun.json` and its JSON starts with `"dry_run": true` (at --out and
+on stdout too), so canned data never passes for real research.
 
 Output: the summary, or with --json the research JSON, goes to stdout; what the run did (the file
 written, the cost logged) goes to stderr. `handle_errors` turns an unknown idea, the cap, a provider
@@ -50,6 +53,7 @@ from factory.http import ProviderError
 
 DEFAULT_PHASE = "triage"
 STAMP_FORMAT = "%Y%m%d-%H%M%S"
+DRY_RUN_SUFFIX = ".dryrun.json"  # a dry run's research file, so it never passes for real research
 
 
 class ToolError(Exception):
@@ -75,7 +79,8 @@ def add_common(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--dry-run",
         action="store_true",
-        help="answer from the fixtures: no network, no key read, no cost logged",
+        help="answer from the fixtures: no network, no key read, no cost logged; the research "
+        "file is <tool>_<ts>.dryrun.json and says dry_run: true",
     )
     parser.add_argument(
         "--json", action="store_true", help="print the research JSON instead of the summary"
@@ -167,10 +172,13 @@ class Run:
         """Write `data` as the research JSON and return its path; with --json, also print it.
 
         The file is `ideas/<slug>/research/<tool>_<YYYYMMDD-HHMMSS>.json` (`-2`, `-3`... added
-        when a run of the same second has it already), or --out. It is written to a `.tmp` beside
-        it and renamed into place: no half-written file is ever left. Raises ToolError when it
-        cannot be written.
+        when a run of the same second has it already), or --out. In a dry run it ends in
+        `.dryrun.json` instead (--out keeps the path given) and the JSON starts with
+        `"dry_run": true`. It is written to a `.tmp` beside it and renamed into place: no
+        half-written file is ever left. Raises ToolError when it cannot be written.
         """
+        if self.dry_run:
+            data = {"dry_run": True, **data}
         text = json.dumps(data, indent=2, ensure_ascii=False) + "\n"
         path = self.args.out if self.args.out is not None else self._research_path()
         try:
@@ -216,10 +224,11 @@ class Run:
     def _research_path(self) -> Path:
         folder = paths.research_dir(self.slug)
         stamp = _now().strftime(STAMP_FORMAT)
-        path = folder / f"{self.tool}_{stamp}.json"
+        suffix = DRY_RUN_SUFFIX if self.dry_run else ".json"
+        path = folder / f"{self.tool}_{stamp}{suffix}"
         n = 2
         while path.exists():
-            path = folder / f"{self.tool}_{stamp}-{n}.json"
+            path = folder / f"{self.tool}_{stamp}-{n}{suffix}"
             n += 1
         return path
 

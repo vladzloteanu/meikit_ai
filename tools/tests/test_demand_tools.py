@@ -1,4 +1,5 @@
 import json
+import re
 import time
 
 import httpx
@@ -184,13 +185,27 @@ def test_a_dry_run_writes_research_reads_no_key_and_logs_nothing(root, capsys, m
     before = log.read_text(encoding="utf-8")
     assert main([*argv, "--idea", "_fixture", "--dry-run"]) == 0
     [path] = research(root, argv[0])
-    assert path.suffix == ".json" and json.loads(path.read_text(encoding="utf-8"))
+    assert path.name.endswith(".dryrun.json")
+    assert json.loads(path.read_text(encoding="utf-8"))["dry_run"] is True
     assert log.read_text(encoding="utf-8") == before
     out, err = capsys.readouterr()
     assert out.strip()
     report = err.splitlines()[-1]  # keyword_volume warns first about the fixture's other row
     assert report.startswith(f"{argv[0]}: dry run: wrote ideas/_fixture/research/{argv[0]}_")
     assert report.endswith("not logged")
+
+
+def test_a_dry_run_file_is_marked_and_a_real_one_is_not(root, monkeypatch):
+    argv = ["serp_ads", "--idea", "_fixture", "--keywords", "facebook ad account hacked"]
+    assert main([*argv, "--dry-run"]) == 0
+    [dry] = research(root, "serp_ads")  # exactly one file, the marked one
+    assert re.fullmatch(r"serp_ads_[0-9]{8}-[0-9]{6}\.dryrun\.json", dry.name)
+    assert json.loads(dry.read_text(encoding="utf-8"))["dry_run"] is True
+    wire(monkeypatch, searchapi, answer(fixture("searchapi/google")))
+    assert main(argv) == 0
+    [real] = [path for path in research(root, "serp_ads") if path != dry]
+    assert re.fullmatch(r"serp_ads_[0-9]{8}-[0-9]{6}\.json", real.name)
+    assert "dry_run" not in json.loads(real.read_text(encoding="utf-8"))
 
 
 @pytest.mark.parametrize("argv", DRY_RUNS, ids=DRY_RUN_IDS)
@@ -281,8 +296,8 @@ def test_serp_ads_research_from_the_google_answer(root, capsys):
         ["serp_ads", "--idea", "_fixture", "--dry-run"]
         + ["--keywords", "facebook ad account hacked", "ad account security"],
     )
-    assert list(out) == ["gl", "hl", "queries", "advertisers"]
-    assert (out["gl"], out["hl"]) == ("us", "en")
+    assert list(out) == ["dry_run", "gl", "hl", "queries", "advertisers"]
+    assert out["dry_run"] is True and (out["gl"], out["hl"]) == ("us", "en")
     assert list(out["queries"]) == ["facebook ad account hacked", "ad account security"]
     serp = out["queries"]["facebook ad account hacked"]
     assert list(serp) == ["n_ads", "ads", "organic"]
@@ -516,7 +531,7 @@ def test_keyword_volume_keeps_a_keyword_without_data_as_not_found(
         capsys,
         ["keyword_volume", "--idea", "_fixture", "--dry-run", "--cc", "us", "--buckets-file", f],
     )
-    assert list(out) == ["cc", "language", "keywords", "buckets"]
+    assert list(out) == ["dry_run", "cc", "language", "keywords", "buckets"]
     assert (out["cc"], out["language"]) == ("us", "en")
     assert out["keywords"] == {
         "facebook ad account hacked": {**NO_DATA, "bucket": "trigger"},
@@ -714,7 +729,7 @@ def ad_library(capsys, *argv):
 
 def test_ad_library_meta(root, capsys):
     out = ad_library(capsys, "--engine", "meta", "--q", "ad account security")
-    assert list(out) == ["engine", "query", "total_results", "items"]
+    assert list(out) == ["dry_run", "engine", "query", "total_results", "items"]
     assert out["engine"] == "meta" and out["query"] == {
         "q": "ad account security",
         "country": "ALL",
