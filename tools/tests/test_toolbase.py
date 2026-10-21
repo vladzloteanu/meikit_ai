@@ -1,6 +1,6 @@
 import argparse
 import json
-from datetime import datetime
+from datetime import date, datetime
 
 import pytest
 
@@ -334,3 +334,45 @@ def test_positive_int_refuses_what_is_not_one_or_more(text):
     with pytest.raises(argparse.ArgumentTypeError):
         toolbase.positive_int(text)
     assert toolbase.positive_int("20") == 20
+
+
+@pytest.mark.parametrize("text", ["2026-1-02", "20261021", "2026-02-30", "2026-W43-3", "today", ""])
+def test_iso_date_reads_a_day_written_yyyy_mm_dd_and_nothing_else(text):
+    assert toolbase.iso_date("2026-10-21") == date(2026, 10, 21)
+    with pytest.raises(argparse.ArgumentTypeError, match="is not a day as YYYY-MM-DD"):
+        toolbase.iso_date(text)
+
+
+def test_today_is_the_local_day_of_now(stamp):
+    assert toolbase.today() == date(2026, 10, 21)
+
+
+def test_date_range_defaults_to_the_12_months_up_to_today(stamp):
+    assert toolbase.date_range(None, None) == (date(2025, 10, 21), date(2026, 10, 21))
+    assert toolbase.date_range(date(2026, 1, 1), None) == (date(2026, 1, 1), date(2026, 10, 21))
+    # an --until without --since: the 12 months up to it
+    assert toolbase.date_range(None, date(2024, 2, 29)) == (date(2023, 2, 28), date(2024, 2, 29))
+    one_day = date(2026, 3, 1)
+    assert toolbase.date_range(one_day, one_day) == (one_day, one_day)
+
+
+def test_date_range_refuses_a_since_after_the_until():
+    with pytest.raises(
+        toolbase.UsageError, match=r"^--since 2026-10-21 is after --until 2026-10-20$"
+    ):
+        toolbase.date_range(date(2026, 10, 21), date(2026, 10, 20))
+
+
+def test_day_and_month_of_a_unix_time_are_utc():
+    assert toolbase.day_of(1767225599) == "2025-12-31"  # 23:59:59 UTC, already 2026 in Paris
+    assert toolbase.month_of(1767225599) == "2025-12"
+    assert (toolbase.day_of(1767225600), toolbase.month_of(1767225600)) == ("2026-01-01", "2026-01")
+
+
+def test_snippet_is_the_start_of_the_text_on_one_line():
+    assert toolbase.snippet("  Locked out\n\nof my  ad account ") == "Locked out of my ad account"
+    assert toolbase.snippet("x" * 300) == "x" * 300
+    cut = toolbase.snippet("word " * 100)
+    assert len(cut) <= 300 and cut.endswith("…") and cut.startswith("word word")
+    assert toolbase.snippet("abcdef", width=4) == "abc…"
+    assert [toolbase.snippet(text) for text in (None, "", " \n ", 3)] == [None, None, None, None]

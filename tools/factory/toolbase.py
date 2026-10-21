@@ -41,9 +41,10 @@ import argparse
 import functools
 import json
 import os
+import re
 import sys
 from collections.abc import Callable, Iterable
-from datetime import datetime
+from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import Self
 from urllib.parse import urlsplit
@@ -54,6 +55,7 @@ from factory.http import ProviderError
 DEFAULT_PHASE = "triage"
 STAMP_FORMAT = "%Y%m%d-%H%M%S"
 DRY_RUN_SUFFIX = ".dryrun.json"  # a dry run's research file, so it never passes for real research
+SNIPPET_WIDTH = 300  # characters of an item's text a research file keeps
 
 
 class ToolError(Exception):
@@ -302,6 +304,57 @@ def domain_of(text: str | None) -> str | None:
     if not host or "." not in host:
         return None
     return host.removeprefix("www.")
+
+
+def today() -> date:
+    """The local day: the default end of a dated search."""
+    return _now().date()
+
+
+def iso_date(text: str) -> date:
+    """argparse type: a day written YYYY-MM-DD."""
+    try:
+        if re.fullmatch(r"\d{4}-\d{2}-\d{2}", text):
+            return date.fromisoformat(text)
+    except ValueError:  # 2026-02-30
+        pass
+    raise argparse.ArgumentTypeError(f"{text!r} is not a day as YYYY-MM-DD")
+
+
+def date_range(since: date | None, until: date | None) -> tuple[date, date]:
+    """The first and the last day of a dated search, both included: `until` defaults to today and
+    `since` to 12 months before `until`. Raises UsageError when `since` is after `until`."""
+    until = until or today()
+    since = since or _year_before(until)
+    if since > until:
+        raise UsageError(f"--since {since} is after --until {until}")
+    return since, until
+
+
+def day_of(timestamp: float) -> str:
+    """The UTC day of a Unix time, YYYY-MM-DD."""
+    return datetime.fromtimestamp(timestamp, UTC).strftime("%Y-%m-%d")
+
+
+def month_of(timestamp: float) -> str:
+    """The UTC month of a Unix time, YYYY-MM."""
+    return day_of(timestamp)[:7]
+
+
+def snippet(text: object, width: int = SNIPPET_WIDTH) -> str | None:
+    """The start of `text` on one line, at most `width` characters (a cut one ends in `…`); None
+    when there is no text."""
+    if not isinstance(text, str) or not text.split():
+        return None
+    line = " ".join(text.split())
+    return line if len(line) <= width else line[: width - 1].rstrip() + "…"
+
+
+def _year_before(day: date) -> date:
+    try:
+        return day.replace(year=day.year - 1)
+    except ValueError:  # 29 February
+        return day.replace(year=day.year - 1, day=28)
 
 
 def _now() -> datetime:

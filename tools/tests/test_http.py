@@ -1,9 +1,10 @@
+import json
 import time
 
 import httpx
 import pytest
 
-from factory import secrets
+from factory import http, secrets
 from factory.http import Client, ProviderError
 from factory.providers import searchapi
 
@@ -271,6 +272,50 @@ def test_dry_run_makes_no_request_counts_calls_and_names_a_missing_fixture():
     assert c.calls == 2
     with pytest.raises(FileNotFoundError, match=r"fixtures/searchapi/nope\.json"):
         c.get_json("/search", fixture="searchapi/nope")
+
+
+def fixture_dir(monkeypatch, tmp_path, files: dict):
+    """Point the dry-run fixtures at tmp_path, holding `files` ({"provider/name": data})."""
+    for name, data in files.items():
+        path = tmp_path / f"{name}.json"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(data), encoding="utf-8")
+    monkeypatch.setattr(http, "FIXTURES", tmp_path)
+
+
+def test_dry_run_answers_with_the_fixture_status_and_the_rest_as_the_body(monkeypatch, tmp_path):
+    fixture_dir(
+        monkeypatch,
+        tmp_path,
+        {"t/missing": {"_status": 404}, "t/made": {"_status": 201, "id": 7}, "t/plain": {"a": 1}},
+    )
+    c = Client("t", "https://x.test", dry_run=True)
+    missing = c.get("/domain/x.io", fixture="t/missing")
+    assert missing.status_code == 404 and missing.json() == {}
+    assert c.post_json("/rows/", json={"x": 1}, fixture="t/made") == {"id": 7}
+    plain = c.get("/a", fixture="t/plain")
+    assert plain.status_code == 200 and plain.json() == {"a": 1}
+    assert c.calls == 3
+
+
+def test_dry_run_json_calls_refuse_a_non_2xx_fixture_status_like_a_real_answer(
+    monkeypatch, tmp_path
+):
+    fixture_dir(monkeypatch, tmp_path, {"t/missing": {"_status": 404}})
+    c = Client("t", "https://x.test", dry_run=True)
+    with pytest.raises(ProviderError) as e:
+        c.get_json("/domain/x.io", fixture="t/missing")
+    assert e.value.status == 404 and str(e.value) == "t: HTTP 404: GET /domain/x.io: {}"
+    with pytest.raises(ProviderError) as e:
+        c.post_json("/domain/x.io", fixture="t/missing")
+    assert e.value.status == 404
+
+
+def test_the_rdap_fixtures_answer_404_and_200():
+    c = Client("rdap", "https://rdap.org", dry_run=True)
+    assert c.get("/domain/x.io", fixture="rdap/available").status_code == 404
+    taken = c.get("/domain/example.com", fixture="rdap/taken")
+    assert taken.status_code == 200 and "_status" not in taken.json()
 
 
 # --- ProviderError -----------------------------------------------------------------------------

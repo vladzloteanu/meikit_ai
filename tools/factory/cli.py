@@ -23,6 +23,10 @@ TOOL_MODULES: list[str] = [
     "serp_ads",
     "keyword_volume",
     "ad_library",
+    "reddit_mentions",
+    "hn_mentions",
+    "pricing_scan",
+    "domain_check",
 ]
 
 

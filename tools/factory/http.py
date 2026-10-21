@@ -9,7 +9,9 @@ parameters that carry its credentials) and adds what every research API here nee
   is the provider's Retry-After or X-RateLimit-Reset, capped at 300 s; a response `fatal` accepts
   (SearchAPI's "used all of the searches for the month" 429) raises at once, without a retry;
 - dry runs: with `dry_run=True` every call is answered from `fixtures/<fixture>.json` and nothing
-  touches the network; `calls` still counts the calls, so a tool can preview its cost;
+  touches the network; `calls` still counts the calls, so a tool can preview its cost; a fixture
+  object with a top-level `"_status": <int>` is answered with that status, its other keys as the
+  body (RDAP's `{"_status": 404}` is a domain nobody holds);
 - errors: `ProviderError` names the provider and the status and never quotes a secret.
 
 `get` and `post` return the final response whatever its status (RDAP reads a 404 as an answer);
@@ -163,12 +165,17 @@ class Client:
         return response
 
     def _replay(self, method: str, path: str, fixture: str | None) -> httpx.Response:
-        """The dry-run answer: a 200 carrying `fixtures/<fixture>.json` (FileNotFoundError if none)."""
+        """The dry-run answer from `fixtures/<fixture>.json` (FileNotFoundError if none): a 200
+        carrying it, or, for an object with a top-level `_status`, that status carrying the rest."""
         if fixture is None:
             raise ValueError(f"{self.provider}: {method} {path} has no dry-run fixture")
         data = json.loads((FIXTURES / f"{fixture}.json").read_text(encoding="utf-8"))
+        status = 200
+        if isinstance(data, dict) and "_status" in data:
+            data = dict(data)
+            status = data.pop("_status")
         url = self.base_url.rstrip("/") + "/" + path.lstrip("/")
-        return httpx.Response(200, json=data, request=httpx.Request(method, url))
+        return httpx.Response(status, json=data, request=httpx.Request(method, url))
 
     def _pace(self) -> None:
         """Wait until `pace_s` has passed since the previous request started (never before the

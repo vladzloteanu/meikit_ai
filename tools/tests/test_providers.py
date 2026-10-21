@@ -2,6 +2,7 @@ import functools
 import json
 import re
 import time
+from collections import Counter
 
 import httpx
 import pytest
@@ -135,8 +136,30 @@ def test_seranking_dry_run_serves_the_fixtures(no_secrets):
 
 def test_fixtures_carry_no_request_metadata_or_key_param():
     files = sorted(FIXTURES.glob("*/*.json"))
-    assert len(files) == 9
+    assert Counter(file.parent.name for file in files) == {
+        "searchapi": 5,
+        "seranking": 4,
+        "arcticshift": 2,
+        "algolia": 1,
+        "firecrawl": 1,
+        "rdap": 2,
+    }
     for file in files:
         text = file.read_text(encoding="utf-8")
         assert "search_metadata" not in text, file.name
         assert not re.search(r"(?i)\bapi_key=(?!\*\*\*)", text), file.name  # SearchAPI's key
+
+
+def test_the_reddit_and_hn_fixtures_name_no_user():
+    for name in ("posts_search", "comments_search"):
+        data = json.loads((FIXTURES / f"arcticshift/{name}.json").read_text(encoding="utf-8"))
+        assert 0 < len(data["data"]) <= 10
+        for item in data["data"]:
+            assert re.fullmatch(r"user\d+|AutoModerator|\[deleted\]", item["author"]), name
+    hn = json.loads((FIXTURES / "algolia/search_by_date.json").read_text(encoding="utf-8"))
+    assert 0 < len(hn["hits"]) <= 10
+    for hit in hn["hits"]:
+        assert re.fullmatch(r"user\d+", hit["author"])
+        authors = [tag for tag in hit["_tags"] if tag.startswith("author_")]
+        assert authors == [f"author_{hit['author']}"]
+        assert "_highlightResult" not in hit
