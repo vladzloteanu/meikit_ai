@@ -23,11 +23,16 @@ def root(factory_root: Path) -> Path:
     """A throwaway factory root.
 
     FACTORY_ROOT points at it, ideas/ exists, and the repo's ideas/_fixture is copied in once the
-    repo has one.
+    repo has one, without the research files a manual dry run may have left in it.
     """
     ideas = factory_root / "ideas"
     ideas.mkdir(exist_ok=True)
     fixture = REPO_ROOT / "ideas" / "_fixture"
     if fixture.is_dir():
-        shutil.copytree(fixture, ideas / "_fixture")
+        shutil.copytree(fixture, ideas / "_fixture", ignore=_research_output)
     return factory_root
+
+
+def _research_output(folder: str, names: list[str]) -> list[str]:
+    """copytree's ignore: in research/, everything but .gitkeep."""
+    return [name for name in names if name != ".gitkeep"] if Path(folder).name == "research" else []
