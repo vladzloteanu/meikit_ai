@@ -69,7 +69,8 @@ creates the folder.
 `TRIAGED` once the brief is, `GO` or `NO-GO` after the challenge, `LAUNCHED` when the site is live,
 `RUNNING` while traffic or outreach is on, `REWORK` while a workstream changes part of the plan.
 `BUILD`, `PIVOT`, `PARK` and `DROP` are the verdict labels (spec section 12); `PARK` is the only
-one a human can set over the computed label. Nothing else is accepted: `save_idea` raises
+one a human can set over the computed label. `DROP` is also the status of an idea the triage
+stopped (its `brief.md` says why, and steps 3 to 7 of its plan are `skipped`). Nothing else is accepted: `save_idea` raises
 `ValueError`, `load_idea` raises `IdeaFileError`.
 
 ## plan.md

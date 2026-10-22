@@ -126,7 +126,13 @@ reads it to show where the idea stands and to offer the next step.
 Gates (a step fails and the plan stops or pivots when one is not met):
 - Intake: slug, geo, language, buyer, value per customer, cap written down.
 - Triage: at least one of {someone pays to acquire this buyer today, a trigger keyword exists,
-  recurring complaints exist}. All three absent ends the run at cost zero.
+  recurring complaints exist}. All three absent ends the run at cost zero. *Amended 2026-10-22,
+  after the Codex challenge of the triage skill: three signals scored 0–2 or U (unknown) — P the
+  buyer's problem seen in their actions, C commercial evidence, R an unpaid route to reach the
+  buyer; PASS when R ≥ 1 and (P = 2, or C = 2, or P ≥ 1 and C ≥ 1 from independent sources);
+  STOP (status `DROP`) only after the minimum coverage finds the decisive evidence absent;
+  INCONCLUSIVE otherwise. Adjacent advertising and search volume never pass on their own. The
+  skill `.claude/skills/idea-triage/SKILL.md` is the reference.*
 - Challenge: one framing survives with a falsifiable prediction; a price is written; a recipe and
   channels are chosen; the modelled cost per primary event leaves margin against value per customer.
 - Launch: page live, QA passed, a test event reached the admin, claims lint clean, legal pages up.
