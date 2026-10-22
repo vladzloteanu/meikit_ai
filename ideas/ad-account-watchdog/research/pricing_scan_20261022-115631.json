@@ -1,0 +1,61 @@
+{
+  "pages": [
+    {
+      "url": "https://hacked.com/meta-business-portfolio-recovery/",
+      "title": "Meta Business Manager Recovery | Hacked.com",
+      "headline": "Hacked.com in the news",
+      "prices": [
+        "$149",
+        "$249",
+        "$990",
+        "$1,499",
+        "$509",
+        "$199",
+        "$899 per year"
+      ],
+      "cta": "About demand letters",
+      "offer_shape": "subscription"
+    },
+    {
+      "url": "https://theadspend.com/blog/google-ads-change-history-alerts",
+      "title": "Google Ads Change History Alerts: Scripts vs Slack (2026) — The Ad Spend",
+      "headline": "Google Ads Change History Alerts: Scripts vs Slack (2026)",
+      "prices": [],
+      "cta": null,
+      "offer_shape": "unknown"
+    },
+    {
+      "url": "https://saashero.net/google-ppc/google-ads-agency-account-takeover/",
+      "title": "Google Ads MCC Takeover: Recovery Steps & Prevention",
+      "headline": "Google Ads Agency Account Takeover: How to Recover",
+      "prices": [],
+      "cta": "Phishing toolkits such as iAuthFlow V2 can register an attacker-controlled passkey on a victim’s Google account",
+      "offer_shape": "unknown"
+    },
+    {
+      "url": "https://bfj.digital/insights/how-a-forgotten-account-cost-our-client--60k/",
+      "title": "How a Forgotten Account Cost Our Client $60,000 | BFJ Digital",
+      "headline": "How a Forgotten Account Cost Our Client $60,000 (And How We Got It Back)",
+      "prices": [
+        "$60,000",
+        "$350",
+        "$130,000",
+        "$2,000",
+        "$5.4"
+      ],
+      "cta": "Contact us now",
+      "offer_shape": "one_shot"
+    },
+    {
+      "url": "https://theadspend.com/pricing",
+      "title": "Pricing — The Ad Spend",
+      "headline": "Free for the whole team. Strategists, full data, and advanced modules when you need them.",
+      "prices": [
+        "$1,000/ mo",
+        "$10"
+      ],
+      "cta": "Start free",
+      "offer_shape": "subscription"
+    }
+  ]
+}

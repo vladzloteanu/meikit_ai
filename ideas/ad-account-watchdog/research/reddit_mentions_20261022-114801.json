@@ -1,0 +1,272 @@
+{
+  "subreddits": [
+    "FacebookAds",
+    "PPC",
+    "googleads",
+    "agency"
+  ],
+  "since": "2025-10-22",
+  "until": "2026-10-22",
+  "limit": 100,
+  "max_wait_s": 60.0,
+  "waited_s": 41.0,
+  "skipped_searches": 14,
+  "terms": {
+    "business manager hacked": {
+      "posts": 24,
+      "comments": 0,
+      "by_month": {
+        "2025-11": 3,
+        "2026-01": 2,
+        "2026-02": 3,
+        "2026-03": 4,
+        "2026-05": 1,
+        "2026-06": 2,
+        "2026-07": 1,
+        "2026-08": 1,
+        "2026-09": 2,
+        "2026-10": 5
+      },
+      "by_subreddit": {
+        "FacebookAds": 24
+      },
+      "complete": false,
+      "covered_since": "2026-10-23",
+      "skipped": true,
+      "error": null,
+      "calls": 3,
+      "waited_s": 41.0,
+      "hits": [
+        {
+          "kind": "post",
+          "subreddit": "FacebookAds",
+          "title": "Ad account hacked and charged $1,129.89 for a hacker’s shoe ads. Meta has ignored my refund request for 2 weeks and PayPal denied my dispute. How do I actually get a human at Meta?",
+          "url": "https://www.reddit.com/r/FacebookAds/comments/1xbex20/ad_account_hacked_and_charged_112989_for_a/",
+          "score": 1,
+          "created": "2026-10-21",
+          "snippet": "Small business owner here, I run a balloon decor business. On October 5 and 6 my ad account got hacked. Someone got in, duplicated one of my campaigns and ran ads for urbanstepwear.com, a shoe store I have never heard of. Total damage: $1,129.89 charged to my PayPal. I secured the account right awa…"
+        },
+        {
+          "kind": "post",
+          "subreddit": "FacebookAds",
+          "title": "Meta Business Manager hacked – ~$5,000 unauthorized ad spend, but Meta Support won't connect me to a specialist",
+          "url": "https://www.reddit.com/r/FacebookAds/comments/1x4q1wl/meta_business_manager_hacked_5000_unauthorized_ad/",
+          "score": 1,
+          "created": "2026-10-13",
+          "snippet": null
+        },
+        {
+          "kind": "post",
+          "subreddit": "FacebookAds",
+          "title": "URGENT: Business Manager Hacked - Hackers set $20k/day budgets on all client accounts.  anyone how to stop it?",
+          "url": "https://www.reddit.com/r/FacebookAds/comments/1wyf0tq/urgent_business_manager_hacked_hackers_set_20kday/",
+          "score": 6,
+          "created": "2026-10-05",
+          "snippet": "Hey everyone, dealing with an absolute nightmare right now and hoping someone here has successfully navigated this before. Our agency's Meta Business Manager was just compromised. We caught it quickly, but the hackers went in and set up dozens of new campaigns - specifically, one new campaign per c…"
+        },
+        {
+          "kind": "post",
+          "subreddit": "FacebookAds",
+          "title": "Stuck In 2FA Loop On One Specific Business Manager / Ad Account Only",
+          "url": "https://www.reddit.com/r/FacebookAds/comments/1wwvaro/stuck_in_2fa_loop_on_one_specific_business/",
+          "score": 3,
+          "created": "2026-10-03",
+          "snippet": "Long story short, got a txt last night from a client that one of their staff (who was an admin on the ad account) had been hacked and dodgy ads were being run. In effect, a hacker was using the staff member's account to run ads (not adding another user to the account which is how I have seen this s…"
+        },
+        {
+          "kind": "post",
+          "subreddit": "FacebookAds",
+          "title": "Meta says a $10K refund for a hacked portfolio was \"processed\" weeks ago, but it never arrived. How do I get it resolved?",
+          "url": "https://www.reddit.com/r/FacebookAds/comments/1wvf9s4/meta_says_a_10k_refund_for_a_hacked_portfolio_was/",
+          "score": 1,
+          "created": "2026-10-02",
+          "snippet": "Looking for advice from anyone who's got a Meta refund processed successfully. A Business Portfolio I manage was hacked in June, and $10K was spent on a client's ad account. Meta's support chat confirmed that the business portfolio was hacked, and they agreed to refund it. On Aug 27 they said it wo…"
+        },
+        {
+          "kind": "post",
+          "subreddit": "FacebookAds",
+          "title": "Help : Hacked Meta Business Manager, Lost Admin Access",
+          "url": "https://www.reddit.com/r/FacebookAds/comments/1whchva/help_hacked_meta_business_manager_lost_admin/",
+          "score": 0,
+          "created": "2026-09-15",
+          "snippet": "Someone managed to get into my Business Manager and remove my admin access. They must have hacked the personal account of the second admin of the Business Manager. Then they removed both of our personal accounts from the Business Manager. My Meta Ads campaign is still running and I can’t do anythin…"
+        },
+        {
+          "kind": "post",
+          "subreddit": "FacebookAds",
+          "title": "BM hacked and can't get hold of real human at Meta!!!",
+          "url": "https://www.reddit.com/r/FacebookAds/comments/1w66g1l/bm_hacked_and_cant_get_hold_of_real_human_at_meta/",
+          "score": 0,
+          "created": "2026-09-03",
+          "snippet": "My Business manager got hacked yesterday and I have been trying to get through to a support agent via the AI chatbox but just going through this endless loop with the AI right now saying there are no support agents available right now to handle my case and to try again in a few hours. I'm gonna kee…"
+        },
+        {
+          "kind": "post",
+          "subreddit": "FacebookAds",
+          "title": "Weekly roundup: what actually happened in here this week (Jul 27 - Aug 2)",
+          "url": "https://www.reddit.com/r/FacebookAds/comments/1vdw4am/weekly_roundup_what_actually_happened_in_here/",
+          "score": 16,
+          "created": "2026-08-02",
+          "snippet": "Second week in a row posting this! I've got a side project that tags every post in this sub by what people are complaining about, so I end up reading the whole week whether I want to or not. Writing it up again for anyone who doesn't live in here. There was just under 300 posts this week, 144 of th…"
+        },
+        {
+          "kind": "post",
+          "subreddit": "FacebookAds",
+          "title": "Need Help Recovering a business account",
+          "url": "https://www.reddit.com/r/FacebookAds/comments/1un5x7c/need_help_recovering_a_business_account/",
+          "score": 1,
+          "created": "2026-07-04",
+          "snippet": "My friend got themselves hacked via a phishing email, after that the usual routine, the scammers set up their scam product campaign. I helped out and paused the fake campaigns and kicked out the scammers from the business manager. However my friend is locked out of her business IG account and suppo…"
+        },
+        {
+          "kind": "post",
+          "subreddit": "FacebookAds",
+          "title": "[Help] Facebook ad account blocked — endless loop with 2FA and useless support",
+          "url": "https://www.reddit.com/r/FacebookAds/comments/1uj7yzu/help_facebook_ad_account_blocked_endless_loop/",
+          "score": 1,
+          "created": "2026-06-29",
+          "snippet": "I've been trying to fix this for hours and Meta support is completely useless. Hoping someone here went through something similar. **The problem:** My personal Facebook account has a restriction that prevents me from managing all ad assets in my Business Manager. The restriction supposedly dates ba…"
+        },
+        {
+          "kind": "post",
+          "subreddit": "FacebookAds",
+          "title": "Contact support before ban appeal / how can someone appeal on your behalf.",
+          "url": "https://www.reddit.com/r/FacebookAds/comments/1u0p7yl/contact_support_before_ban_appeal_how_can_someone/",
+          "score": 3,
+          "created": "2026-06-09",
+          "snippet": "I see here stories everyday that people get permanently banned immediately after appeal. It doesn't seem safe to appeal in your own. I remembered something that was told to some workers in my previous company when they contacted support. It was 2-3 years ago so i do not if it still valid. I think i…"
+        },
+        {
+          "kind": "post",
+          "subreddit": "FacebookAds",
+          "title": "Meta Business Manager & Multiple Ad Accounts Hacked – How Long Does Recovery Usually Take?",
+          "url": "https://www.reddit.com/r/FacebookAds/comments/1tkxvao/meta_business_manager_multiple_ad_accounts_hacked/",
+          "score": 1,
+          "created": "2026-05-22",
+          "snippet": "My Meta Business Manager and all linked ad accounts got hacked and completely taken over. Around 8 BMs and 12 ad accounts are affected, all were actively running campaigns, and now no original admin has access anymore. I already contacted Meta Support and they said the case is under review, but I w…"
+        },
+        {
+          "kind": "post",
+          "subreddit": "FacebookAds",
+          "title": "Facebook Ads account hacked charges still increasing even though ads are stopped",
+          "url": "https://www.reddit.com/r/FacebookAds/comments/1rwau2e/facebook_ads_account_hacked_charges_still/",
+          "score": 1,
+          "created": "2026-03-17",
+          "snippet": "My Facebook Ads account was hacked a couple of days ago and around 6000 SEK (\\~$600) was charged for ads that I did not create. Here’s what I’ve already done: * I still have full access to my Facebook account * I removed the unknown admins * I enabled 2FA * I changed my password * I blocked my card…"
+        },
+        {
+          "kind": "post",
+          "subreddit": "FacebookAds",
+          "title": "Tips and advice for business/page owners",
+          "url": "https://www.reddit.com/r/FacebookAds/comments/1rtz7vw/tips_and_advice_for_businesspage_owners/",
+          "score": 1,
+          "created": "2026-03-15",
+          "snippet": "Hi everyone, im a former meta employee who got connections inside. I DON'T ASK FOR ANYTHING WHEN IT COMES TO QUESTIONS Im here to give you some info and detail why things happen. I also attached image for example. -Getting awful result is not coincidence or Meta strategy. You are getting awful resu…"
+        },
+        {
+          "kind": "post",
+          "subreddit": "FacebookAds",
+          "title": "Meta permanently disabled my 10-year Meta Developer-verified advertiser profile after identity verification — managing 40 active ad accounts + API integrations",
+          "url": "https://www.reddit.com/r/FacebookAds/comments/1rqjc0e/meta_permanently_disabled_my_10year_meta/",
+          "score": 9,
+          "created": "2026-03-11",
+          "snippet": "Looking for advice from other agency operators / serious Meta advertisers. I’ve managed Meta Ads professionally for 10+ years. My personal profile is used only to access Business Manager and manage advertiser infrastructure, I stopped using it for personal engagement years ago. Last week Meta asked…"
+        },
+        {
+          "kind": "post",
+          "subreddit": "FacebookAds",
+          "title": "Meta Ads account disabled — can't create new ad accounts due to past hack. Any workarounds?",
+          "url": "https://www.reddit.com/r/FacebookAds/comments/1rq5cg8/meta_ads_account_disabled_cant_create_new_ad/",
+          "score": 1,
+          "created": "2026-03-10",
+          "snippet": "Hoping someone here has dealt with this before. About 2 years ago my personal Facebook account was hacked and permanently disabled. I submitted multiple review requests but eventually accepted that the account was gone. The issue now is that I work at a small independent agency and my name is effec…"
+        },
+        {
+          "kind": "post",
+          "subreddit": "FacebookAds",
+          "title": "Meta Business Manager Hacked Despite 2FA – We Lost Full Access – What Escalation Options Exist?",
+          "url": "https://www.reddit.com/r/FacebookAds/comments/1rg18yi/meta_business_manager_hacked_despite_2fa_we_lost/",
+          "score": 1,
+          "created": "2026-02-27",
+          "snippet": null
+        },
+        {
+          "kind": "post",
+          "subreddit": "FacebookAds",
+          "title": "Restricted Instagram, still running ads with it?",
+          "url": "https://www.reddit.com/r/FacebookAds/comments/1rfa9ju/restricted_instagram_still_running_ads_with_it/",
+          "score": 1,
+          "created": "2026-02-26",
+          "snippet": "So we have an Instagram account tied to an old business manager, which was hacked years ago, we had everything fixed but meta continuously disabled the business manager and we decided to start a new one to avoid the pain. Our Instagram as of last week now says in the actual Instagram app - “Busines…"
+        },
+        {
+          "kind": "post",
+          "subreddit": "FacebookAds",
+          "title": "Meta Business Suite please help don’t know where else to turn any information would be greatly appreciated",
+          "url": "https://www.reddit.com/r/FacebookAds/comments/1r407s8/meta_business_suite_please_help_dont_know_where/",
+          "score": 3,
+          "created": "2026-02-13",
+          "snippet": "I will try to be as detailed as possible. This is already taken a tremendous amount of my time so I apologize for the spelling errors and punctuation, I’ll be using voice chat to get this out there as soon as possible. This is already consumed a ton of time. I own a small dealership in Ohio We adve…"
+        },
+        {
+          "kind": "post",
+          "subreddit": "FacebookAds",
+          "title": "Help",
+          "url": "https://www.reddit.com/r/FacebookAds/comments/1qlzzzw/help/",
+          "score": 1,
+          "created": "2026-01-24",
+          "snippet": "Hey guys, I'm in a real mess. I was about to start advertising my business on Facebook when I found out my Business Manager account had been hacked. I created a new profile, warmed it up a bit, then created a new Business Manager account, a fan page, and started testing ads. Every time I try to set…"
+        },
+        {
+          "kind": "post",
+          "subreddit": "FacebookAds",
+          "title": "Facebook account locked, Business Manager + ads affected, no FB login access — urgent help",
+          "url": "https://www.reddit.com/r/FacebookAds/comments/1qar4ha/facebook_account_locked_business_manager_ads/",
+          "score": 1,
+          "created": "2026-01-12",
+          "snippet": "Hi everyone, My Facebook account has been **locked due to a security checkpoint** (advanced protection / weak password type issue). The problem is: * This FB profile is the **primary admin of a Business Manager** * It has **active ad accounts with billing history** * Ads are stopped and I **urgentl…"
+        },
+        {
+          "kind": "post",
+          "subreddit": "FacebookAds",
+          "title": "Ad agency holding meta ads account hostage!!! Please help!",
+          "url": "https://www.reddit.com/r/FacebookAds/comments/1p2i5ak/ad_agency_holding_meta_ads_account_hostage_please/",
+          "score": 1,
+          "created": "2025-11-20",
+          "snippet": "I started my e com business 10 years ago and have been working with an agency for about 6. My ad account was hacked, and since I couldn’t guarantee it wouldn’t happen again, I allowed the agency to create and host our ad account We’ve recently had a messy breakup, and the agency plans to remove us…"
+        },
+        {
+          "kind": "post",
+          "subreddit": "FacebookAds",
+          "title": "My Meta Ads account was hacked this morning and I can’t reach support at all. I’m terrified my account will get shut down. Has anyone dealt with this?",
+          "url": "https://www.reddit.com/r/FacebookAds/comments/1oy53u6/my_meta_ads_account_was_hacked_this_morning_and_i/",
+          "score": 1,
+          "created": "2025-11-15",
+          "snippet": "This morning my Meta Business/Ads account was **hacked**, and I’m honestly panicking because there is *no* way to reach an actual human at Meta. Someone got into my Business Manager and created an ad account under a completely random name. They added **their own credit card** and started running ad…"
+        },
+        {
+          "kind": "post",
+          "subreddit": "FacebookAds",
+          "title": "My page and business portfolio were restricted from advertising when I am not even advertising. Why?",
+          "url": "https://www.reddit.com/r/FacebookAds/comments/1ow707o/my_page_and_business_portfolio_were_restricted/",
+          "score": 0,
+          "created": "2025-11-13",
+          "snippet": "Hello everyone, I received a message saying that my Facebook page and business portfolio were restricted from advertising when I a do not even have an ads manager. I simply post posts every once in a while. A day later, another one of my pages received the same message. The message Meta sent me sta…"
+        }
+      ]
+    },
+    "MCC hacked": {
+      "posts": 0,
+      "comments": 0,
+      "by_month": {},
+      "by_subreddit": {},
+      "complete": false,
+      "covered_since": "2026-10-23",
+      "skipped": true,
+      "error": null,
+      "calls": 0,
+      "waited_s": 0.0,
+      "hits": []
+    }
+  }
+}

@@ -1,6 +1,6 @@
 slug: ad-account-watchdog
 title: Ad Account Watchdog
-status: NEW
+status: TRIAGED
 created: '2026-10-22'
 updated: '2026-10-22'
 geo:
@@ -24,11 +24,11 @@ provisional: true
 notes: Optional 599 EUR manual+automatic audit plus 59 EUR/month watchdog; prevention
   demand unproven; price shape to confirm with 10 burned owners
 totals:
-  cash_eur: 0.0
+  cash_eur: 0.05
   founder_time_eur: 0.0
   by_kind:
     ads: 0.0
-    api: 0.0
+    api: 0.05
     llm: 0.0
     domain: 0.0
     founder_time: 0.0
