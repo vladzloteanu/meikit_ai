@@ -1,0 +1,88 @@
+{
+  "since": "2025-10-22",
+  "until": "2026-10-22",
+  "limit": 100,
+  "terms": {
+    "ad account hacked": {
+      "stories": 0,
+      "comments": 3,
+      "by_month": {
+        "2025-11": 1,
+        "2026-03": 1,
+        "2026-06": 1
+      },
+      "complete": true,
+      "hits": [
+        {
+          "kind": "comment",
+          "title": "Ask HN: My competitors have flawed products but I can't get traction",
+          "url": "https://news.ycombinator.com/item?id=48418725",
+          "score": null,
+          "created": "2026-06-05",
+          "snippet": "First off: congratulations on shipping! Most never get there. Genuinely: Who cares about saving reels? Or less bluntly, who are your potential customers and where are you advertising to reach them? Instagram itself is hugely popular, but the general population of Instagram users won't and don't car…"
+        },
+        {
+          "kind": "comment",
+          "title": "Microsoft's \"fix\" for Windows 11",
+          "url": "https://news.ycombinator.com/item?id=47501831",
+          "score": null,
+          "created": "2026-03-24",
+          "snippet": "I have the same experience. I'm on a Windows Surfuace 7 Arm laptop right now. There's no Copilot icon next to the start menu. I press the start icon and I don't see a single ad anywhere. There are no ads on my screen. I use Edge and I don't see anything odd while I shop. Granted, I run \"Pro.\" Maybe…"
+        },
+        {
+          "kind": "comment",
+          "title": "Meta projected 10% of 2024 revenue came from scams",
+          "url": "https://news.ycombinator.com/item?id=45848320",
+          "score": null,
+          "created": "2025-11-07",
+          "snippet": "I wonder how much of Meta the corporation is a scam waiting to crumble. Hundreds of billions of dollars can make people do questionable things. -their revenue is 99% ads with more than 80% coming from FB and IG -they can only sell ads if they have a large and active user base -DAP (daily active peo…"
+        }
+      ]
+    },
+    "Google Ads account hacked": {
+      "stories": 1,
+      "comments": 0,
+      "by_month": {
+        "2025-11": 1
+      },
+      "complete": true,
+      "hits": [
+        {
+          "kind": "story",
+          "title": "Ask HN: Google Ads Hacked?",
+          "url": "https://news.ycombinator.com/item?id=45816087",
+          "score": 6,
+          "created": "2025-11-04",
+          "snippet": "Well, they've either been hacked, or it's a bad bug, or they're up to something unusual. Either way, they're admitting nothing. Our Ads account had all user roles demoted to \"Read Only\" without any notifications, and there was no entry in the audit log. No other changes were made, and no unusual ac…"
+        }
+      ]
+    },
+    "ad account hijacked": {
+      "stories": 1,
+      "comments": 1,
+      "by_month": {
+        "2026-03": 1,
+        "2026-07": 1
+      },
+      "complete": true,
+      "hits": [
+        {
+          "kind": "comment",
+          "title": "Who's running all those tiny RPKI servers?",
+          "url": "https://news.ycombinator.com/item?id=48923442",
+          "score": null,
+          "created": "2026-07-15",
+          "snippet": "17.6% of assigned BGP-able IP address space are assigned but not actively broadcasting BGP packets??? (Deep-breath in, warning: rant) This makes for a very problematic of continual hijacking AS link pathways between two hosts, notably between two countries. BGPsec is well designed but remains large…"
+        },
+        {
+          "kind": "story",
+          "title": "Tell HN: Beware of Mac Studio Scams on eBay",
+          "url": "https://news.ycombinator.com/item?id=47328946",
+          "score": 3,
+          "created": "2026-03-10",
+          "snippet": "The tell-tale signs seem obvious in retrospect, but even the best of us can be fooled sometimes: 1. The lowest price, by quite a bit 2. An eBay \"classified\" ad, which doesn't support purchasing through eBay (why does eBay even offer this?) 3. Some sort of rug pull at the last minute, to make the pa…"
+        }
+      ]
+    }
+  }
+}

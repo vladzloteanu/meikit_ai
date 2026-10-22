@@ -1,0 +1,35 @@
+slug: ad-account-watchdog
+title: Ad Account Watchdog
+status: NEW
+created: '2026-10-22'
+updated: '2026-10-22'
+geo:
+- US
+- GB
+language: en
+buyer: Owner of a small performance agency holding 10-50 client ad accounts
+signer: The agency owner
+value_per_customer_eur: 418.0
+value_basis: 59 EUR/month (Vlad's call) x 6 paying months (default, unknown) x 0.9
+  margin (default) = 319; plus 599 EUR audit (Vlad's call) x 0.33 attach rate (bet)
+  x 0.5 margin (bet) = 99; low 319 (no audit) / base 418 / high 432 (4 EUR per account
+  on 20 accounts); every input provisional
+cap_eur: 300.0
+founder_hour_rate_eur: 100.0
+repo: null
+local_path: null
+domain: null
+current_experiment: null
+provisional: true
+notes: Optional 599 EUR manual+automatic audit plus 59 EUR/month watchdog; prevention
+  demand unproven; price shape to confirm with 10 burned owners
+totals:
+  cash_eur: 0.0
+  founder_time_eur: 0.0
+  by_kind:
+    ads: 0.0
+    api: 0.0
+    llm: 0.0
+    domain: 0.0
+    founder_time: 0.0
+    other: 0.0
