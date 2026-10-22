@@ -1,4 +1,4 @@
-.PHONY: sync test check fixture secrets-init secrets-edit secrets-cat secrets-get secrets-apply-diff
+.PHONY: sync test check board ideas fixture secrets-init secrets-edit secrets-cat secrets-get secrets-apply-diff
 
 sync:
 	uv sync
@@ -13,6 +13,12 @@ check: test
 
 fixture:
 	bash scripts/fixture.sh
+
+# The board: one row per idea (slug, status, step, experiment, spend/cap, updated, next command).
+board:
+	@uv run factory board
+
+ideas: board
 
 # Secrets (docs/secrets.md): every target delegates to bin/secrets. secrets-cat prints every
 # value; secrets-get K=a.b.c prints one, so use it for non-secret values only.
