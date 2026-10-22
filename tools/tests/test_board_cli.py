@@ -177,6 +177,18 @@ def test_idea_new_writes_every_field_it_is_given(root):
     assert (data["provisional"], data["notes"]) == (True, "a = b")
 
 
+def test_idea_new_without_a_value_writes_unknown(root):
+    assert main(["idea", "new", "demo", "--title", "Demo"]) == 0
+    data = yaml.safe_load((root / "ideas/demo/idea.yml").read_text())
+    assert data["value_per_customer_eur"] is None and data["value_basis"] == ""
+
+
+def test_idea_new_accepts_unknown_as_the_value(root):
+    assert main(["idea", "new", "demo", "--title", "Demo", "--value-eur", "unknown"]) == 0
+    data = yaml.safe_load((root / "ideas/demo/idea.yml").read_text())
+    assert data["value_per_customer_eur"] is None
+
+
 def test_idea_new_refuses_an_existing_slug(root, capsys):
     path = root / "ideas/_fixture/idea.yml"
     before = path.read_text()
@@ -228,6 +240,20 @@ def test_idea_set_converts_each_value_to_its_type(root, capsys):
     assert capsys.readouterr().out == ""
 
 
+def test_idea_set_unknown_or_empty_clears_the_value_and_sets_its_basis(root):
+    argv = ["idea", "set", "_fixture", "value_per_customer_eur=unknown"]
+    argv += ["value_basis=price 59 (founder) x months unknown"]
+    assert main(argv) == 0
+    idea = ledger.load_idea("_fixture")
+    assert idea.value_per_customer_eur is None
+    assert idea.value_basis == "price 59 (founder) x months unknown"
+    assert main(["idea", "set", "_fixture", "value_per_customer_eur=319", "value_basis="]) == 0
+    idea = ledger.load_idea("_fixture")
+    assert idea.value_per_customer_eur == 319.0 and idea.value_basis == ""
+    assert main(["idea", "set", "_fixture", "value_per_customer_eur="]) == 0
+    assert ledger.load_idea("_fixture").value_per_customer_eur is None
+
+
 def test_idea_set_an_empty_value_clears_an_optional_field(root):
     assert main(["idea", "set", "_fixture", "domain=meikit.ai", "current_experiment=3"]) == 0
     assert main(["idea", "set", "_fixture", "domain=", "current_experiment=", "geo="]) == 0
@@ -252,6 +278,10 @@ def test_idea_set_saves_through_the_ledger(root, monkeypatch):
         ("totals=1", "'totals' is not a settable field"),
         ("status=LIVE", "status: 'LIVE' is not one of"),
         ("cap_eur=nan", "cap_eur: 'nan' is not a finite number"),
+        (
+            "value_per_customer_eur=lots",
+            "value_per_customer_eur: 'lots' is not a finite number or unknown",
+        ),
         ("current_experiment=1.5", "current_experiment: '1.5' is not a whole number"),
         ("provisional=maybe", "provisional: 'maybe' is not true or false"),
         ("status", "'status' is not key=value"),

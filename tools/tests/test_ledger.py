@@ -36,6 +36,7 @@ IDEA_KEYS = [
     "buyer",
     "signer",
     "value_per_customer_eur",
+    "value_basis",
     "cap_eur",
     "founder_hour_rate_eur",
     "repo",
@@ -266,9 +267,38 @@ def test_load_idea_fills_defaults_for_a_minimal_file(root, monkeypatch):
     i = ledger.load_idea("demo")
     assert (i.status, i.language, i.cap_eur, i.founder_hour_rate_eur) == ("NEW", "en", 300.0, 100.0)
     assert (i.created, i.updated) == ("2026-11-02", "2026-11-02")
-    assert (i.geo, i.buyer, i.signer, i.notes, i.value_per_customer_eur) == ([], "", "", "", 0.0)
+    assert (i.geo, i.buyer, i.signer, i.notes) == ([], "", "", "")
+    assert i.value_per_customer_eur is None and i.value_basis == ""  # unknown until declared
     assert (i.repo, i.local_path, i.domain, i.current_experiment) == (None, None, None, None)
     assert i.provisional is False and i.totals == {} and i.extra == {}
+
+
+def test_load_idea_reads_a_null_or_unknown_value_per_customer_as_unknown(root):
+    write_idea_yml(root, "demo", "slug: demo\ntitle: Demo\nvalue_per_customer_eur: null\n")
+    assert ledger.load_idea("demo").value_per_customer_eur is None
+    write_idea_yml(root, "other", "slug: other\ntitle: Other\nvalue_per_customer_eur: unknown\n")
+    assert ledger.load_idea("other").value_per_customer_eur is None
+
+
+def test_load_idea_reads_the_value_basis(root):
+    write_idea_yml(
+        root,
+        "demo",
+        "slug: demo\ntitle: Demo\nvalue_basis: 59 EUR/month (founder) x 6 months (default)\n",
+    )
+    assert ledger.load_idea("demo").value_basis == "59 EUR/month (founder) x 6 months (default)"
+
+
+def test_save_idea_writes_an_unknown_value_as_null_and_keeps_its_basis(root):
+    i = ledger.load_idea("_fixture")
+    i.value_per_customer_eur = None
+    i.value_basis = "price unknown — measure by ten burned owners"
+    ledger.save_idea(i)
+    data = yaml.safe_load(read(root / "ideas/_fixture/idea.yml"))
+    assert data["value_per_customer_eur"] is None
+    assert data["value_basis"] == "price unknown — measure by ten burned owners"
+    again = ledger.load_idea("_fixture")
+    assert again.value_per_customer_eur is None and again.value_basis == i.value_basis
 
 
 def test_load_idea_reads_unquoted_dates_as_text(root):
@@ -419,6 +449,7 @@ def test_save_idea_refuses_a_status_that_is_not_one_of_the_eleven(root):
         ("cap_eur", float("nan")),
         ("founder_hour_rate_eur", float("inf")),
         ("cap_eur", "lots"),
+        ("value_per_customer_eur", "lots"),
         ("provisional", "yes"),
         ("current_experiment", "first"),
     ],

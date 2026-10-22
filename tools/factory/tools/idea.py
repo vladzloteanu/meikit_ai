@@ -1,7 +1,8 @@
 """`factory idea`: create an idea, and change the fields of its idea.yml.
 
     factory idea new <slug> --title T [--geo FR,US] [--language en] [--buyer ..] [--signer ..]
-                     [--value-eur N] [--cap-eur N] [--rate-eur N] [--provisional] [--notes ..]
+                     [--value-eur N|unknown] [--cap-eur N] [--rate-eur N] [--provisional]
+                     [--notes ..]
     factory idea set <slug> key=value [key=value ...]
 
 `new` is `ledger.create_idea` (the folder, the default plan.md, the empty cost ledger) and refuses
@@ -45,7 +46,10 @@ def add_parser(sub: argparse._SubParsersAction) -> None:
     new.add_argument("--buyer", help="who pays")
     new.add_argument("--signer", help="who signs the purchase")
     new.add_argument(
-        "--value-eur", type=number, metavar="N", help="first-year gross margin per customer"
+        "--value-eur",
+        type=optional_number,
+        metavar="N|unknown",
+        help="first-year gross margin per customer, or unknown (the default)",
     )
     new.add_argument(
         "--cap-eur",
@@ -72,8 +76,9 @@ def add_parser(sub: argparse._SubParsersAction) -> None:
         help="change fields of idea.yml",
         description="Change fields of an idea's idea.yml, all or nothing. Settable: "
         + ", ".join(SETTABLE)
-        + ". geo is comma-separated, provisional is true or false, an empty value clears "
-        "repo, local_path, domain and current_experiment.",
+        + ". geo is comma-separated, provisional is true or false, value_per_customer_eur is "
+        "a number or unknown, an empty value clears repo, local_path, domain, "
+        "current_experiment and value_per_customer_eur.",
     )
     set_.add_argument("slug", help=commands.SLUG_HELP)
     set_.add_argument("assignments", nargs="+", metavar="key=value")
@@ -97,6 +102,17 @@ def number(text: str) -> float:
     if not math.isfinite(value):  # float() reads nan and inf, which no file can hold
         raise ValueError(f"{text!r} is not a finite number")
     return value
+
+
+def optional_number(text: str) -> float | None:
+    """A finite number, or None for an empty text or the word unknown: the value per customer
+    before anything supports it. Also the argparse type of --value-eur."""
+    if text.strip().lower() in ("", "unknown"):
+        return None
+    try:
+        return number(text)
+    except ValueError:
+        raise ValueError(f"{text!r} is not a finite number or unknown") from None
 
 
 def _text(text: str) -> str:
@@ -142,7 +158,8 @@ SETTABLE: dict[str, Callable[[str], Any]] = {
     "language": _text,
     "buyer": _text,
     "signer": _text,
-    "value_per_customer_eur": number,
+    "value_per_customer_eur": optional_number,
+    "value_basis": _text,
     "cap_eur": number,
     "founder_hour_rate_eur": number,
     "repo": _optional_text,

@@ -9,6 +9,7 @@ language: fr
 buyer: independent dog groomers
 signer: the salon owner
 value_per_customer_eur: 228.0
+value_basis: 19 EUR/month (fixture) x 12 months x 1.0
 cap_eur: 300.0
 founder_hour_rate_eur: 100.0
 repo: null

@@ -154,7 +154,10 @@ class Idea:
     language: str = "en"
     buyer: str = ""
     signer: str = ""
-    value_per_customer_eur: float = 0.0
+    # None is "unknown": no CAC threshold can be computed from it. `value_basis` says how the
+    # number was built (each input with its source, or `default` / `unknown`).
+    value_per_customer_eur: float | None = None
+    value_basis: str = ""
     cap_eur: float = DEFAULT_CAP_EUR
     founder_hour_rate_eur: float = DEFAULT_RATE_EUR
     repo: str | None = None
@@ -515,6 +518,13 @@ def _number(slug: str, name: str, value: Any) -> float:
     return number
 
 
+def _optional_number(slug: str, name: str, value: Any) -> float | None:
+    """A number, or None for the word `unknown` (a null key never reaches a converter)."""
+    if isinstance(value, str) and value.strip().lower() == "unknown":
+        return None
+    return _number(slug, name, value)
+
+
 def _optional_int(slug: str, name: str, value: Any) -> int | None:
     if isinstance(value, float) and value.is_integer():
         return int(value)
@@ -541,7 +551,8 @@ _CONVERTERS: dict[str, Callable[[str, str, Any], Any]] = {
     "language": _text,
     "buyer": _text,
     "signer": _text,
-    "value_per_customer_eur": _number,
+    "value_per_customer_eur": _optional_number,
+    "value_basis": _text,
     "cap_eur": _number,
     "founder_hour_rate_eur": _number,
     "repo": _optional_text,

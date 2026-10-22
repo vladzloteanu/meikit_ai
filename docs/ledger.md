@@ -38,7 +38,8 @@ of it in a throwaway factory root.
 | `language` | text | the language of the pages and ads (default `en`) |
 | `buyer` | text | who pays |
 | `signer` | text | who signs the purchase |
-| `value_per_customer_eur` | number | first-year gross margin per customer; allowed CAC is a third of it |
+| `value_per_customer_eur` | number or null | first-year gross margin per customer; allowed CAC is a third of it. `null` (the default, written `unknown` on the command line) means unknown: no CAC threshold can be computed, the verdict cannot use it |
+| `value_basis` | text | how the value was built: each input (price, purchases in the year, margin) with its source, `default` or `unknown`, and the low/base/high when it is a range |
 | `cap_eur` | number | cash cap, compared with the cash spent by `costs.check_cap` (default 300) |
 | `founder_hour_rate_eur` | number | prices founder time (default 100) |
 | `repo`, `local_path`, `domain` | text or null | the idea's GitHub repo, its local checkout, its domain |
@@ -159,7 +160,7 @@ cannot be read) with one line on stderr, 2 a usage error from argparse.
 | Command | What it does |
 |---|---|
 | `board [--json] [--all]` | one row per idea: `slug`, `status`, `step`, `exp`, `spend/cap`, `updated`, `next` |
-| `idea new <slug> --title T [--geo FR,US] [--language ..] [--buyer ..] [--signer ..] [--value-eur N] [--cap-eur N] [--rate-eur N] [--provisional] [--notes ..]` | `create_idea`; exit 1 for a slug that exists or is not a slug |
+| `idea new <slug> --title T [--geo FR,US] [--language ..] [--buyer ..] [--signer ..] [--value-eur N\|unknown] [--cap-eur N] [--rate-eur N] [--provisional] [--notes ..]` | `create_idea`; exit 1 for a slug that exists or is not a slug |
 | `idea set <slug> key=value ...` | change fields of `idea.yml`, all or nothing |
 | `plan show <slug>`, `plan next <slug>`, `plan mark <slug> <id> <status>` | the steps as a table; the next step as `<id>. <name> — <command> — <timebox>` (`done: ...` when none is left); set a step's status |
 | `costs add --idea S --kind K --amount-eur N [--provider ..] [--phase ..] [--note ..] [--channel ..]` | append a line to `costs.jsonl`, the cap is not checked; a negative amount corrects |
@@ -176,10 +177,11 @@ cannot be read) with one line on stderr, 2 a usage error from argparse.
   read shows `?` as its spend. `factory plan show <slug>` and `factory costs total --idea <slug>`
   print the error with its line number.
 - **`idea set`.** The keys are the `Idea` fields but `slug`, `created`, `updated`, `totals` and
-  `extra`. `status` must be one of the statuses, `geo` is split on commas, `cap_eur`,
-  `value_per_customer_eur` and `founder_hour_rate_eur` are finite numbers, `current_experiment` a
-  whole number, `provisional` `true` or `false`. An empty value clears `repo`, `local_path`,
-  `domain` and `current_experiment`, and empties `geo` and the text fields. Every pair is checked
+  `extra`. `status` must be one of the statuses, `geo` is split on commas, `cap_eur` and
+  `founder_hour_rate_eur` are finite numbers, `value_per_customer_eur` a finite number or
+  `unknown`, `current_experiment` a whole number, `provisional` `true` or `false`. An empty value
+  clears `repo`, `local_path`, `domain`, `current_experiment` and `value_per_customer_eur`, and
+  empties `geo` and the text fields (`value_basis` included). Every pair is checked
   before anything is written: an unknown key or a bad value is one line on stderr, exit 1, and the
   file is untouched. It saves through `save_idea`, so `updated` and `totals` are refreshed.
 - **`plan mark`.** `<status>` is one of `todo`, `doing`, `done`, `skipped`, `void`; only that
