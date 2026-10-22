@@ -1,83 +1,128 @@
 ---
 name: idea-new
-description: Intake of a new idea — the pitch verbatim, the seven intake questions one at a time, the ledger folder, cheap checks on the pitch's factual claims. Step 1 of the weekly plan.
+description: Intake of a new idea, office-hours style — the pitch verbatim, an evidence sweep, then decision briefs with a recommendation that settle buyer, status quo, price shape, value, geo and language with Vlad, a premise check and an outside voice; writes the ledger folder. Step 1 of the weekly plan.
 ---
 
-# /idea-new — intake (step 1, 15 minutes of Vlad's time)
+# /idea-new — intake (step 1, about 30 minutes of Vlad's time)
 
-The intake turns a pitch into a ledger entry the triage can work on. It is not the challenge:
-do not argue the idea, sharpen its inputs. The gate at the end: slug, geo, language, buyer,
-value per customer and cap are written down.
+The intake turns a pitch into a ledger entry the triage can work on, by helping Vlad find the
+answers: he brings an idea, not the buyer, the price or the geo. This skill is an oriented wrapper
+around `/gstack-office-hours`: its posture, its forcing questions and its decision briefs, aimed
+at the factory's output. You do the homework, you recommend, Vlad decides. The gate at the end:
+slug, geo, language, buyer, value per customer and cap are written down, each marked as Vlad's
+call or as a recommendation he accepted.
+
+## The method (read it before the first message)
+
+Read these sections of `~/.claude/skills/gstack-office-hours/SKILL.md` and nothing else of it
+(find them with `grep -n '^#' <file>`, read only those line ranges): the startup-mode operating
+principles, the response posture, the anti-sycophancy rules, the pushback patterns, the six
+forcing questions (this skill uses Q1 to Q4), "Phase 3" premise challenge and "Phase 3.5" second
+opinion. Then the decision-brief format every question must use (search the same file for
+"ELI10": D-numbering, ELI10, stakes, recommendation, pros and cons, net). If that file is
+missing, `docs/challenge-techniques.md` sections 0.1 and 1.1 hold the same text verbatim.
+
+Posture, in short: take a position on every answer and say what evidence would change it; push
+once, then again, when an answer is a category instead of a person or a feeling instead of a
+number; name the failure pattern when you see one; never the banned phrases. Do not invoke
+`/gstack-office-hours` itself (its own flow would take the session to a software design doc):
+follow its text here.
 
 ## Checklist
 
-1. **Pitch, verbatim.** The pitch is the text after `/idea-new`, or the next message when there
-   is none; if there is none at all, ask for it. Keep it byte for byte, typos included. Propose a
-   working title and a slug (lowercase, hyphens, 2–4 words, e.g. `ad-account-watchdog`); Vlad can
-   override either at any point.
+1. **Pitch, verbatim.** The pitch is the text after `/idea-new`, or the next message when there is
+   none; if there is none at all, ask for it. Keep it byte for byte, typos included. Propose a
+   working title and a slug (lowercase, hyphens, 2–4 words) in one line; Vlad can override either
+   at any point. Create the folder at once so the tools can write into it:
+   `uv run factory idea new <slug> --title "<title>" --provisional` (the values come at step 6).
 2. **Private context.** If the pitch names an employer, a client, a person or an incident that
-   must not reach the public (pages, ads, outreach), say so in one line now and keep it for the
-   `## Private context` section. The origin story is motivation, never content.
-3. **The intake questions, one per message, in this order.** Ask, wait for the answer, then ask
-   the next. No list of questions, no message with two questions in it.
-   1. Geo: which countries (ISO codes, e.g. US, FR)?
-   2. Language of the pages and ads?
-   3. Buyer: who pays? Push once when the answer is a category rather than a person with a job
-      ("a performance marketer running several Meta accounts for clients" beats "marketers").
-   4. Who signs the purchase: the buyer, their boss, a client?
-   5. Value per customer = first-year gross margin in EUR: price × purchases in the first year ×
-      gross margin (software 0.9, services lower). For a monthly subscription assume six paying
-      months unless Vlad gives a retention figure. Given only a price shape, compute it and show
-      the arithmetic with its assumptions; given no price, propose the obvious shape, compute,
-      and mark the value provisional.
-   6. Cash cap in EUR (default 300).
-   7. Founder hour rate in EUR (default 100).
-   "Later", "don't know" or an absent Vlad: record a provisional value (the default, or your best
-   estimate said as such) and move on. The idea is then `provisional: true` and every such value
-   goes under `## To confirm`.
-4. **Create the ledger folder:**
-   `uv run factory idea new <slug> --title "<title>" --geo <CC,CC> --language <xx> --buyer "<…>" --signer "<…>" --value-eur <n> --cap-eur <n> --rate-eur <n> [--provisional] [--notes "<one line>"]`.
-   It writes `idea.yml`, `plan.md`, `intake.md` (header only), `learnings.md`, `costs.jsonl` and
-   `research/`. It refuses an existing slug: pick another one, never delete. Field values in
-   `idea.yml` are short labels (buyer and signer at most 12 words each); Vlad's exact words go in
-   `intake.md`, not in `idea.yml`.
-5. **Write `ideas/<slug>/intake.md`** below its header, in this order:
-   - `## Pitch (verbatim)` — the pitch as a blockquote, unchanged.
-   - `## Intake answers` — one line per question (geo, language, buyer, signer, value with its
-     arithmetic, cap, rate); provisional ones end with `(provisional)`.
-   - `## Private context` — only when step 2 found something: what stays out of public content.
-   - `## Claims checked` — step 6.
-   - `## To confirm` — only when provisional: one line per value and what would settle it (usually
-     the challenge session).
-6. **Check the pitch's factual claims, with the free tools only.** List each claim about the world
-   the pitch relies on: that a problem happens, that people complain about it, that a competitor
-   exists, that a price is paid. The intake checks the first two kinds; "someone advertises on it"
-   and "someone pays" are the triage's questions (its tools cost money) and are written down as
-   `deferred to triage`. At most three terms and three subreddits at intake (the Reddit provider
-   throttles; the triage goes wider):
-   - complaints on Reddit:
-     `uv run factory reddit_mentions --idea <slug> --terms "<phrase>" [--terms "<phrase>"] --subreddits <a,b,c> --since <90 days ago, YYYY-MM-DD>`
-     (`--subreddits` is required: name the subreddits where the buyer actually posts, e.g.
-     `FacebookAds,PPC,marketing` for people who run ads; a run waits out throttles for up to five
-     minutes and then reports what it got, with `complete: false` where it is a lower bound);
-   - complaints on Hacker News: `uv run factory hn_mentions --idea <slug> --terms "<phrase>" --since <12 months ago>`
-     (fast; expect little for consumer or marketing pains).
-   Read the hits, not just the counts. Write one entry per claim: the evidence (counts with their
-   window, whether they are lower bounds, one or two quotes with links) and a verdict: `supported`,
-   `weak`, `unchecked (<reason>)` or `deferred to triage`. A claim you could not check stays
-   `unchecked` with the reason (tool missing, provider down, throttled): never fill it from memory
-   and never write a new tool for it.
-7. **Close the step:** `uv run factory plan mark <slug> 1 done`; append one line to
-   `ideas/<slug>/learnings.md` in its format, `- <YYYY-MM-DD> /idea-new: <what the intake lacked, what took longest>`;
-   then `uv run factory board`.
-8. **Summary, one screen:** title and slug; the seven values, provisional ones flagged; each claim
-   with its verdict; the private-context rule if any; the next step, `/idea-triage` (60 min, 3 EUR).
+   must not reach the public, say so in one line now, keep it for `## Private context`, and keep it
+   out of every prompt that leaves this machine (the outside voice of step 5 included). The origin
+   story is motivation, never content.
+3. **Homework, before any question (at most 10 minutes, nothing spent).**
+   - Answer Q1 to Q4 yourself on the pitch, one line each: the demand evidence you expect to find,
+     the status quo and its cost, the actual human who needs this most, the narrowest wedge
+     someone would pay for this week. These are your bets; the evidence corrects them.
+   - Evidence sweep with the free tools: `uv run factory reddit_mentions --idea <slug> --terms "<pain phrase>" [--terms …] --subreddits <2–3 where that human posts> --since <90 days ago> --max-wait-s 240 --phase intake`
+     (at most three terms; the provider throttles, counts marked `complete: false` are lower
+     bounds), `uv run factory hn_mentions --idea <slug> --terms "<phrase>" --phase intake`, and
+     the session's own web search for the landscape: "[problem space] startup approach <year>",
+     "[problem space] common mistakes", "why [incumbent] fails". Read the hits, not the counts:
+     who complains (role, situation), what they lose (money, time), what they do today instead,
+     any price mentioned, any product already sold for this.
+   - Rewrite your four bets with the evidence under them. A bet the evidence contradicts is
+     dropped, not defended.
+4. **The decisions, as decision briefs, one at a time.** Ask through AskUserQuestion when it is
+   available (in plain text with the same brief otherwise), numbered D1, D2…; each brief carries
+   your recommendation with the evidence behind it, two to four options, pros and cons, and the
+   stakes; Vlad can always type his own answer. Wait for the answer before the next brief. When
+   his pick contradicts the evidence, push once with the evidence, then accept and mark the value
+   `Vlad's call`.
+   - **D1 Buyer** (Q3, desperate specificity): the two to four concrete people the evidence shows,
+     role and situation, not categories; the recommended one and why; who signs is part of each
+     option ("the owner signs for the agency"). A category answer gets the Q3 forcing push.
+   - **D2 Status quo and its cost** (Q2): what that buyer does today instead and what it costs
+     them in money or hours, from the hits; the options are the workarounds seen; this feeds the
+     value and the triage's "who pays today".
+   - **D3 Narrowest wedge and price shape** (Q4): the smallest thing this buyer would pay for this
+     week and how it is priced (per account per month, per workspace per month, a one-shot audit,
+     a share of spend, a yearly fee…); each option shows its arithmetic for the value per
+     customer = price × purchases in the first year × gross margin (software 0.9, services lower;
+     six paying months for a new monthly subscription unless Vlad gives retention). The
+     recommendation names the number.
+   - **D4 Geo and language**: where the evidence and the buyer are, and the language of the pages
+     and ads; one brief, with your recommendation.
+   - Cash cap (300 EUR) and founder rate (100 EUR/h) are defaults: state them in the summary, change
+     them only when Vlad says so. Q1 (demand reality) is not asked: the sweep answers it, and your
+     position on it goes in the summary with what would change your mind.
+   - Escape hatch, as office hours has it: when Vlad says "just decide", give every open brief
+     your recommendation as its value, mark each `accepted recommendation (unasked)` and move on;
+     do not argue a second time.
+5. **Premises and the outside voice.**
+   - Premises (Phase 3): restate the intake as four or five premises ("1. The buyer is …; 2. Today
+     they …, which costs them …; 3. They would pay … for …; 4. The test runs in … in …")
+     with agree/disagree, in one question. A disagreement reopens its brief.
+   - Outside voice (Phase 3.5, mandatory here, two to five minutes): build the context block the
+     office-hours skill specifies (problem statement, the key answers with Vlad's verbatim quotes,
+     the evidence findings, the agreed premises; nothing from `## Private context`), take the
+     startup-mode second-opinion prompt verbatim from the skill, and run it on another model
+     family, first `codex exec -s read-only --skip-git-repo-check "<prompt>"`, then
+     `gemini-vertex -p "<prompt>" -o text` if Codex fails, then a fresh subagent through the Agent
+     tool if both fail. Show the answer verbatim under `SECOND OPINION (<model>)`, add the three to
+     five bullet synthesis (agree, disagree and why, does the challenged premise change the
+     recommendation), and when a premise was challenged ask the revision check (A revise / B keep,
+     with his reason). Both outside models spend cents on the configured keys: say the cost.
+6. **Write the ledger.**
+   `uv run factory idea set <slug> geo=<CC,CC> language=<xx> buyer="<short label>" signer="<short label>" value_per_customer_eur=<n> provisional=<true|false> notes="<one line>"`
+   (buyer and signer at most 12 words; `provisional=true` when any value is an unasked
+   recommendation or marked to confirm). Then `ideas/<slug>/intake.md` below its header, in this
+   order: `## Pitch (verbatim)` (blockquote); `## Homework` (your four bets with the evidence,
+   counts with their window and whether they are lower bounds, three quotes with links, the
+   landscape in three lines); `## Decisions` (one entry per brief: the options shown, the
+   recommendation, Vlad's answer quoted, the value recorded and its mark: `Vlad's call`,
+   `accepted recommendation`, `accepted recommendation (unasked)`); `## Premises` (agreed or
+   revised, with his words); `## Second opinion` (model, verbatim output, synthesis, the revision
+   decision); `## Private context` (only when step 2 found something); `## Claims checked` (each
+   factual claim of the pitch with its evidence from the sweep and a verdict `supported`, `weak`,
+   `unchecked (<reason>)` or `deferred to triage` for "someone advertises" and "someone pays");
+   `## To confirm` (every provisional value and what settles it, usually the challenge).
+7. **Close the step**: `uv run factory plan mark <slug> 1 done`; append
+   `- <YYYY-MM-DD> /idea-new: <what the evidence lacked, what took longest, what Vlad overrode>` to
+   `ideas/<slug>/learnings.md`; `uv run factory board`.
+8. **Summary and assignment, one screen**: title and slug; the values with their marks; your
+   position on demand reality and what would change it; the outside voice's challenged premise
+   and the decision on it; the private-context rule if any; the cost of the outside voice; the
+   next step `/idea-triage` (60 min, 3 EUR); and, as office hours ends, one assignment Vlad can
+   do in 48 hours without the factory (two conversations, one message, one observation).
 
 ## Rules
 
-- Timebox: 15 minutes of Vlad's time. Short messages; a question is one sentence.
-- Vlad's words are never cleaned up: the pitch is verbatim, the answers are quoted.
-- Secrets: never print a key value. Costs: the intake spends nothing.
+- Timebox: about 30 minutes of Vlad's time, ten of homework before he is asked anything. Short
+  messages; one brief per message.
+- Vlad's words are never cleaned up: the pitch is verbatim, his answers are quoted.
+- Evidence or nothing: a number in `intake.md` comes from a research file, a cited page or
+  Vlad; a guess is written as a bet, never as a fact. Never write a new tool to get a number.
+- Private context never leaves this machine: not in the outside-voice prompt, not in web searches.
+- Secrets: never print a key value. Costs: the intake spends nothing beyond the outside voice.
 - This skill owns the session until its summary is printed: do not invoke `/gstack-office-hours`
-  or any other skill during the intake, even when a pitch looks like their trigger; the challenge
-  step calls them.
+  or any other skill during the intake; the challenge step calls them.
