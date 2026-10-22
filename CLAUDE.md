@@ -28,7 +28,8 @@ The design is `docs/factory-design.md` (approved 2026-10-20). Vlad decides; the 
   never set in one: the default `git diff` of the encrypted file shows redacted hashes, keep it so.
 - Private context: what a pitch says about an employer, a client, a person or an incident stays in
   `intake.md` under `## Private context` and never reaches a page, an ad, an outreach message, a
-  web search or a prompt sent to an outside model (Codex, Gemini, a subagent).
+  web search or a prompt sent to an outside model (Codex, Gemini, a subagent). The founder
+  profiles in `founders/` (git-ignored) are private context in the same sense.
 - Evidence or nothing: a number in the ledger comes from a research file, a cited page or Vlad.
   A guess is written as a bet or as `unknown — measure by <method>`, never as a fact.
 - Vlad's words stay verbatim (the pitch, his answers). The skills do the homework and recommend
@@ -52,6 +53,9 @@ The design is `docs/factory-design.md` (approved 2026-10-20). Vlad decides; the 
 | What | Where |
 |---|---|
 | Design, decisions, the first idea | `docs/factory-design.md` |
+| Where ideas come from (sources, scoring, the pilot; proposal) | `docs/idea-sourcing.md` |
+| Research reports and their notes | `docs/research/` |
+| Founder profiles (private, git-ignored) | `founders/` |
 | Ledger format and the CLI | `docs/ledger.md` |
 | Secrets scheme | `docs/secrets.md` |
 | Doctor checks and channel eligibility | `docs/doctor.md` |

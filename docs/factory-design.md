@@ -486,7 +486,9 @@ append and a one-screen summary. `CLAUDE.md` tells a new session to start with `
   Turnstile; Porkbun API; the shared cold-email sending domain and its warm-up.
 - **`/factory-scout`** (later): propose three candidate ideas per week from structural signals
   (fast-growing advertisers, one-star reviews, "alternatives to X" demand, public complaints) in the
-  intake format.
+  intake format. *Amended 2026-10-22: the method is proposed in `docs/idea-sourcing.md` (money
+  first, then pain; P/C/R plus hassle and fit; a pilot run by hand); the command is built only
+  after Vlad validates that pilot.*
 
 ## 15. Left to the builder
 
