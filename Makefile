@@ -16,8 +16,8 @@ test: ## run the test suite
 check: test ## tests, then the offline doctor (fails when a check fails)
 	uv run factory doctor --offline
 
-fixture: ## refresh the dry-run fixture idea (scripts/fixture.sh)
-	bash scripts/fixture.sh
+fixture: ## capture the providers' dry-run fixtures with one real call each (real keys, real cost)
+	uv run python scripts/capture-fixtures.py
 
 # The board: one row per idea (slug, status, step, experiment, spend/cap, updated, next command).
 board: ## list the ideas: status, next step, spend against cap
