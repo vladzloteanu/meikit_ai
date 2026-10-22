@@ -61,7 +61,10 @@ validated on a real idea before the next one is built.
 ## Contribute
 
 - **Branch and pull request.** Branch from `main`, open a pull request; `make check` is green
-  before you ask for a review.
+  before you ask for a review. Commit and push often: small commits, pushed the same day.
+- **Leave nothing stale.** A change to a tool, a field, a status or a command updates, in the
+  same pull request, the skills that name it, the docs, this README, `CLAUDE.md` and the
+  `Makefile`.
 - **Tests first.** A change comes with its test in `tools/tests/`; one file runs with
   `uv run pytest -q tools/tests/test_<name>.py`. Tests never reach a provider: they use the
   fixtures and the `_fixture` idea in a throwaway root.

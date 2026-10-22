@@ -37,7 +37,15 @@ The design is `docs/factory-design.md` (approved 2026-10-20). Vlad decides; the 
 - Spending: NeuralBox and the outside voices spend on configured keys. Say the cost, log it with
   `uv run factory costs add`.
 - Commits: a conventional prefix (`feat:`, `fix:`, `chore:`, `docs:`), the body says why, and the
-  last line is `Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>`.
+  last line is `Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>`. Commit and push often:
+  every finished piece of work is committed at once and pushed to `origin` (Vlad, 2026-10-22);
+  work in progress never sits unpushed at the end of a session.
+- End of every task, before reporting: a sweep of what the change makes stale, and the fix in the
+  same commit or the next one. Check, every time: the skills in `.claude/skills/` (a tool, flag,
+  field or status they name), `docs/` (`ledger.md`, `secrets.md`, `doctor.md`, `neuralbox.md`,
+  the design's amendments), `README.md` (install, commands, contribute rules), this `CLAUDE.md`
+  (rules and the table below), the `Makefile` (a new command gets a target and its `##` line)
+  and the tests. "Nothing to update" is a conclusion reached by looking, not a default.
 
 ## Where things are
 
