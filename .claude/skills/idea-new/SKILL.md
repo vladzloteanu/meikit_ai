@@ -12,6 +12,20 @@ at the factory's output. You do the homework, you recommend, Vlad decides. The g
 slug, geo, language, buyer, value per customer and cap are written down, each marked as Vlad's
 call or as a recommendation he accepted.
 
+## Prerequisites (check them first, propose installs, never install silently)
+
+This skill leans on things outside the repo. Check each in one shell call before anything else;
+for every missing one, show the install line and ask Vlad whether to run it (one question for all
+of them). Without gstack the skill cannot run; without Codex and Gemini the outside voice falls
+back to a fresh Claude subagent, which is weaker but allowed.
+
+| Needed | Check | Install if missing |
+|---|---|---|
+| gstack office-hours skill | `test -f ~/.claude/skills/gstack-office-hours/SKILL.md \|\| test -f ~/.claude/skills/gstack/office-hours/SKILL.md` | `git clone --single-branch --depth 1 https://github.com/garrytan/gstack.git ~/.claude/skills/gstack && cd ~/.claude/skills/gstack && ./setup` (then re-open the session) |
+| Codex CLI, logged in | `codex login status` | `npm install -g @openai/codex`, then `codex login` (or pipe an API key: `… \| codex login --with-api-key`) |
+| Gemini CLI, logged in (optional) | `gemini --version` and a one-word `gemini -p pong -o text` | `npm install -g @google/gemini-cli`, then `gemini` once interactively to log in |
+| factory CLI | `uv run factory --version` | `make sync` in the repo |
+
 ## The method (read it before the first message)
 
 Read these sections of `~/.claude/skills/gstack-office-hours/SKILL.md` and nothing else of it
