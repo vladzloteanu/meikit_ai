@@ -5,3 +5,5 @@ __pycache__/
 secrets/master.key
 secrets/config.yml
 ideas/*/research/*.tmp
+# Founder profiles: private context (employer, side business, personal admin), never committed
+/founders/
