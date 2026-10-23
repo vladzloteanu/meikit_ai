@@ -62,5 +62,6 @@ The design is `docs/factory-design.md` (approved 2026-10-20). Vlad decides; the 
 | NeuralBox (AdsInsights) | `docs/neuralbox.md` |
 | Challenge techniques (digest of the gstack skills) | `docs/challenge-techniques.md` |
 | Build plans | `docs/superpowers/plans/` |
+| Designs of later parts, awaiting or after approval (the admin) | `docs/superpowers/specs/` |
 | Build ledger, rehearsals, outside reviews | `.superpowers/sdd/` (git-ignored scratch) |
 | Fixture provenance | `tools/factory/fixtures/README.md` |
