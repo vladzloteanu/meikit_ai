@@ -1,8 +1,8 @@
 # admin.meikit.ai — design
 
 Status: draft of 2026-10-23, awaiting Vlad's approval. Brainstormed 2026-10-22/23; a fresh
-reviewer (the builder check) read the first version and its findings are folded in: two questions
-remain for Vlad (section 10). Plan: `docs/superpowers/plans/` (written after approval, with
+reviewer (the builder check) read the first version and its findings are folded in; Vlad answered
+question 1 the same day (section 10), question 2 has a stated default. Plan: `docs/superpowers/plans/` (written after approval, with
 superpowers:writing-plans).
 
 ## 1. Intent
@@ -74,11 +74,14 @@ Anti-goals (what would make it a failure even if it worked):
   `admin.meikit.ai` currently resolve to Porkbun's parking (`pixie.porkbun.com`). The factory
   design (D3) wants a wildcard pointed to Vercel one day; that is `/factory-setup`'s job, not this
   one's. This design needs one CNAME.
-- **Vercel scope, unresolved since 2026-10-21** (`docs/doctor.md`, "The Vercel scope"): the login
-  on this machine, `vladzloteanu-4035`, is a team-based account with no personal scope; its only
-  team, and its default, is Dolead's. Design D9 ("Vlad's personal account, the login already on
-  this machine, never a team scope") cannot be followed as written. The doctor's `vercel.scope`
-  check fails on purpose until Vlad chooses a scope. This design needs that choice (question 1).
+- **Vercel scope, settled on 2026-10-23** (question 1): the login on this machine,
+  `vladzloteanu-4035`, is a team-based account with no personal scope whose only team is
+  Dolead's (`docs/doctor.md`, "The Vercel scope"), so design D9 ("Vlad's personal account, the
+  login already on this machine") could not be followed. Vlad created a separate Vercel account
+  for the factory; its Hobby team is `vlad-zs-projects-48baafee`
+  (https://vercel.com/vlad-zs-projects-48baafee). Checked: that team is not listed under this
+  machine's login, so no token of the Dolead-linked login is involved. `accounts.vercel.scope`
+  still says `vladzloteanu-4035` and changes to the new slug (section 6).
 - A Vercel account token reaches every team the account belongs to; there is no project-scoped
   token. A token of the current login, stored in GitHub Actions, would therefore reach Dolead's
   Vercel team. That rules out "a new Hobby team under the current login" for anything that puts a
@@ -246,9 +249,10 @@ Rules of the tool:
 
 ### 5.5 Deploy
 
-- The Vercel project `meikit-admin` lives in the factory's own Vercel team (question 1 decides
-  which; `accounts.vercel.scope` names it), is created once with the CLI, and is **not connected
-  to the Git repository** (section 4: Hobby ignores the cofounder's commits).
+- The Vercel project `meikit-admin` lives in the factory's own Vercel team,
+  `vlad-zs-projects-48baafee` (`accounts.vercel.scope` names it), is created once with the CLI,
+  and is **not connected to the Git repository** (section 4: Hobby ignores the cofounder's
+  commits).
 - Every Vercel command of this design, local or in CI, runs with `--scope <the factory team>` and
   with the factory's token (`--token`, read from the encrypted config, never shown), **never with
   the global CLI login of this machine**, which belongs to Dolead's team. The Makefile passes the
@@ -264,8 +268,8 @@ Rules of the tool:
 - Those three values live in the encrypted config under `admin:` too (`vercel_token`,
   `vercel_org_id`, `vercel_project_id`); `make admin-gh-secrets` sets them with `gh secret set`
   from `bin/secrets get`, nothing printed. The token is an account token created once in the
-  factory's Vercel account. Because a token reaches the whole team, that team must hold nothing
-  but the factory's projects (question 1).
+  factory's Vercel account. Because a token reaches the whole account, that account holds nothing
+  but the factory's projects (section 4).
 - Concurrency: one deploy at a time (`concurrency: admin-deploy`), the newest push wins. A failed
   `make test` or `make admin-check` stops the deploy and leaves the previous version up.
 - Expected time from push to live: two to four minutes. Cost: GitHub's free minutes for private
@@ -283,9 +287,11 @@ reader of the ledger); committing a generated `board.json` (a generated file in 
   project's `*.vercel.app` URL serves the same page behind the same login.
 - `uv run factory doctor` gains one online check, `admin.url`: `https://admin.meikit.ai/` answers
   401 (the login is up) — `warn` on anything else, `skip` offline. `docs/doctor.md` lists it.
-- The doctor's `vercel.login` and `vercel.scope` checks are taught the outcome of question 1 (the
-  factory's token and team instead of the machine's login) in this plan, since the admin is the
-  first thing that deploys; `docs/doctor.md` and design D9 are amended in the same commit.
+- The doctor's `vercel.login` and `vercel.scope` checks are taught the factory's token and team
+  (`accounts.vercel.scope`) instead of the machine's login in this plan, since the admin is the
+  first thing that deploys; `docs/doctor.md` and design D9 are amended in the same commit: "Vercel:
+  a separate account for the factory, team `vlad-zs-projects-48baafee` (Hobby), used only through
+  its token; the machine's login belongs to Dolead and is never used by the factory".
 
 ### 5.7 What else changes in the repo (the end-of-task sweep, named now)
 
@@ -308,11 +314,14 @@ reader of the ledger); committing a generated `board.json` (a generated file in 
 
 ## 6. What the founders do by hand, once
 
-1. Vlad settles question 1 (the Vercel account or team), creates its account token and adds it,
-   with the user/password pair, to the config with `make secrets-edit`; commits the `.enc`.
-2. Vlad creates the project and attaches the domain (two CLI commands, written in the plan), adds
+1. Done on 2026-10-23: the factory's Vercel account and its team `vlad-zs-projects-48baafee`.
+2. Vlad creates an account token in that account (Account settings → Tokens; scope: the team,
+   expiry: his choice) and, in one `make secrets-edit`, sets `accounts.vercel.scope` to
+   `vlad-zs-projects-48baafee` and adds the `admin` section: `user`, `password`, `vercel_token`;
+   commits the `.enc`. The plan's first task gives the exact lines.
+3. Vlad creates the project and attaches the domain (two CLI commands, written in the plan), adds
    the CNAME at Porkbun, runs `make admin-env` and `make admin-gh-secrets`.
-3. Both founders keep the pair in their password manager. The cofounder needs nothing else.
+4. Both founders keep the pair in their password manager. The cofounder needs nothing else.
 
 ## 7. Later phases, doors kept open
 
@@ -370,17 +379,15 @@ Not designed here; named so v1 does not close them.
 
 ## 10. Open questions for Vlad
 
-1. **Which Vercel account hosts the factory?** The login on this machine has no personal scope and
-   only Dolead's team (section 4), and any token of it would reach that team. My recommendation:
-   a separate Vercel account for the factory, on a personal address, with its own free Hobby
-   team; the factory uses it only through its token (`accounts.vercel.scope` names the team),
-   this machine's `vercel` login stays Dolead's and is never used by the factory. This amends D9.
-   The alternative, a new Hobby team under the current login, keeps one login but puts a token
-   that can reach Dolead's Vercel into GitHub Actions; I advise against it.
+1. **Which Vercel account hosts the factory?** Answered on 2026-10-23: a separate account, team
+   `vlad-zs-projects-48baafee` (Vlad: "done https://vercel.com/vlad-zs-projects-48baafee"). The
+   machine's login, which has only Dolead's team, is never used by the factory. D9 is amended as
+   in section 5.6.
 2. **The scout board: in v1 or as the first follow-up?** `scout/ideas.yml` holds 42 candidates
    the two of you are meant to review, and it is where the cofounder's review work of the next
    weeks happens; the factory board has one real idea. My recommendation: in v1, as the last task
    of the plan, reading the store only once it is committed in the format of its README; if the
    store is not committed when the plan reaches that task, the task is skipped and becomes the
    first follow-up. The risk is the format moving under the page; the snapshot is its only
-   reader, so a change costs one function and its test.
+   reader, so a change costs one function and its test. Open: unless Vlad says otherwise before
+   the plan is written, the plan follows this recommendation.
