@@ -1,0 +1,268 @@
+{
+  "reviews": [
+    {
+      "id": "sc-029",
+      "verdict": "kill",
+      "reason": "Returns platforms already manage the receipt-to-refund workflow, so a €300 exception list may duplicate a screen the store has paid for.",
+      "flip": "Three stores using a returns platform each pay €300 for a one-week digest that catches cases their platform missed."
+    },
+    {
+      "id": "sc-016",
+      "verdict": "kill",
+      "reason": "Running landing pages and paid-ad tests for clients resembles the performance-marketing agency work the brief excludes.",
+      "flip": "A self-serve version with no managed ad buying wins three €1,500 deposits from eligible product teams within a week."
+    },
+    {
+      "id": "sc-023",
+      "verdict": "kill",
+      "reason": "A €250 checklist must displace cheap tools such as SafetyCulture or Jolt, and the bakery-specific reason to switch is unproven.",
+      "flip": "Three multi-shop bakeries pay €250 for a trial after seeing those alternatives."
+    },
+    {
+      "id": "sc-002",
+      "verdict": "kill",
+      "reason": "Custom PrestaShop and WooCommerce setups plus three changing ad-platform APIs create a support treadmill at €199 a month.",
+      "flip": "Three merchants pay €199 after a standard installation runs for a week without founder intervention."
+    },
+    {
+      "id": "sc-011",
+      "verdict": "kill",
+      "reason": "A failed certificate push can take a device offline, creating the on-call duty the founders cannot provide.",
+      "flip": "Three MSPs pay for a beta whose contract makes them the incident owner and limits the tool to tested device models."
+    },
+    {
+      "id": "sc-005",
+      "verdict": "kill",
+      "reason": "Recommending legally compliant wording across EU markets turns a €149 scanner into a legal-judgment and liability service.",
+      "flip": "Three brands pay at least €150 a month for factual flags and an evidence register, with their own counsel approving wording."
+    },
+    {
+      "id": "sc-004",
+      "verdict": "kill",
+      "reason": "Portal logins and two-factor prompts make monthly collection across dozens of SaaS vendors a maintenance treadmill at €149.",
+      "flip": "A paid trial collects at least 80% of one buyer's missing invoices for a month from a small fixed set of portals without founder login help."
+    },
+    {
+      "id": "sc-024",
+      "verdict": "kill",
+      "reason": "Guest-experience suites such as ReviewPro and TrustYou already offer review queues, so the narrow €300 replacement needs a clear missing job.",
+      "flip": "Three hotel groups pay €300 for a pilot after showing that their current suite cannot assign and track replies as needed."
+    },
+    {
+      "id": "sc-031",
+      "verdict": "keep",
+      "reason": "Distributors already pay people to clean supplier data, and €800 needs only 18 customers if capped batches retain a healthy margin.",
+      "flip": "A paid ten-sheet batch needs enough manual correction to push its gross margin below 60%."
+    },
+    {
+      "id": "sc-022",
+      "verdict": "keep",
+      "reason": "Contractors already spend staff time chasing expiring certificates, and reminders plus a document list are a bounded €500 workflow.",
+      "flip": "In a paid ten-subcontractor pilot, automated requests fail to reduce the administrator's chase time."
+    },
+    {
+      "id": "sc-015",
+      "verdict": "kill",
+      "reason": "Obtaining supplier geolocation data and completing due diligence is supplier-chasing work that will overwhelm a €200 monthly service.",
+      "flip": "Three importers pay €200 and provide complete supplier data for a sample filing within one week, without founder chasing."
+    },
+    {
+      "id": "sc-026",
+      "verdict": "kill",
+      "reason": "WordPress care tools such as ManageWP and MainWP already bundle client reports, leaving little reason to add a €200 reporting subscription.",
+      "flip": "Three maintenance firms using those tools pay €200 specifically for proof their bundled reports cannot produce."
+    },
+    {
+      "id": "sc-006",
+      "verdict": "kill",
+      "reason": "Time-critical CRA vulnerability reporting creates an incident-response expectation that conflicts with the no-on-call constraint.",
+      "flip": "Three makers pay €400 for a preparation-only kit and name their own person responsible for urgent triage and filing."
+    },
+    {
+      "id": "sc-025",
+      "verdict": "keep",
+      "reason": "A scheduled Jira access-review app has a specific paid IT job, a €400 price and marketplace distribution without ongoing service delivery.",
+      "flip": "A one-week marketplace audit finds a well-rated app already doing contractor expiry reviews at a much lower effective price."
+    },
+    {
+      "id": "sc-037",
+      "verdict": "kill",
+      "reason": "A guarantee of tax and intellectual-property audit compliance turns document collection into legal advice, while the claimed mandatory slips are unverified.",
+      "flip": "Three agencies pay €190 for a vault using their lawyer-approved contracts, with no compliance guarantee."
+    },
+    {
+      "id": "sc-009",
+      "verdict": "kill",
+      "reason": "The proposed buyer is a performance-marketing agency, placing the offer inside the brief's day-job conflict.",
+      "flip": "An eligible in-house finance team pays €299 for invoice reconciliation without agency clients or lead-buying campaigns."
+    },
+    {
+      "id": "sc-028",
+      "verdict": "keep",
+      "reason": "Purchasing and engineering staff already review supplier revisions, and a searchable approval history can replace that paid labour without live operations.",
+      "flip": "Five manufacturers show fewer than one consequential revision a month and none accepts a €400 pilot."
+    },
+    {
+      "id": "sc-035",
+      "verdict": "kill",
+      "reason": "WhatsApp Business onboarding, quote software, signatures and payments make each €190 contractor account too setup-heavy for a few founder hours a week.",
+      "flip": "Three contractors pay €190 and complete a real quote-to-payment flow in a week using the same setup."
+    },
+    {
+      "id": "sc-010",
+      "verdict": "kill",
+      "reason": "Computing withholding and declarations requires maintaining Romanian tax rules, crossing the brief's regulated-advice boundary.",
+      "flip": "Three accounting firms pay €199 for document collection and reminders while their own software and staff calculate tax."
+    },
+    {
+      "id": "sc-033",
+      "verdict": "kill",
+      "reason": "A failed renewal on embedded devices can cause outages, so a purported set-and-forget proxy still creates on-call liability.",
+      "flip": "Three hardware teams pay €350 for a pilot limited to noncritical devices with their own engineers owning failures."
+    },
+    {
+      "id": "sc-013",
+      "verdict": "kill",
+      "reason": "At €99 it needs 141 customers, exceeding the brief's 100-customer ceiling, and it closely overlaps the watchdog already in testing.",
+      "flip": "Three eligible buyers pay at least €200 for a policy-review job demonstrably separate from the existing watchdog."
+    },
+    {
+      "id": "sc-003",
+      "verdict": "kill",
+      "reason": "WhatsApp Business archiving may require advisers to move existing client chats, making a compliance-sensitive €150 sale and setup hard.",
+      "flip": "Three firms pay €150 after a one-week demo captures and exports every message in their intended business workflow."
+    },
+    {
+      "id": "sc-014",
+      "verdict": "kill",
+      "reason": "At €79 it needs 177 customers, breaching the brief's 100-customer ceiling.",
+      "flip": "Three merchants prepay at least €150 a month for a connector that their chosen approved platform does not supply."
+    },
+    {
+      "id": "sc-001",
+      "verdict": "kill",
+      "reason": "A method for finding a Forge app is not yet a customer job, so votes alone cannot establish a €250 purchase.",
+      "flip": "Name one unmet request that Forge can deliver and get three administrators to place €250 preorders within a week."
+    },
+    {
+      "id": "sc-030",
+      "verdict": "kill",
+      "reason": "Annual renewals make a €300 monthly subscription hard to justify, especially beside membership tools such as AssoConnect and Wild Apricot.",
+      "flip": "Three associations pay €300 a month for a pilot covering work they perform outside renewal season."
+    },
+    {
+      "id": "sc-021",
+      "verdict": "keep",
+      "reason": "Domiciliation providers already pay staff to scan and route mail, and the proposed software leaves physical handling with them.",
+      "flip": "Five providers each show too little daily mail-handling time to save €350 a month."
+    },
+    {
+      "id": "sc-008",
+      "verdict": "kill",
+      "reason": "At €99 it needs 141 customers, while patching client sites adds breakage liability and support work.",
+      "flip": "Three organisations prepay at least €150 a month for a strictly bounded maintenance plan that freelancers deliver without founder intervention."
+    },
+    {
+      "id": "sc-012",
+      "verdict": "kill",
+      "reason": "Trendtrack, Semrush and Sensor Tower already sell ad intelligence, making a €299 ranking hard to distinguish in a crowded market.",
+      "flip": "Three buyers outside the excluded lead-advertiser market pay €299 for one EU ranking they cannot obtain from those vendors."
+    },
+    {
+      "id": "sc-018",
+      "verdict": "keep",
+      "reason": "Retailers already spend staff or consultant time documenting green claims, and an evidence register avoids making legal decisions.",
+      "flip": "Five retailers show no recurring evidence-review spend and none will pay €500 for a pilot."
+    },
+    {
+      "id": "sc-007",
+      "verdict": "kill",
+      "reason": "Keeping city-by-city rental rules current creates a legal-rules maintenance treadmill for a €149 product.",
+      "flip": "Three conciergeries pay at least €150 for document and deadline tracking while their own advisers supply the local rules."
+    },
+    {
+      "id": "sc-027",
+      "verdict": "kill",
+      "reason": "Training-management software such as Digiforma already handles course documents, so a separate €350 evidence pack needs an unserved workflow.",
+      "flip": "Three providers using existing software pay €350 for packets it cannot export."
+    },
+    {
+      "id": "sc-038",
+      "verdict": "kill",
+      "reason": "A scraper can flag green-claim words but cannot verify the evidence behind recommended wording, making the offer a legal judgment.",
+      "flip": "Three brands pay €299 for flags and evidence collection with their own counsel approving every claim."
+    },
+    {
+      "id": "sc-017",
+      "verdict": "keep",
+      "reason": "Brands must assemble packaging files and already pay for that work; a €700 document workflow needs only 20 customers.",
+      "flip": "Three buyers say their backlog is a one-time job and refuse monthly billing after seeing a ten-product pilot."
+    }
+  ],
+  "top5": [
+    {
+      "id": "sc-031",
+      "why": "A paid ten-sheet batch can test demand, accuracy and margin within days at a price needing only 18 customers."
+    },
+    {
+      "id": "sc-022",
+      "why": "A ten-subcontractor chase exposes the buyer's current labour cost and whether reminders actually remove it."
+    },
+    {
+      "id": "sc-025",
+      "why": "A marketplace audit can cheaply test the exact competitive gap before building a €400 app."
+    },
+    {
+      "id": "sc-018",
+      "why": "The €500 evidence workflow fits the regulatory timing while leaving legal approval with the retailer."
+    },
+    {
+      "id": "sc-017",
+      "why": "Packaging files have a mandatory driver and a €700 price, provided interviews confirm work continues after the initial backlog."
+    }
+  ],
+  "missing": [
+    {
+      "title": "Supplier rebate and credit-note reconciliation",
+      "pitch": "Compare distributor purchase exports against agreed supplier rebates and credit notes, then send finance staff a monthly list of amounts to verify and claim.",
+      "buyer": "Finance manager at an EU industrial distributor with 10–100 employees",
+      "job": "Find supplier credits and rebates missed during monthly reconciliation.",
+      "geo": "FR/EU",
+      "price_eur_month": 700,
+      "customers_for_14k": 20,
+      "pattern": "paid labour → software",
+      "where_money_is_proven": "Ask distributors for staff reconciliation hours and examples of recovered credits; willingness to pay is a guess.",
+      "why_low_hassle": "It reads contract and transaction exports, flags discrepancies and leaves supplier contact to the customer.",
+      "biggest_risk": "Supplier contract formats may make normalization too costly.",
+      "first_48h_test": "Reconcile one distributor's anonymized month of purchases and rebate terms, quantify missed credits and request a paid pilot."
+    },
+    {
+      "title": "Cleaning client-issue closure desk",
+      "pitch": "Turn client emails and WhatsApp complaints into assigned site issues with photo evidence and a daily overdue digest.",
+      "buyer": "Owner of a French commercial-cleaning firm with 20–200 staff",
+      "job": "Supervisors already chase cleaners and reassure clients when site issues go unresolved.",
+      "geo": "FR",
+      "price_eur_month": 450,
+      "customers_for_14k": 32,
+      "pattern": "paid labour → software",
+      "where_money_is_proven": "Measure supervisor time on recent complaints and inspect current operations-software invoices; the €450 price is a guess.",
+      "why_low_hassle": "The firm handles the field work; software only assigns, records and escalates issues asynchronously.",
+      "biggest_risk": "Cleaners may not submit closure evidence consistently.",
+      "first_48h_test": "Ask three firms for 20 recent complaints, build a manual issue digest and seek one paid €450 pilot."
+    },
+    {
+      "title": "Wholesale invoice-dispute packet",
+      "pitch": "Assemble the purchase order, delivery proof, invoice and correspondence for each short-paid or disputed B2B invoice so an accounts-receivable clerk can resolve it.",
+      "buyer": "Finance lead at a French wholesaler with 10–100 employees",
+      "job": "Staff already search several systems to answer customer invoice disputes.",
+      "geo": "FR/EU",
+      "price_eur_month": 600,
+      "customers_for_14k": 24,
+      "pattern": "paid labour → software",
+      "where_money_is_proven": "Time clerks assembling recent dispute files and ask what overdue amounts remain unresolved; willingness to pay is a guess.",
+      "why_low_hassle": "A monthly export and document search prepare packets; customer staff decide and send responses.",
+      "biggest_risk": "Missing delivery documents could make too many packets incomplete.",
+      "first_48h_test": "Prepare five packets from one wholesaler's anonymized disputes, record time saved and ask for a paid pilot."
+    }
+  ]
+}

@@ -1,0 +1,263 @@
+{
+ "reviews": [
+  {
+   "id": "sc-029",
+   "verdict": "kill",
+   "reason": "Too much hassle to integrate with bespoke store operations, and you lack an edge to unseat named competitors.",
+   "flip": "Three stores prepay for a manual one-week digest generated from their standard CSV exports.",
+   "model": "gemini-3.1-pro"
+  },
+  {
+   "id": "sc-005",
+   "verdict": "kill",
+   "reason": "Breaks a constraint by dispensing regulated legal advice on compliance wording across fragmented and shifting EU jurisdictions.",
+   "flip": "Find five brands actively paying a non-legal software vendor for automated EU green-claim compliance checks.",
+   "model": "gemini-3.1-pro"
+  },
+  {
+   "id": "sc-004",
+   "verdict": "kill",
+   "reason": "Too much hassle maintaining headless scrapers against shifting 2FA and portal updates, creating an operational nightmare for a part-time founder.",
+   "flip": "Run headless scripts on 10 major portals for a week to prove the 2FA failure rate is near zero.",
+   "model": "gemini-3.1-pro"
+  },
+  {
+   "id": "sc-024",
+   "verdict": "kill",
+   "reason": "Too much hassle securing restricted API access from Booking and Google while fighting named competitors in a market without an edge.",
+   "flip": "Get three hotel managers to prepay on a mockup without demanding deep property management system integration.",
+   "model": "gemini-3.1-pro"
+  },
+  {
+   "id": "sc-031",
+   "verdict": "keep",
+   "reason": "Leverages your exact edges in AI agent orchestration and Romanian labor arbitrage while comfortably sitting above the B2B price floor.",
+   "flip": "Process ten varied PDFs; I am guessing the manual QA hours will wipe out the 800 EUR margin.",
+   "model": "gemini-3.1-pro"
+  },
+  {
+   "id": "sc-022",
+   "verdict": "kill",
+   "reason": "Named competitors like Provigis already dominate French subcontractor document collection, making this an uphill battle without a construction edge.",
+   "flip": "Cold call five construction PMs; I am guessing they use a mandatory industry platform rather than chasing PDFs.",
+   "model": "gemini-3.1-pro"
+  },
+  {
+   "id": "sc-015",
+   "verdict": "kill",
+   "reason": "Chasing third-world supplier data introduces too much hassle, directly breaking a constraint against heavy, non-scalable manual operations.",
+   "flip": "Five coffee roasters confirm they already hold structured supplier geolocation data ready for automated API extraction.",
+   "model": "gemini-3.1-pro"
+  },
+  {
+   "id": "sc-009",
+   "verdict": "kill",
+   "reason": "Selling to performance-marketing agencies breaks a constraint by targeting the day job's immediate ecosystem of advertisers who buy leads.",
+   "flip": "Agency finance operations prove entirely separate from media buying, allowing us to sell without touching the day job's network.",
+   "model": "gemini-3.1-pro"
+  },
+  {
+   "id": "sc-013",
+   "verdict": "kill",
+   "reason": "At 99 EUR it falls below the price floor, requiring too many customers and breaking the revenue constraints.",
+   "flip": "An ad agency offers 300 EUR a month to white-label the pre-check tool for all its clients.",
+   "model": "gemini-3.1-pro"
+  },
+  {
+   "id": "sc-021",
+   "verdict": "keep",
+   "reason": "It captures existing money flow by automating staff labor, perfectly leveraging your insider edge in French domiciliation without requiring heavy operations.",
+   "flip": "I am guessing sorting is heavily manual; observing that providers already use off-the-shelf bulk OCR software would reverse this.",
+   "model": "gemini-3.1-pro"
+  },
+  {
+   "id": "sc-027",
+   "verdict": "kill",
+   "reason": "Named competitors: all-in-one French training platforms like Digiforma or Dendreo already handle document generation natively, making this standalone tool redundant.",
+   "flip": "I am guessing; finding five providers who use generic CRMs and will pay for standalone documentation reverses this.",
+   "model": "gemini-3.1-pro"
+  },
+  {
+   "id": "sc-038",
+   "verdict": "kill",
+   "reason": "Breaks a constraint: interpreting ad copy against the EU green claims ban and recommending verified wording constitutes regulated legal advice.",
+   "flip": "I am guessing; a lawyer confirming in writing that automated term-flagging avoids regulated legal advice restrictions reverses this.",
+   "model": "gemini-3.1-pro"
+  },
+  {
+   "id": "sc-017",
+   "verdict": "kill",
+   "reason": "A slipping deadline: because the August 2026 compliance date has passed, ongoing monthly subscription revenue will dry up immediately after the backlog.",
+   "flip": "Finding five brands still facing continuous, newly introduced packaging updates that justify signing a 700 EUR monthly pilot.",
+   "model": "gemini-3.1-pro"
+  },
+  {
+   "id": "sc-016",
+   "verdict": "kill",
+   "reason": "Breaks the day-job constraint by running agency-style performance ad campaigns and requires heavy per-client operational labor.",
+   "flip": "Three corporate teams prepay 1,500 EUR monthly for self-serve automated tests without bespoke founder labor.",
+   "model": "gemini-3.7-flash"
+  },
+  {
+   "id": "sc-023",
+   "verdict": "kill",
+   "reason": "Named competitors like Connecteam provide mature checklists below this price floor, making single-bakery sales too high-friction part-time.",
+   "flip": "I am guessing five multi-shop bakery owners prepay 250 EUR after testing a one-page handoff prototype.",
+   "model": "gemini-3.7-flash"
+  },
+  {
+   "id": "sc-002",
+   "verdict": "keep",
+   "reason": "Leverages founder ad-tracking expertise to capture EU PrestaShop merchants neglected by Shopify-focused competitors like Elevar.",
+   "flip": "Twenty PrestaShop merchants confirm that cheap one-off Addons modules and Stape already eliminate their tracking pain.",
+   "model": "gemini-3.7-flash"
+  },
+  {
+   "id": "sc-011",
+   "verdict": "kill",
+   "reason": "Supporting fragmented device APIs creates an integration treadmill, risking urgent outages that break the constraint against 24/7 on-call.",
+   "flip": "I am guessing ten MSPs prove three standardized firewall APIs cover eighty percent of renewals and commit upfront.",
+   "model": "gemini-3.7-flash"
+  },
+  {
+   "id": "sc-026",
+   "verdict": "kill",
+   "reason": "Competitors like ManageWP, MainWP, and WP Umbrella already bundle white-label client reporting into core maintenance tools for a fraction of the price.",
+   "flip": "Three maintenance agencies committing €200/month because existing tools lack critical custom reporting their clients demand.",
+   "model": "gemini-3.7-flash"
+  },
+  {
+   "id": "sc-006",
+   "verdict": "keep",
+   "reason": "Mandatory CRA compliance enforcement creates urgent non-discretionary B2B budget among small manufacturers lacking dedicated enterprise vulnerability tooling.",
+   "flip": "Ten target IoT makers confirm they will ignore CRA rules until heavy enforcement fines actually hit.",
+   "model": "gemini-3.7-flash"
+  },
+  {
+   "id": "sc-025",
+   "verdict": "kill",
+   "reason": "Atlassian Guard provides native guest management, and competing Marketplace access-control plugins cost well below €400/month for 50–250 users.",
+   "flip": "Five Jira admins paying over €400/month for third-party contractor access-expiry tools on Atlassian Marketplace.",
+   "model": "gemini-3.7-flash"
+  },
+  {
+   "id": "sc-037",
+   "verdict": "keep",
+   "reason": "French IP law strictly mandates explicit written copyright assignment per project, solving a real audit liability for agencies via founder's specific edge.",
+   "flip": "Guess: Agency outreach reveals owners refuse to pay, relying on free boilerplate clauses despite known legal invalidity.",
+   "model": "gemini-3.7-flash"
+  },
+  {
+   "id": "sc-028",
+   "verdict": "kill",
+   "reason": "Breaks the low-touch constraint because manufacturing spec workflows require complex enterprise integrations, custom formats, and lengthy internal stakeholder sign-offs.",
+   "flip": "Three mid-market manufacturers immediately prepay for a standalone document diff tool without integrations.",
+   "model": "gemini-3.7-flash"
+  },
+  {
+   "id": "sc-035",
+   "verdict": "kill",
+   "reason": "French artisans rarely pay 190 EUR monthly for a single-channel bridge when comprehensive French invoicing suites cost under 50 EUR.",
+   "flip": "Five French contractors prepay 190 EUR monthly after seeing a Meta ad prototype demo.",
+   "model": "gemini-3.7-flash"
+  },
+  {
+   "id": "sc-010",
+   "verdict": "kill",
+   "reason": "Romanian accounting firms resist 199 EUR monthly pricing, while frequent national tax law changes demand constant, unprofitable legal maintenance.",
+   "flip": "Guessing: three Bucharest accounting firms sign annual contracts at 199 EUR monthly during the 15 cold calls.",
+   "model": "gemini-3.7-flash"
+  },
+  {
+   "id": "sc-033",
+   "verdict": "keep",
+   "reason": "Solves an immutable March 2027 deadline where connected hardware teams must automate renewals or risk bricking legacy deployed field devices.",
+   "flip": "Interviews reveal hardware leads universally prefer internal bash scripts or custom private root CAs over third-party agents.",
+   "model": "gemini-3.7-flash"
+  },
+  {
+   "id": "sc-003",
+   "verdict": "kill",
+   "reason": "I am guessing small wealth advisers face minimal compliance enforcement, while Meta API constraints break normal WhatsApp chat workflows for €150 monthly.",
+   "flip": "Five ORIAS-registered advisers sign paid pre-orders citing explicit regulatory audit demands for archived WhatsApp chats.",
+   "model": "gemini-3.7-flash"
+  },
+  {
+   "id": "sc-014",
+   "verdict": "kill",
+   "reason": "At €79 monthly, this breaches the €150 price floor constraint and faces commoditization from over 130 approved platforms shipping free connectors.",
+   "flip": "Five e-commerce merchants pre-pay €150 monthly because approved platform connectors fail complex PrestaShop B2C e-reporting.",
+   "model": "gemini-3.7-flash"
+  },
+  {
+   "id": "sc-001",
+   "verdict": "keep",
+   "reason": "Atlassian Marketplace provides proven monetization, high B2B price points above €250, and zero-touch distribution fitting the part-time founder constraint.",
+   "flip": "Every top-voted Jira feature gap is already covered by established marketplace vendors or Atlassian's native roadmap.",
+   "model": "gemini-3.7-flash"
+  },
+  {
+   "id": "sc-030",
+   "verdict": "kill",
+   "reason": "Trade association renewals are highly seasonal, making a €300 monthly subscription unviable against entrenched all-in-one competitors like AssoConnect.",
+   "flip": "Three association directors immediately pre-pay a €3,600 annual contract to eliminate manual renewal chasing staff time.",
+   "model": "gemini-3.7-flash"
+  },
+  {
+   "id": "sc-008",
+   "verdict": "kill",
+   "reason": "Priced below the 150-EUR floor, sub-100-EUR SMB customers churn heavily while manual vulnerability patching creates unsustainable operational hassle for part-time founders.",
+   "flip": "Five cold-contacted SMBs immediately prepay an annual 1,800 EUR security maintenance contract in one week.",
+   "model": "gemini-3.7-flash"
+  },
+  {
+   "id": "sc-012",
+   "verdict": "kill",
+   "reason": "Selling to performance advertisers directly breaks the day-job non-compete constraint while fighting entrenched competitors like Semrush and Sensor Tower.",
+   "flip": "Day-job legal counsel formally confirms in writing that selling competitor ad data does not violate employment constraints.",
+   "model": "gemini-3.7-flash"
+  },
+  {
+   "id": "sc-018",
+   "verdict": "kill",
+   "reason": "A slipping deadline from France not transposing the directive removes enforcement pressure, eliminating urgent money flow from target apparel retailers.",
+   "flip": "Guessing: Three French apparel retailers sign paid LOIs within one week to prevent cross-border EU regulatory fines.",
+   "model": "gemini-3.7-flash"
+  },
+  {
+   "id": "sc-007",
+   "verdict": "keep",
+   "reason": "The Le Meur law creates an urgent compliance deadline for French conciergeries that global channel managers like Smoobu fail to address.",
+   "flip": "Guessing: Ten interviewed conciergeries report that their existing PMS already tracks city-level day caps and DPE registration requirements.",
+   "model": "gemini-3.7-flash"
+  }
+ ],
+ "top5": [
+  {
+   "id": "sc-004",
+   "why": "Directly leverages the founder's French admin expertise to solve a tedious expense reconciliation problem with low operational overhead.",
+   "model": "gemini-3.7-flash"
+  },
+  {
+   "id": "sc-021",
+   "why": "Capitalizes on the founder's insider domiciliation knowledge and AI agent workflows to automate a manual document intake process.",
+   "model": "gemini-3.7-flash"
+  },
+  {
+   "id": "sc-006",
+   "why": "Monetizes an active EU regulatory deadline with thin market supply, commanding high recurring pricing from hardware makers.",
+   "model": "gemini-3.7-flash"
+  },
+  {
+   "id": "sc-033",
+   "why": "Addresses a forced 2027 compliance deadline for connected hardware where technical buyers will readily pay for automated certificate renewals.",
+   "model": "gemini-3.7-flash"
+  },
+  {
+   "id": "sc-037",
+   "why": "Exploits the founder's specific edge in French freelancer copyright contracts, providing automated compliance for agencies with minimal ongoing support.",
+   "model": "gemini-3.7-flash"
+  }
+ ],
+ "_note": "gemini-3.1-pro through NeuralBox's mcp__Gemini__Generate, 7 chunks of 5 ideas plus one top-5 call on a compact list; output capped at 4096 tokens per call: chunk 1: 1; chunk 2: 5; chunk 3: 1; chunk 4: 1; chunk 5: 1; chunk 6: 1; chunk 7: 3; then gemini-3.7-flash for the reviews the cap cut (chunks of 4) and the top 5: flash chunk 1: 4; flash chunk 2: 4; flash chunk 3: 4; flash chunk 4: 4; flash chunk 5: 4"
+}

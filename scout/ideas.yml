@@ -1,0 +1,1784 @@
+- id: sc-001
+  title: Forge app for a top-voted Jira or Confluence gap
+  pitch: Pick one of the long-standing, heavily voted feature requests in Atlassian's public Jira that
+    a Cloud (Forge) app can deliver, build it and sell it through the Atlassian Marketplace. The end of
+    Data Center expansions (March 2028) keeps pushing customers to Cloud, where many server-era apps are
+    missing.
+  buyer: Jira or Confluence admins in companies of 50-2,000 users
+  job: close a feature gap Atlassian has left open for years
+  geo: global
+  price_eur_month: 250
+  customers_for_14k: 56
+  pattern: marketplace gap
+  where_money_is_proven: Atlassian Marketplace REST API (installs, price ladder, sort by top-grossing)
+    for apps in the same category; the request's vote count
+  why_low_hassle: Atlassian handles billing, procurement and distribution; one product for every customer;
+    no setup per customer
+  biggest_risk: Atlassian ships the feature, or an existing vendor already covers it; Forge platform limits
+  first_48h_test: Rank the top 50 unresolved Cloud suggestions by votes, check each against Marketplace
+    apps, keep 3 with no app or only stale, poorly rated ones, and send a priced pre-order to 20 admins
+    who commented on them
+  origin: claude
+  round: '2026-10-23'
+  related:
+  - sc-025
+  evidence: []
+  first_read:
+    C: U
+    P: U
+    R: U
+    H: 0
+    F: 1
+    conflict: none
+    low_hassle: true
+  challenge:
+    claude: 'keep: marketplace distribution and top-grossing data make money provable in a day; pick the
+      gap before building'
+    codex: 'kill: A method for finding a Forge app is not yet a customer job, so votes alone cannot establish
+      a €250 purchase. Flip: Name one unmet request that Forge can deliver and get three administrators
+      to place €250 preorders within a week.'
+    gemini: 'keep: Atlassian Marketplace provides proven monetization, high B2B price points above €250,
+      and zero-touch distribution fitting the part-time founder constraint. Flip: Every top-voted Jira
+      feature gap is already covered by established marketplace vendors or Atlassian''s native roadmap.
+      (gemini-3.7-flash)'
+  status: proposed
+  decision: null
+  consensus: 2.0
+- id: sc-002
+  title: Server-side tracking with tracking-health alerts for PrestaShop and WooCommerce shops
+  pitch: Elevar sells server-side conversion tracking to Shopify stores; PrestaShop (strong in France)
+    and WooCommerce shops mostly run fragile browser pixels. A module plus a hosted endpoint sends Meta,
+    Google and TikTok conversions server-side and alerts when event volume or match quality drops.
+  buyer: French and EU e-commerce merchants spending 5k EUR+ a month on ads, and their freelancers
+  job: keep conversion tracking accurate so the ad platforms optimize
+  geo: FR/EU
+  price_eur_month: 199
+  customers_for_14k: 70
+  pattern: geography
+  where_money_is_proven: Elevar's and Stape's public pricing and review counts; PrestaShop Addons tracking
+    modules and their reviews; Codeur.com gigs for Conversions API setup
+  why_low_hassle: self-serve module; monitoring is asynchronous (alerts, not on-call); one pipeline for
+    every shop
+  biggest_risk: Stape and freelancers already cover server-side tagging cheaply; support on custom shops;
+    ad-platform API changes
+  first_48h_test: Count PrestaShop Addons tracking modules with their reviews and the Codeur.com Conversions
+    API gigs of the last 90 days; offer a 199 EUR/month beta to 20 PrestaShop shops running a Meta pixel
+  origin: claude
+  round: '2026-10-23'
+  related: []
+  evidence: []
+  first_read:
+    C: U
+    P: U
+    R: U
+    H: 0
+    F: 2
+    conflict: none
+    low_hassle: true
+  challenge:
+    claude: 'keep: uses the measurement edge; Stape is cheap, so the wedge is PrestaShop plus done-for-you
+      plus alerts'
+    codex: 'kill: Custom PrestaShop and WooCommerce setups plus three changing ad-platform APIs create
+      a support treadmill at €199 a month. Flip: Three merchants pay €199 after a standard installation
+      runs for a week without founder intervention.'
+    gemini: 'keep: Leverages founder ad-tracking expertise to capture EU PrestaShop merchants neglected
+      by Shopify-focused competitors like Elevar. Flip: Twenty PrestaShop merchants confirm that cheap
+      one-off Addons modules and Stape already eliminate their tracking pain. (gemini-3.7-flash)'
+  status: proposed
+  decision: null
+  consensus: 2.0
+- id: sc-003
+  title: Archived, auditable WhatsApp for independent wealth advisers
+  pitch: Advisers discuss money with clients on WhatsApp, while their record-keeping duties expect client
+    exchanges kept and retrievable. A WhatsApp Business setup that archives conversations, links them
+    to the client file and exports them for an audit, for small advisory firms.
+  buyer: independent wealth-management advisory firms in France (1-20 advisers)
+  job: keep client communications archived and auditable
+  geo: FR
+  price_eur_month: 150
+  customers_for_14k: 93
+  pattern: unbundle a paid incumbent
+  where_money_is_proven: enterprise archivers' pricing (LeapXpert, Smarsh, Global Relay); the regulator's
+    record-keeping guidance; firm counts in the ORIAS register (to measure)
+  why_low_hassle: one product, self-serve onboarding through the WhatsApp Business API; no advice given
+  biggest_risk: the duty may not bite for small firms (weak urgency); Meta's WhatsApp Business policy;
+    data-protection liability
+  first_48h_test: Read the record-keeping rules for these advisers, then call 10 firms from the ORIAS
+    register with a 150 EUR/month offer and count yes or maybe
+  origin: claude
+  round: '2026-10-23'
+  related:
+  - sc-035
+  evidence: []
+  first_read:
+    C: U
+    P: U
+    R: U
+    H: 1
+    F: 1
+    conflict: check
+    low_hassle: true
+  challenge:
+    claude: 'doubt: unclear that small advisers must archive WhatsApp; Meta''s API can cut it off; advisers
+      may buy leads'
+    codex: 'kill: WhatsApp Business archiving may require advisers to move existing client chats, making
+      a compliance-sensitive €150 sale and setup hard. Flip: Three firms pay €150 after a one-week demo
+      captures and exports every message in their intended business workflow.'
+    gemini: 'kill: I am guessing small wealth advisers face minimal compliance enforcement, while Meta
+      API constraints break normal WhatsApp chat workflows for €150 monthly. Flip: Five ORIAS-registered
+      advisers sign paid pre-orders citing explicit regulatory audit demands for archived WhatsApp chats.
+      (gemini-3.7-flash)'
+  status: proposed
+  decision: null
+  consensus: 0.0
+- id: sc-004
+  title: Invoice collector for SaaS and ad-platform invoices of French SMBs
+  pitch: Finance teams lose hours every month downloading invoices from software and ad-platform portals
+    and matching them to card payments in Qonto, Spendesk or Pennylane. An agent logs in, fetches, matches
+    and uploads them. GetMyInvoices does this in Germany, and the French e-invoicing reform does not cover
+    foreign SaaS invoices.
+  buyer: finance or office managers in French companies of 10-200 people with 30+ software and ad subscriptions
+  job: collect and match supplier invoices every month
+  geo: FR
+  price_eur_month: 149
+  customers_for_14k: 94
+  pattern: geography
+  where_money_is_proven: GetMyInvoices pricing and customer count; Dext and Yooz pricing; Codeur.com gigs
+    for invoice collection
+  why_low_hassle: a monthly asynchronous batch; setup is connecting accounts
+  biggest_risk: portal logins with 2FA break the agents (a maintenance treadmill); Pennylane or Qonto
+    ship it
+  first_48h_test: A priced landing page ('every SaaS and ad invoice in Pennylane, 149 EUR/month') on LinkedIn
+    ads to French finance managers, plus 20 direct messages; count booked calls
+  origin: claude
+  round: '2026-10-23'
+  related: []
+  evidence: []
+  first_read:
+    C: U
+    P: U
+    R: U
+    H: 0
+    F: 2
+    conflict: none
+    low_hassle: true
+  challenge:
+    claude: 'keep: proposed by all three models and lived firsthand; the risk is 2FA portals and holding
+      customers'' logins'
+    codex: 'kill: Portal logins and two-factor prompts make monthly collection across dozens of SaaS vendors
+      a maintenance treadmill at €149. Flip: A paid trial collects at least 80% of one buyer''s missing
+      invoices for a month from a small fixed set of portals without founder login help.'
+    gemini: 'kill: Too much hassle maintaining headless scrapers against shifting 2FA and portal updates,
+      creating an operational nightmare for a part-time founder. Flip: Run headless scripts on 10 major
+      portals for a week to prove the 2FA failure rate is near zero. (gemini-3.1-pro)'
+  status: proposed
+  decision: null
+  also_by:
+  - codex
+  - gemini
+  variants:
+  - 'sc-020 (codex): Missing supplier-invoice detector'
+  - 'sc-039 (gemini): Missing Invoice Chaser for French Accounting'
+  consensus: 1.25
+- id: sc-005
+  title: Product-claims and listing compliance checker for EU e-shops
+  pitch: Generic green claims are banned EU-wide since September 2026, product-safety rules require safety
+    and responsible-person information on listings, and discounts must show the previous price. A Shopify/PrestaShop
+    app scans every product page and ad for these, proposes compliant wording and keeps an evidence file
+    per claim.
+  buyer: e-commerce brands selling in the EU with 100+ products
+  job: keep product pages compliant before a consumer-protection control
+  geo: EU
+  price_eur_month: 149
+  customers_for_14k: 94
+  pattern: deadline wave
+  where_money_is_proven: compliance apps on the Shopify App Store (reviews, plans); consumer-protection
+    control reports and fines; law firms' audit prices
+  why_low_hassle: marketplace distribution, self-serve, scheduled scans
+  biggest_risk: liability when a checked page is still fined; rules differ by country; low willingness
+    to pay before enforcement
+  first_48h_test: Scan 200 French Shopify stores for banned generic claims and missing safety information;
+    email the 50 worst a free report and a 149 EUR/month offer
+  origin: claude
+  round: '2026-10-23'
+  related:
+  - sc-018
+  - sc-038
+  evidence: []
+  first_read:
+    C: U
+    P: U
+    R: U
+    H: 0
+    F: 1
+    conflict: none
+    low_hassle: true
+  challenge:
+    claude: 'keep-ish: real deadline and marketplace distribution; liability framing (flags, not legal
+      advice) decides it'
+    codex: 'kill: Recommending legally compliant wording across EU markets turns a €149 scanner into a
+      legal-judgment and liability service. Flip: Three brands pay at least €150 a month for factual flags
+      and an evidence register, with their own counsel approving wording.'
+    gemini: 'kill: Breaks a constraint by dispensing regulated legal advice on compliance wording across
+      fragmented and shifting EU jurisdictions. Flip: Find five brands actively paying a non-legal software
+      vendor for automated EU green-claim compliance checks. (gemini-3.1-pro)'
+  status: proposed
+  decision: null
+  also_by:
+  - gemini
+  variants:
+  - 'sc-036 (gemini): EU Green Claims Compliance Watchdog'
+  consensus: 0.5
+- id: sc-006
+  title: CRA vulnerability-handling kit for small connected-product makers
+  pitch: 'Since 11 September 2026 makers of products with digital elements sold in the EU must report
+    actively exploited vulnerabilities fast and run a disclosure process; the full CRA applies in December
+    2027. A kit: disclosure inbox and security.txt, SBOM upload with CVE monitoring, triage by agents
+    with a security engineer''s check, pre-filled notifications.'
+  buyer: small hardware/IoT and software-product makers (10-200 staff) selling in the EU
+  job: meet CRA vulnerability-handling and reporting duties
+  geo: EU
+  price_eur_month: 400
+  customers_for_14k: 35
+  pattern: deadline wave
+  where_money_is_proven: CRA consultancy prices; SBOM and vulnerability-management tool pricing; counts
+    of EU makers in scope (to measure)
+  why_low_hassle: the customer files; the kit monitors and prepares, alerts in business hours
+  biggest_risk: time-critical duties create on-call pressure; makers may not know they are in scope; enterprise
+    vendors move down-market
+  first_48h_test: List 100 EU connected-product makers from trade-fair exhibitor lists, check who publishes
+    a vulnerability disclosure policy, offer the kit at 400 EUR/month to the 30 without one
+  origin: claude
+  round: '2026-10-23'
+  related: []
+  evidence: []
+  first_read:
+    C: U
+    P: U
+    R: U
+    H: 1
+    F: 1
+    conflict: none
+    low_hassle: false
+  challenge:
+    claude: 'kill as framed: the 24-hour reporting duty puts us on call; a self-serve readiness kit could
+      survive'
+    codex: 'kill: Time-critical CRA vulnerability reporting creates an incident-response expectation that
+      conflicts with the no-on-call constraint. Flip: Three makers pay €400 for a preparation-only kit
+      and name their own person responsible for urgent triage and filing.'
+    gemini: 'keep: Mandatory CRA compliance enforcement creates urgent non-discretionary B2B budget among
+      small manufacturers lacking dedicated enterprise vulnerability tooling. Flip: Ten target IoT makers
+      confirm they will ignore CRA rules until heavy enforcement fines actually hit. (gemini-3.7-flash)'
+  status: proposed
+  decision: null
+  consensus: 1.25
+- id: sc-007
+  title: Compliance tracker for French short-term rental conciergeries
+  pitch: 'Conciergeries manage 20-200 furnished tourist rentals each, and the 2024 Le Meur law tightened
+    registration, energy-rating and day-limit rules, which vary by city (to verify). A tracker per listing:
+    registration status, energy-rating deadlines, nights against caps and the city''s rules, with alerts
+    before a breach.'
+  buyer: conciergerie owners in France (20-200 listings)
+  job: keep every listing legal across cities
+  geo: FR
+  price_eur_month: 149
+  customers_for_14k: 94
+  pattern: deadline wave
+  where_money_is_proven: conciergeries pay for channel-manager tools (Smoobu, Lodgify, Hostaway); municipal
+    fines; conciergerie counts in SIRENE (to measure)
+  why_low_hassle: listing data entered once, a rules engine, alerts
+  biggest_risk: municipal rules change; channel managers add the feature; a small market
+  first_48h_test: Call 15 conciergeries in Paris, Lyon and Bordeaux with a priced pre-order; note how
+    they track registration and day caps today
+  origin: claude
+  round: '2026-10-23'
+  related: []
+  evidence: []
+  first_read:
+    C: U
+    P: U
+    R: U
+    H: 0
+    F: 1
+    conflict: none
+    low_hassle: true
+  challenge:
+    claude: 'keep-ish: verify the Le Meur rules city by city first; conciergeries are reachable and pay
+      for tools'
+    codex: 'kill: Keeping city-by-city rental rules current creates a legal-rules maintenance treadmill
+      for a €149 product. Flip: Three conciergeries pay at least €150 for document and deadline tracking
+      while their own advisers supply the local rules.'
+    gemini: 'keep: The Le Meur law creates an urgent compliance deadline for French conciergeries that
+      global channel managers like Smoobu fail to address. Flip: Guessing: Ten interviewed conciergeries
+      report that their existing PMS already tracks city-level day caps and DPE registration requirements.
+      (gemini-3.7-flash)'
+  status: proposed
+  decision: null
+  consensus: 1.5
+- id: sc-008
+  title: Outside-in vulnerable-site detection with an instant security-maintenance offer
+  pitch: Scan public web data for French small businesses and associations whose sites run CMS versions
+    with known critical vulnerabilities, send each a specific report and an instant price for patching
+    plus monthly maintenance, delivered by freelancers with agents.
+  buyer: French SMBs and associations with old Joomla, WordPress or PrestaShop sites
+  job: keep the website patched and safe
+  geo: FR
+  price_eur_month: 99
+  customers_for_14k: 141
+  pattern: arbitrage machine
+  where_money_is_proven: maintenance-plan prices of web agencies (30-150 EUR/month); Codeur.com gigs for
+    security updates
+  why_low_hassle: detection and outreach are automated; delivery is runbook work
+  biggest_risk: cold outreach to small organisations converts poorly; cheap competitors with distribution;
+    liability when an update breaks a site
+  first_48h_test: Query public crawl data for French domains on vulnerable CMS versions, email 200 of
+    them a specific report and a 99 EUR/month offer, count replies
+  origin: claude
+  round: '2026-10-23'
+  related:
+  - sc-026
+  evidence: []
+  first_read:
+    C: U
+    P: U
+    R: U
+    H: 0
+    F: 2
+    conflict: none
+    low_hassle: true
+  challenge:
+    claude: 'doubt: close to the Joomla machine already explored; cold outreach to small organisations
+      converts poorly'
+    codex: 'kill: At €99 it needs 141 customers, while patching client sites adds breakage liability and
+      support work. Flip: Three organisations prepay at least €150 a month for a strictly bounded maintenance
+      plan that freelancers deliver without founder intervention.'
+    gemini: 'kill: Priced below the 150-EUR floor, sub-100-EUR SMB customers churn heavily while manual
+      vulnerability patching creates unsustainable operational hassle for part-time founders. Flip: Five
+      cold-contacted SMBs immediately prepay an annual 1,800 EUR security maintenance contract in one
+      week. (gemini-3.7-flash)'
+  status: proposed
+  decision: null
+  consensus: 0.0
+- id: sc-009
+  title: Ad-spend rebilling and invoice reconciliation for marketing agencies
+  pitch: Agencies running clients' ads on Meta, Google, TikTok and LinkedIn rebill spend per client, reconcile
+    platform invoices across dozens of accounts and handle reverse-charge VAT. A tool pulls invoices and
+    spend per account, maps them to clients and drafts the rebilling invoices.
+  buyer: finance or ops leads at agencies managing 20+ client ad accounts in the EU
+  job: monthly ad-spend rebilling and invoice reconciliation
+  geo: EU
+  price_eur_month: 299
+  customers_for_14k: 47
+  pattern: paid labour -> software
+  where_money_is_proven: staff days spent on it (to measure in calls); agency finance tools' pricing;
+    Codeur.com gigs
+  why_low_hassle: a monthly batch with the same connectors for everyone
+  biggest_risk: a small niche; ad platforms' billing data differs; agencies may live with their accounting
+    tool
+  first_48h_test: LinkedIn messages to 30 agency finance leads with a 299 EUR/month offer; count calls
+    booked
+  origin: claude
+  round: '2026-10-23'
+  related: []
+  evidence: []
+  first_read:
+    C: U
+    P: U
+    R: U
+    H: 0
+    F: 2
+    conflict: none
+    low_hassle: true
+  challenge:
+    claude: 'keep: a narrow, painful monthly job sold to ad-heavy agencies at 299; measure the hours in
+      five calls'
+    codex: 'kill: The proposed buyer is a performance-marketing agency, placing the offer inside the brief''s
+      day-job conflict. Flip: An eligible in-house finance team pays €299 for invoice reconciliation without
+      agency clients or lead-buying campaigns.'
+    gemini: 'kill: Selling to performance-marketing agencies breaks a constraint by targeting the day
+      job''s immediate ecosystem of advertisers who buy leads. Flip: Agency finance operations prove entirely
+      separate from media buying, allowing us to sell without touching the day job''s network. (gemini-3.1-pro)'
+  status: proposed
+  decision: null
+  consensus: 1.0
+- id: sc-010
+  title: Copyright-contract paperwork for Romanian companies paying creators and developers
+  pitch: Romanian companies pay many developers and creators under copyright-assignment contracts, which
+    need a monthly annex, a payment notice, withheld tax and declarations. A tool generates and e-signs
+    annexes and notices, computes withholding and reminds deadlines, sold to accounting firms per client.
+  buyer: Romanian accounting firms and companies managing copyright-contract payees
+  job: monthly copyright-contract paperwork and withholding
+  geo: RO
+  price_eur_month: 199
+  customers_for_14k: 70
+  pattern: the founder's own itch
+  where_money_is_proven: accounting firms' fees per payee; the number of such contracts (to measure)
+  why_low_hassle: templates and rules in a monthly batch
+  biggest_risk: Romanian tax rules change often; a small market at low prices
+  first_48h_test: Call 15 Bucharest accounting firms with a priced offer
+  origin: claude
+  round: '2026-10-23'
+  related:
+  - sc-037
+  evidence: []
+  first_read:
+    C: U
+    P: U
+    R: U
+    H: 0
+    F: 2
+    conflict: none
+    low_hassle: true
+  challenge:
+    claude: 'keep-ish: firsthand pain and language edge, but a small market; sell to accounting firms,
+      not companies'
+    codex: 'kill: Computing withholding and declarations requires maintaining Romanian tax rules, crossing
+      the brief''s regulated-advice boundary. Flip: Three accounting firms pay €199 for document collection
+      and reminders while their own software and staff calculate tax.'
+    gemini: 'kill: Romanian accounting firms resist 199 EUR monthly pricing, while frequent national tax
+      law changes demand constant, unprofitable legal maintenance. Flip: Guessing: three Bucharest accounting
+      firms sign annual contracts at 199 EUR monthly during the 15 cold calls. (gemini-3.7-flash)'
+  status: proposed
+  decision: null
+  consensus: 0.5
+- id: sc-011
+  title: Certificate renewal for devices that cannot renew themselves, sold through MSPs
+  pitch: Public TLS certificates are capped at 100 days from March 2027, shorter later, and many printers,
+    NAS, firewalls and appliances still take manual certificate uploads. A light agent issues through
+    ACME and pushes certificates to those devices through their APIs, with an inventory and expiry alerts,
+    priced per device to managed-IT providers.
+  buyer: managed IT providers and IT admins of SMBs
+  job: renew device certificates before they expire
+  geo: global
+  price_eur_month: 300
+  customers_for_14k: 47
+  pattern: deadline wave
+  where_money_is_proven: MSP tool pricing; certificate-lifecycle vendors' prices; MSP community complaints
+    about the new limits
+  why_low_hassle: software only, sold to MSPs who do the field work
+  biggest_risk: device APIs vary (an integration treadmill); established vendors add device push; outages
+    get blamed on the tool
+  first_48h_test: Ask in r/msp and MSP groups which devices they still renew by hand; count the devices
+    named; offer a priced beta
+  origin: claude
+  round: '2026-10-23'
+  related:
+  - sc-033
+  evidence: []
+  first_read:
+    C: U
+    P: U
+    R: U
+    H: 1
+    F: 1
+    conflict: none
+    low_hassle: true
+  challenge:
+    claude: 'doubt: device integrations are a treadmill and certificate tools will add device push'
+    codex: 'kill: A failed certificate push can take a device offline, creating the on-call duty the founders
+      cannot provide. Flip: Three MSPs pay for a beta whose contract makes them the incident owner and
+      limits the tool to tested device models.'
+    gemini: 'kill: Supporting fragmented device APIs creates an integration treadmill, risking urgent
+      outages that break the constraint against 24/7 on-call. Flip: I am guessing ten MSPs prove three
+      standardized firewall APIs cover eighty percent of renewals and commit upfront. (gemini-3.7-flash)'
+  status: proposed
+  decision: null
+  consensus: 0.0
+- id: sc-012
+  title: EU rising-advertiser radar for brands and agencies
+  pitch: Weekly rankings of rising advertisers per category and country from the EU's official ad repositories
+    (Meta reach, Google creatives, Snapchat and Microsoft impressions, LinkedIn), with spend ranges, sold
+    to brands and agencies watching competitors.
+  buyer: marketing leads at EU brands and agencies
+  job: know which competitors are scaling which ads
+  geo: EU
+  price_eur_month: 299
+  customers_for_14k: 47
+  pattern: sell to advertisers whose spend is rising
+  where_money_is_proven: Trendtrack, Semrush Advertising and Sensor Tower pricing; ad-spy tools' traction
+  why_low_hassle: a data pipeline and weekly reports
+  biggest_risk: repository gaps; crowded ad-spy market; the founders' constraints need checking
+  first_48h_test: Build one category's ranking for France from the BigQuery and Meta data and show it
+    to 10 agency heads with a price
+  origin: claude
+  round: '2026-10-23'
+  related: []
+  evidence: []
+  first_read:
+    C: U
+    P: U
+    R: U
+    H: 0
+    F: 2
+    conflict: check
+    low_hassle: true
+  challenge:
+    claude: 'blocked unless agreed: close to AdsInsights, Dolead''s internal tool; strongest edge, worst
+      conflict'
+    codex: 'kill: Trendtrack, Semrush and Sensor Tower already sell ad intelligence, making a €299 ranking
+      hard to distinguish in a crowded market. Flip: Three buyers outside the excluded lead-advertiser
+      market pay €299 for one EU ranking they cannot obtain from those vendors.'
+    gemini: 'kill: Selling to performance advertisers directly breaks the day-job non-compete constraint
+      while fighting entrenched competitors like Semrush and Sensor Tower. Flip: Day-job legal counsel
+      formally confirms in writing that selling competitor ad data does not violate employment constraints.
+      (gemini-3.7-flash)'
+  status: proposed
+  decision: null
+  consensus: 0.0
+- id: sc-013
+  title: Ad and landing-page policy pre-check for health and wellness advertisers
+  pitch: Meta and Google disapprove ads and restrict accounts over health claims, before/after images
+    and personal-attribute wording. A pre-flight checker scans ads and landing pages against each platform's
+    current policy, explains the risk and proposes compliant wording, for direct-to-consumer brands in
+    supplements, cosmetics and wellness.
+  buyer: DTC brands and their freelancers advertising health, beauty or wellness products in the EU
+  job: avoid ad disapprovals and account restrictions
+  geo: EU/US
+  price_eur_month: 99
+  customers_for_14k: 141
+  pattern: sell to advertisers whose spend is rising
+  where_money_is_proven: agencies' compliance reviews; complaint volume on Meta's community forums; existing
+    ad-compliance tools' pricing
+  why_low_hassle: self-serve checks, no live duty
+  biggest_risk: adjacent to the ad-account watchdog already in testing; policies change and enforcement
+    is opaque
+  first_48h_test: Collect 50 disapproval complaints from public forums, run the checker on the ads quoted,
+    and offer it at 99 EUR/month to the posters' brands
+  origin: claude
+  round: '2026-10-23'
+  related:
+  - sc-038
+  evidence: []
+  first_read:
+    C: U
+    P: U
+    R: U
+    H: 0
+    F: 2
+    conflict: none
+    low_hassle: true
+  challenge:
+    claude: 'keep-ish: strong fit, but next to the watchdog already in testing; decide them together'
+    codex: 'kill: At €99 it needs 141 customers, exceeding the brief''s 100-customer ceiling, and it closely
+      overlaps the watchdog already in testing. Flip: Three eligible buyers pay at least €200 for a policy-review
+      job demonstrably separate from the existing watchdog.'
+    gemini: 'kill: At 99 EUR it falls below the price floor, requiring too many customers and breaking
+      the revenue constraints. Flip: An ad agency offers 300 EUR a month to white-label the pre-check
+      tool for all its clients. (gemini-3.1-pro)'
+  status: proposed
+  decision: null
+  consensus: 0.5
+- id: sc-014
+  title: E-invoicing and e-reporting connector for PrestaShop and WooCommerce merchants
+  pitch: From September 2027 French SMEs must issue e-invoices through an approved platform and e-report
+    their B2C sales and payments. A PrestaShop/WooCommerce module connects the shop to the merchant's
+    approved platform and sends the e-reporting data automatically.
+  buyer: French e-commerce SMEs on PrestaShop or WooCommerce
+  job: comply with e-invoicing and e-reporting without changing shop software
+  geo: FR
+  price_eur_month: 79
+  customers_for_14k: 177
+  pattern: deadline wave
+  where_money_is_proven: PrestaShop Addons modules for e-invoicing (reviews, prices); approved platforms'
+    connector pricing
+  why_low_hassle: a module, sold through the marketplace
+  biggest_risk: 130-156 approved platforms and shop vendors will ship connectors; low price
+  first_48h_test: Count e-invoicing modules on PrestaShop Addons with their reviews and prices; message
+    20 PrestaShop agencies about what their clients plan
+  origin: claude
+  round: '2026-10-23'
+  related: []
+  evidence: []
+  first_read:
+    C: U
+    P: U
+    R: U
+    H: 0
+    F: 2
+    conflict: none
+    low_hassle: true
+  challenge:
+    claude: 'doubt: 79 EUR needs 177 shops, and approved platforms and shop vendors will ship connectors'
+    codex: 'kill: At €79 it needs 177 customers, breaching the brief''s 100-customer ceiling. Flip: Three
+      merchants prepay at least €150 a month for a connector that their chosen approved platform does
+      not supply.'
+    gemini: 'kill: At €79 monthly, this breaches the €150 price floor constraint and faces commoditization
+      from over 130 approved platforms shipping free connectors. Flip: Five e-commerce merchants pre-pay
+      €150 monthly because approved platform connectors fail complex PrestaShop B2C e-reporting. (gemini-3.7-flash)'
+  status: proposed
+  decision: null
+  consensus: 0.0
+- id: sc-015
+  title: EUDR due-diligence filings for micro importers
+  pitch: From 30 June 2027 micro and small operators placing coffee, cocoa, wood, leather, rubber, soy
+    or palm products on the EU market must file due-diligence statements with supplier geolocation data.
+    A done-for-you service collects supplier plots, runs the risk check and files the statements in the
+    EU system.
+  buyer: micro and small importers and roasters in France (coffee, chocolate, furniture, leather)
+  job: EUDR due diligence and filings
+  geo: FR/EU
+  price_eur_month: 200
+  customers_for_14k: 70
+  pattern: deadline wave
+  where_money_is_proven: consultants' EUDR packages; prices of platforms for large operators
+  why_low_hassle: agents compile the files; one human check per filing
+  biggest_risk: the law has been delayed twice and may be simplified again; chasing supplier data is operations-heavy
+  first_48h_test: Call 15 French specialty coffee roasters about their EUDR plan and offer a priced filing
+    service
+  origin: claude
+  round: '2026-10-23'
+  related: []
+  evidence: []
+  first_read:
+    C: U
+    P: U
+    R: U
+    H: 1
+    F: 1
+    conflict: none
+    low_hassle: true
+  challenge:
+    claude: 'doubt: proposed by all three, but delays and liability; viable only as a document tool that
+      leaves decisions to the importer'
+    codex: 'kill: Obtaining supplier geolocation data and completing due diligence is supplier-chasing
+      work that will overwhelm a €200 monthly service. Flip: Three importers pay €200 and provide complete
+      supplier data for a sample filing within one week, without founder chasing.'
+    gemini: 'kill: Chasing third-world supplier data introduces too much hassle, directly breaking a constraint
+      against heavy, non-scalable manual operations. Flip: Five coffee roasters confirm they already hold
+      structured supplier geolocation data ready for automated API extraction. (gemini-3.1-pro)'
+  status: proposed
+  decision: null
+  also_by:
+  - codex
+  - gemini
+  variants:
+  - 'sc-019 (codex): Importer supplier-evidence collector'
+  - 'sc-034 (gemini): Shopify EUDR Compliance Dossier Generator'
+  consensus: 0.0
+- id: sc-016
+  title: Paid idea tests in seven days for founders and innovation teams
+  pitch: 'Most idea validation stops at desk research. A productized service runs a real test: a landing
+    page, real ad spend, a cost per lead or per payment intent against a threshold written in advance,
+    and a verdict in a week.'
+  buyer: indie founders, small product teams and corporate innovation teams in France and the EU
+  job: learn what a customer costs before building
+  geo: FR/EU
+  price_eur_month: 1500
+  customers_for_14k: 10
+  pattern: the founder's own itch
+  where_money_is_proven: freelance gigs for landing page plus ads tests on Malt, Codeur.com and Upwork;
+    validation agencies' prices
+  why_low_hassle: a repeatable pipeline does most of each test
+  biggest_risk: service work per client; ad-account risk on shared accounts; resembles an agency
+  first_48h_test: Offer three tests at 1,500 EUR on LinkedIn and Indie Hackers; count paid deposits
+  origin: claude
+  round: '2026-10-23'
+  related: []
+  evidence: []
+  first_read:
+    C: U
+    P: U
+    R: U
+    H: 3
+    F: 2
+    conflict: check
+    low_hassle: false
+  challenge:
+    claude: 'kill as a side business: production per client and the shared ad accounts at risk; keep as
+      the factory''s own engine'
+    codex: 'kill: Running landing pages and paid-ad tests for clients resembles the performance-marketing
+      agency work the brief excludes. Flip: A self-serve version with no managed ad buying wins three
+      €1,500 deposits from eligible product teams within a week.'
+    gemini: 'kill: Breaks the day-job constraint by running agency-style performance ad campaigns and
+      requires heavy per-client operational labor. Flip: Three corporate teams prepay 1,500 EUR monthly
+      for self-serve automated tests without bespoke founder labor. (gemini-3.7-flash)'
+  status: proposed
+  decision: null
+  consensus: 0.0
+- id: sc-017
+  title: Packaging conformity file collector
+  pitch: Collect supplier documents, packaging specifications and signoffs into a file for each product.
+    Sell the document workflow for the EU packaging deadline; leave conformity decisions to the buyer's
+    specialist.
+  buyer: Operations lead at an EU personal-care brand with 10–100 employees
+  job: Staff already assemble packaging documentation for a mandatory deadline.
+  geo: EU
+  price_eur_month: 700
+  customers_for_14k: 20
+  pattern: deadline wave
+  where_money_is_proven: Ask brands for the hours or consultant invoices behind one completed packaging
+    file; check relevant Codeur.com project budgets.
+  why_low_hassle: Customers upload documents and approve files themselves; delivery is an asynchronous
+    workflow.
+  biggest_risk: Unknown willingness to pay monthly after the initial backlog is cleared.
+  first_48h_test: Show five operations leads a sample file and ask for a paid pilot covering ten products.
+  origin: codex
+  round: '2026-10-23'
+  related: []
+  evidence: []
+  first_read:
+    C: U
+    P: U
+    R: U
+    H: 0
+    F: 1
+    conflict: none
+    low_hassle: true
+  challenge:
+    claude: 'keep-ish: 700 EUR a month is bold; check whether demand survives once the backlog is cleared'
+    codex: 'keep: Brands must assemble packaging files and already pay for that work; a €700 document
+      workflow needs only 20 customers. Flip: Three buyers say their backlog is a one-time job and refuse
+      monthly billing after seeing a ten-product pilot.'
+    gemini: 'kill: A slipping deadline: because the August 2026 compliance date has passed, ongoing monthly
+      subscription revenue will dry up immediately after the backlog. Flip: Finding five brands still
+      facing continuous, newly introduced packaging updates that justify signing a 700 EUR monthly pilot.
+      (gemini-3.1-pro)'
+  status: proposed
+  decision: null
+  also_by:
+  - gemini
+  variants:
+  - 'sc-042 (gemini): EU Packaging Dossier Service'
+  consensus: 1.75
+- id: sc-018
+  title: Green-claim evidence register
+  pitch: Give each environmental claim an owner, supporting files, review date and approval history. The
+    product tracks evidence; it does not decide whether a claim is lawful.
+  buyer: Sustainability lead at an EU apparel retailer with 20–200 employees
+  job: Staff already review and document claims used on products and packaging.
+  geo: EU
+  price_eur_month: 500
+  customers_for_14k: 28
+  pattern: deadline wave
+  where_money_is_proven: Ask retailers to show the staff time or external review invoices for a recent
+    claim audit.
+  why_low_hassle: A register, reminders and exports can run without ongoing founder involvement.
+  biggest_risk: The rules and buyers' processes vary; France has not transposed the ban cited in the brief.
+  first_48h_test: Ask five retailers to walk through their last ten claims and offer to organize one evidence
+    register for a fee.
+  origin: codex
+  round: '2026-10-23'
+  related:
+  - sc-005
+  evidence: []
+  first_read:
+    C: U
+    P: U
+    R: U
+    H: 0
+    F: 0
+    conflict: none
+    low_hassle: true
+  challenge:
+    claude: 'doubt: France has not transposed the ban; an evidence register is a feature of compliance
+      suites'
+    codex: 'keep: Retailers already spend staff or consultant time documenting green claims, and an evidence
+      register avoids making legal decisions. Flip: Five retailers show no recurring evidence-review spend
+      and none will pay €500 for a pilot.'
+    gemini: 'kill: A slipping deadline from France not transposing the directive removes enforcement pressure,
+      eliminating urgent money flow from target apparel retailers. Flip: Guessing: Three French apparel
+      retailers sign paid LOIs within one week to prevent cross-border EU regulatory fines. (gemini-3.7-flash)'
+  status: proposed
+  decision: null
+  also_by:
+  - gemini
+  variants:
+  - 'sc-032 (gemini): EU Green Claims Substantiation Vault'
+  consensus: 1.25
+- id: sc-019
+  title: Importer supplier-evidence collector
+  pitch: Chase suppliers for documents, record versions and export a review packet for each shipment.
+    Start with small EU importers preparing for the EUDR deadline, with compliance decisions kept outside
+    the product.
+  buyer: Operations manager at an EU coffee importer with 5–50 employees
+  job: Staff or consultants already gather supplier evidence for mandatory due diligence.
+  geo: EU
+  price_eur_month: 700
+  customers_for_14k: 20
+  pattern: deadline wave
+  where_money_is_proven: Review an importer's current document-chasing hours and consultant invoices;
+    ask for a paid shipment pilot.
+  why_low_hassle: Supplier requests, reminders and exports are repeatable; the customer handles judgment
+    and exceptions.
+  biggest_risk: Unknown whether small importers can supply the required source documents at all.
+  first_48h_test: Interview five importers and manually collect the documents for one shipment at a quoted
+    price.
+  origin: codex
+  round: '2026-10-23'
+  related: []
+  evidence: []
+  first_read:
+    C: U
+    P: U
+    R: U
+    H: null
+    F: null
+    conflict: null
+  challenge: {}
+  status: merged
+  decision: null
+  merged_into: sc-015
+- id: sc-020
+  title: Missing supplier-invoice detector
+  pitch: Match card and bank transactions against invoices in a shared inbox, then list the missing documents
+    for staff to request. This addresses a French admin problem the founder has experienced directly.
+  buyer: Office manager at a French design studio with 5–30 employees
+  job: Staff already reconcile expenses and chase missing supplier invoices.
+  geo: FR
+  price_eur_month: 250
+  customers_for_14k: 56
+  pattern: founder's own itch
+  where_money_is_proven: Time an office manager's monthly invoice chase and inspect the cost of their
+    current expense tool or bookkeeper.
+  why_low_hassle: A monthly exception report and email requests avoid live support and accounting advice.
+  biggest_risk: Expense platforms may add the same matching feature.
+  first_48h_test: Offer three studios a paid, manually prepared missing-invoice report using one month's
+    exports.
+  origin: codex
+  round: '2026-10-23'
+  related: []
+  evidence: []
+  first_read:
+    C: U
+    P: U
+    R: U
+    H: null
+    F: null
+    conflict: null
+  challenge: {}
+  status: merged
+  decision: null
+  merged_into: sc-004
+- id: sc-021
+  title: Domiciliation mail intake
+  pitch: Turn incoming mail scans into named customer records with dispatch confirmations and a searchable
+    history. Sell to domiciliation providers that currently sort and forward mail by hand.
+  buyer: Operations manager at a French domiciliation provider with 2–20 employees
+  job: Staff already scan, classify and forward customer mail.
+  geo: FR
+  price_eur_month: 350
+  customers_for_14k: 40
+  pattern: paid labour → software
+  where_money_is_proven: Observe one provider's daily mail run and calculate staff minutes per envelope
+    from payroll costs.
+  why_low_hassle: The provider keeps physical handling; software covers intake, notifications and records.
+  biggest_risk: Customer volumes may be too low for a €350 monthly tool.
+  first_48h_test: Ask five providers for daily envelope counts and pitch a paid trial on one intake batch.
+  origin: codex
+  round: '2026-10-23'
+  related: []
+  evidence: []
+  first_read:
+    C: U
+    P: U
+    R: U
+    H: 0
+    F: 2
+    conflict: none
+    low_hassle: true
+  challenge:
+    claude: 'keep: a B2B buyer with daily manual work and a firsthand view of the market; count providers
+      in SIRENE'
+    codex: 'keep: Domiciliation providers already pay staff to scan and route mail, and the proposed software
+      leaves physical handling with them. Flip: Five providers each show too little daily mail-handling
+      time to save €350 a month.'
+    gemini: 'keep: It captures existing money flow by automating staff labor, perfectly leveraging your
+      insider edge in French domiciliation without requiring heavy operations. Flip: I am guessing sorting
+      is heavily manual; observing that providers already use off-the-shelf bulk OCR software would reverse
+      this. (gemini-3.1-pro)'
+  status: proposed
+  decision: null
+  consensus: 3.25
+- id: sc-022
+  title: Subcontractor certificate tracker
+  pitch: Collect insurance certificates from subcontractors, flag expiry dates and give project managers
+    a current document list. Keep the contractor responsible for deciding whether a certificate is sufficient.
+  buyer: Project administrator at a French construction contractor with 10–100 employees
+  job: Staff already chase subcontractor insurance documents before and during projects.
+  geo: FR
+  price_eur_month: 500
+  customers_for_14k: 28
+  pattern: paid labour → software
+  where_money_is_proven: Ask contractors to show a recent certificate chase and estimate staff hours;
+    inspect freelancer admin budgets on Codeur.com.
+  why_low_hassle: Scheduled reminders and a document dashboard need no live operational coverage.
+  biggest_risk: Subcontractors may ignore automated requests, leaving manual follow-up.
+  first_48h_test: Run a paid manual chase for one contractor's ten subcontractors and measure response
+    rates.
+  origin: codex
+  round: '2026-10-23'
+  related: []
+  evidence: []
+  first_read:
+    C: U
+    P: U
+    R: U
+    H: 0
+    F: 1
+    conflict: check
+    low_hassle: true
+  challenge:
+    claude: 'keep-ish: a legal duty that is real for contractors; check that the buyers are not lead buyers'
+    codex: 'keep: Contractors already spend staff time chasing expiring certificates, and reminders plus
+      a document list are a bounded €500 workflow. Flip: In a paid ten-subcontractor pilot, automated
+      requests fail to reduce the administrator''s chase time.'
+    gemini: 'kill: Named competitors like Provigis already dominate French subcontractor document collection,
+      making this an uphill battle without a construction edge. Flip: Cold call five construction PMs;
+      I am guessing they use a mandatory industry platform rather than chasing PDFs. (gemini-3.1-pro)'
+  status: proposed
+  decision: null
+  consensus: 1.75
+- id: sc-023
+  title: Bakery shift handoff
+  pitch: Give each shift a short checklist, an issue log and an owner for unresolved tasks. Focus on the
+    small bakery where missed handoffs cost staff time.
+  buyer: Owner of a French bakery group with 2–10 shops
+  job: Managers already spend paid time checking and correcting missed shift tasks.
+  geo: FR
+  price_eur_month: 250
+  customers_for_14k: 56
+  pattern: paid labour → software
+  where_money_is_proven: Shadow opening and closing at three shops; ask owners to price the manager time
+    spent fixing missed tasks.
+  why_low_hassle: A fixed checklist and exception digest are self-serve and require little content upkeep.
+  biggest_risk: Staff may resist another daily tool.
+  first_48h_test: Set up one shop's checklist in a simple form and ask the owner to pay for a two-week
+    trial.
+  origin: codex
+  round: '2026-10-23'
+  related: []
+  evidence: []
+  first_read:
+    C: U
+    P: U
+    R: U
+    H: 0
+    F: 0
+    conflict: none
+    low_hassle: true
+  challenge:
+    claude: 'kill: low-budget buyer, field sales, crowded checklist apps'
+    codex: 'kill: A €250 checklist must displace cheap tools such as SafetyCulture or Jolt, and the bakery-specific
+      reason to switch is unproven. Flip: Three multi-shop bakeries pay €250 for a trial after seeing
+      those alternatives.'
+    gemini: 'kill: Named competitors like Connecteam provide mature checklists below this price floor,
+      making single-bakery sales too high-friction part-time. Flip: I am guessing five multi-shop bakery
+      owners prepay 250 EUR after testing a one-page handoff prototype. (gemini-3.7-flash)'
+  status: proposed
+  decision: null
+  consensus: 0.0
+- id: sc-024
+  title: Hotel review work queue
+  pitch: Combine reviews from several properties into one queue with ownership, approved response templates
+    and overdue alerts. Offer a narrow alternative to broader guest-experience suites.
+  buyer: Guest-experience manager at an EU hotel group with 3–20 properties
+  job: Staff already monitor and reply to public reviews.
+  geo: EU
+  price_eur_month: 300
+  customers_for_14k: 47
+  pattern: unbundle a paid incumbent
+  where_money_is_proven: Inspect guest-experience software invoices or measure review-response hours at
+    hotel groups.
+  why_low_hassle: The customer approves every reply; the product provides a queue and templates rather
+    than a managed response service.
+  biggest_risk: Review platforms' access rules and existing suites may make the narrow offer unattractive.
+  first_48h_test: Show five hotel managers a combined mock queue and ask what they pay today for review
+    handling.
+  origin: codex
+  round: '2026-10-23'
+  related: []
+  evidence: []
+  first_read:
+    C: U
+    P: U
+    R: U
+    H: 1
+    F: 0
+    conflict: none
+    low_hassle: true
+  challenge:
+    claude: 'kill: crowded guest-experience suites; review-platform access'
+    codex: 'kill: Guest-experience suites such as ReviewPro and TrustYou already offer review queues,
+      so the narrow €300 replacement needs a clear missing job. Flip: Three hotel groups pay €300 for
+      a pilot after showing that their current suite cannot assign and track replies as needed.'
+    gemini: 'kill: Too much hassle securing restricted API access from Booking and Google while fighting
+      named competitors in a market without an edge. Flip: Get three hotel managers to prepay on a mockup
+      without demanding deep property management system integration. (gemini-3.1-pro)'
+  status: proposed
+  decision: null
+  consensus: 0.0
+- id: sc-025
+  title: Jira external-access expiry
+  pitch: List contractors and guests across Jira projects, assign an expiry date and prompt an administrator
+    to review access. Package it as a small Atlassian Marketplace app.
+  buyer: Jira administrator at a software company with 50–250 employees
+  job: IT staff already perform periodic access reviews.
+  geo: global
+  price_eur_month: 400
+  customers_for_14k: 35
+  pattern: marketplace gap
+  where_money_is_proven: Inspect paid access-management apps and top-grossing listings in the Atlassian
+    Marketplace; ask administrators for their review hours.
+  why_low_hassle: Scheduled reports and admin-approved changes avoid round-the-clock security operations.
+  biggest_risk: The marketplace may already serve this exact job well; that gap is unverified.
+  first_48h_test: Audit competing listings and interview five Jira administrators before building.
+  origin: codex
+  round: '2026-10-23'
+  related:
+  - sc-001
+  evidence: []
+  first_read:
+    C: U
+    P: U
+    R: U
+    H: 0
+    F: 2
+    conflict: none
+    low_hassle: true
+  challenge:
+    claude: 'keep: a narrow security job in a paying marketplace, known firsthand from access audits'
+    codex: 'keep: A scheduled Jira access-review app has a specific paid IT job, a €400 price and marketplace
+      distribution without ongoing service delivery. Flip: A one-week marketplace audit finds a well-rated
+      app already doing contractor expiry reviews at a much lower effective price.'
+    gemini: 'kill: Atlassian Guard provides native guest management, and competing Marketplace access-control
+      plugins cost well below €400/month for 50–250 users. Flip: Five Jira admins paying over €400/month
+      for third-party contractor access-expiry tools on Atlassian Marketplace. (gemini-3.7-flash)'
+  status: proposed
+  decision: null
+  consensus: 2.25
+- id: sc-026
+  title: WordPress care-plan proof
+  pitch: Generate a monthly client report showing plugin updates, backups and checks completed by a maintenance
+    shop. Sell one focused reporting tool to firms already billing for WordPress care plans.
+  buyer: Owner of a WordPress maintenance firm with 1–10 employees
+  job: Staff already prepare client proof of maintenance work.
+  geo: global
+  price_eur_month: 200
+  customers_for_14k: 70
+  pattern: marketplace gap
+  where_money_is_proven: Inspect paid WordPress maintenance plugins and care-plan listings; time a firm's
+    current monthly reporting.
+  why_low_hassle: Reports run on a schedule and customers remain responsible for the actual maintenance.
+  biggest_risk: Existing tools may bundle reporting at a lower effective price.
+  first_48h_test: Review competing plugin prices and ask ten maintenance shops for one anonymized report
+    and a purchase commitment.
+  origin: codex
+  round: '2026-10-23'
+  related:
+  - sc-008
+  evidence: []
+  first_read:
+    C: U
+    P: U
+    R: U
+    H: 0
+    F: 1
+    conflict: none
+    low_hassle: true
+  challenge:
+    claude: 'doubt: maintenance tools already bundle client reports'
+    codex: 'kill: WordPress care tools such as ManageWP and MainWP already bundle client reports, leaving
+      little reason to add a €200 reporting subscription. Flip: Three maintenance firms using those tools
+      pay €200 specifically for proof their bundled reports cannot produce.'
+    gemini: 'kill: Competitors like ManageWP, MainWP, and WP Umbrella already bundle white-label client
+      reporting into core maintenance tools for a fraction of the price. Flip: Three maintenance agencies
+      committing €200/month because existing tools lack critical custom reporting their clients demand.
+      (gemini-3.7-flash)'
+  status: proposed
+  decision: null
+  consensus: 0.0
+- id: sc-027
+  title: Training-course evidence pack
+  pitch: Turn a training provider's existing attendance and signoff templates into a course-by-course
+    document workflow. Export complete packets for the provider's own review without judging compliance.
+  buyer: Operations director at a French training provider with 3–20 employees
+  job: Administrators already assemble attendance and signoff documents for each course.
+  geo: FR
+  price_eur_month: 350
+  customers_for_14k: 40
+  pattern: template → tool
+  where_money_is_proven: Review a provider's current templates, administrator hours and any document-tool
+    subscription.
+  why_low_hassle: The product repeats a fixed workflow and produces exports; the provider handles exceptions.
+  biggest_risk: Providers may already get this function from their training-management software.
+  first_48h_test: Ask five providers for a sample course packet and quote a paid setup for one course.
+  origin: codex
+  round: '2026-10-23'
+  related: []
+  evidence: []
+  first_read:
+    C: U
+    P: U
+    R: U
+    H: 0
+    F: 1
+    conflict: none
+    low_hassle: true
+  challenge:
+    claude: 'doubt: training-management suites already cover the audit evidence'
+    codex: 'kill: Training-management software such as Digiforma already handles course documents, so
+      a separate €350 evidence pack needs an unserved workflow. Flip: Three providers using existing software
+      pay €350 for packets it cannot export.'
+    gemini: 'kill: Named competitors: all-in-one French training platforms like Digiforma or Dendreo already
+      handle document generation natively, making this standalone tool redundant. Flip: I am guessing;
+      finding five providers who use generic CRMs and will pay for standalone documentation reverses this.
+      (gemini-3.1-pro)'
+  status: proposed
+  decision: null
+  consensus: 0.0
+- id: sc-028
+  title: Supplier specification change log
+  pitch: Record changes between supplier specifications and the versions purchasing and production approved.
+    Give small manufacturers a focused history they can search without buying a full product-lifecycle
+    suite.
+  buyer: Purchasing manager at an EU equipment manufacturer with 20–150 employees
+  job: Staff already compare and circulate supplier specification revisions.
+  geo: EU
+  price_eur_month: 400
+  customers_for_14k: 35
+  pattern: unbundle a paid incumbent
+  where_money_is_proven: Measure purchasing and engineering hours spent on recent revisions; inspect current
+    product-lifecycle software invoices.
+  why_low_hassle: Version comparison, approvals and exports are asynchronous and require no live operations.
+  biggest_risk: The workflow may need more integrations than a small team can maintain.
+  first_48h_test: Ask five manufacturers for two anonymized specification versions and price a pilot around
+    their review process.
+  origin: codex
+  round: '2026-10-23'
+  related: []
+  evidence: []
+  first_read:
+    C: U
+    P: U
+    R: U
+    H: 1
+    F: 0
+    conflict: none
+    low_hassle: true
+  challenge:
+    claude: 'kill: integrations with product-lifecycle and ERP systems are the work'
+    codex: 'keep: Purchasing and engineering staff already review supplier revisions, and a searchable
+      approval history can replace that paid labour without live operations. Flip: Five manufacturers
+      show fewer than one consequential revision a month and none accepts a €400 pilot.'
+    gemini: 'kill: Breaks the low-touch constraint because manufacturing spec workflows require complex
+      enterprise integrations, custom formats, and lengthy internal stakeholder sign-offs. Flip: Three
+      mid-market manufacturers immediately prepay for a standalone document diff tool without integrations.
+      (gemini-3.7-flash)'
+  status: proposed
+  decision: null
+  consensus: 1.0
+- id: sc-029
+  title: Returns exception digest
+  pitch: Flag returns that have stalled between receipt, refund and restocking, then send one daily exception
+    list. Target stores that already pay staff or a returns platform to manage the queue.
+  buyer: Operations manager at an EU online homewares store with 5–40 employees
+  job: Staff already reconcile returns and chase unresolved cases.
+  geo: EU
+  price_eur_month: 300
+  customers_for_14k: 47
+  pattern: unbundle a paid incumbent
+  where_money_is_proven: Inspect returns-platform subscriptions and time a store's daily exception review.
+  why_low_hassle: It reports exceptions from existing exports; store staff resolve them.
+  biggest_risk: The incumbent returns platform may already expose the same exceptions.
+  first_48h_test: Get anonymized return exports from three stores and produce a paid one-week exception
+    digest.
+  origin: codex
+  round: '2026-10-23'
+  related: []
+  evidence: []
+  first_read:
+    C: U
+    P: U
+    R: U
+    H: 0
+    F: 0
+    conflict: none
+    low_hassle: true
+  challenge:
+    claude: 'kill: returns platforms expose these exceptions'
+    codex: 'kill: Returns platforms already manage the receipt-to-refund workflow, so a €300 exception
+      list may duplicate a screen the store has paid for. Flip: Three stores using a returns platform
+      each pay €300 for a one-week digest that catches cases their platform missed.'
+    gemini: 'kill: Too much hassle to integrate with bespoke store operations, and you lack an edge to
+      unseat named competitors. Flip: Three stores prepay for a manual one-week digest generated from
+      their standard CSV exports. (gemini-3.1-pro)'
+  status: proposed
+  decision: null
+  consensus: 0.0
+- id: sc-030
+  title: Association renewal desk
+  pitch: Track member renewals, send reminders and show an administrator who needs personal follow-up.
+    Focus on associations large enough to pay staff, but small enough to buy in one call.
+  buyer: Executive director of a French trade association with 200–2,000 members
+  job: Staff already process and chase annual membership renewals.
+  geo: FR
+  price_eur_month: 300
+  customers_for_14k: 47
+  pattern: paid labour → software
+  where_money_is_proven: Ask associations for renewal-season staff hours and current membership-software
+    invoices.
+  why_low_hassle: Imports, reminders and an exception list run on a predictable annual cycle.
+  biggest_risk: Annual workload may make a monthly subscription hard to justify.
+  first_48h_test: Interview five directors and ask for a paid pilot covering their next 50 renewals.
+  origin: codex
+  round: '2026-10-23'
+  related: []
+  evidence: []
+  first_read:
+    C: U
+    P: U
+    R: U
+    H: 0
+    F: 1
+    conflict: none
+    low_hassle: true
+  challenge:
+    claude: 'doubt: annual workload and small budgets'
+    codex: 'kill: Annual renewals make a €300 monthly subscription hard to justify, especially beside
+      membership tools such as AssoConnect and Wild Apricot. Flip: Three associations pay €300 a month
+      for a pilot covering work they perform outside renewal season.'
+    gemini: 'kill: Trade association renewals are highly seasonal, making a €300 monthly subscription
+      unviable against entrenched all-in-one competitors like AssoConnect. Flip: Three association directors
+      immediately pre-pay a €3,600 annual contract to eliminate manual renewal chasing staff time. (gemini-3.7-flash)'
+  status: proposed
+  decision: null
+  consensus: 0.0
+- id: sc-031
+  title: Industrial catalogue cleanup
+  pitch: Convert supplier PDFs into consistent French and English product tables, with Romanian freelancers
+    checking the output against each distributor's terminology. Sell a capped monthly batch rather than
+    open-ended catalogue work.
+  buyer: Catalogue manager at an EU industrial-parts distributor with 5–50 employees
+  job: Distributors already pay staff or freelancers to normalize and translate supplier product data.
+  geo: EU
+  price_eur_month: 800
+  customers_for_14k: 18
+  pattern: arbitrage machine
+  where_money_is_proven: Inspect catalogue-cleanup and translation budgets on Codeur.com and Freelancer.com;
+    request recent supplier-PDF processing costs.
+  why_low_hassle: Fixed input formats, a batch cap and freelancer checks keep founder work to sampling
+    and exceptions.
+  biggest_risk: Document variety could erase the margin; volume and processing time are guesses.
+  first_48h_test: Price and deliver a paid batch of ten supplier sheets, recording processing time and
+    error rates.
+  origin: codex
+  round: '2026-10-23'
+  related: []
+  evidence: []
+  first_read:
+    C: U
+    P: U
+    R: U
+    H: 1
+    F: 2
+    conflict: none
+    low_hassle: true
+  challenge:
+    claude: 'keep-ish: an arbitrage machine with Romanian freelancers; the margin depends on document
+      variety'
+    codex: 'keep: Distributors already pay people to clean supplier data, and €800 needs only 18 customers
+      if capped batches retain a healthy margin. Flip: A paid ten-sheet batch needs enough manual correction
+      to push its gross margin below 60%.'
+    gemini: 'keep: Leverages your exact edges in AI agent orchestration and Romanian labor arbitrage while
+      comfortably sitting above the B2B price floor. Flip: Process ten varied PDFs; I am guessing the
+      manual QA hours will wipe out the 800 EUR margin. (gemini-3.1-pro)'
+  status: proposed
+  decision: null
+  consensus: 2.75
+- id: sc-032
+  title: EU Green Claims Substantiation Vault
+  pitch: Automated crawler and dossier generator for EU e-commerce brands to verify product claims against
+    the EU Green Claims Directive and prevent regulatory fines.
+  buyer: Head of Marketing / Compliance at EU consumer brand (10-100 staff).
+  job: Auditing product copy and assembling mandatory environmental substantiation dossiers, currently
+    paid to ESG consultants.
+  geo: EU
+  price_eur_month: 290
+  customers_for_14k: 49
+  pattern: deadline wave
+  where_money_is_proven: ESG compliance consulting invoices and legal audit fees for marketing claims.
+  why_low_hassle: Asynchronous scheduled web scraping and automated LLM compliance checks against EU taxonomy;
+    zero synchronous support.
+  biggest_risk: National transposition delays across EU member states slowing down immediate buyer panic.
+  first_48h_test: Cold email 30 French D2C e-commerce CMOs offering a free 10-page green claims risk report.
+  origin: gemini
+  round: '2026-10-23'
+  related: []
+  evidence: []
+  first_read:
+    C: U
+    P: U
+    R: U
+    H: null
+    F: null
+    conflict: null
+  challenge: {}
+  status: merged
+  decision: null
+  merged_into: sc-018
+- id: sc-033
+  title: 100-Day TLS Automated Provisioner for Embedded Devices
+  pitch: A drop-in agent and API proxy that automates short-lived TLS certificate renewals for legacy
+    IoT devices lacking native ACME/Certbot support.
+  buyer: VP of Engineering or IT Director at connected hardware companies (10-100 staff).
+  job: Preventing device outages caused by the March 2027 100-day certificate cap; currently managed via
+    manual scripts.
+  geo: global
+  price_eur_month: 350
+  customers_for_14k: 40
+  pattern: deadline wave
+  where_money_is_proven: DigiCert/Sectigo enterprise PKI management spend and custom OpenSSL freelance
+    contracts on Upwork.
+  why_low_hassle: Pure API/daemon software architecture; set-and-forget deployment with low customer touch
+    after setup.
+  biggest_risk: Hardware teams creating brittle internal cron jobs instead of paying for third-party automation.
+  first_48h_test: Publish a technical teardown on LinkedIn/Reddit targeting embedded engineers; measure
+    demo call bookings.
+  origin: gemini
+  round: '2026-10-23'
+  related:
+  - sc-011
+  evidence: []
+  first_read:
+    C: U
+    P: U
+    R: U
+    H: 2
+    F: 1
+    conflict: none
+    low_hassle: false
+  challenge:
+    claude: 'kill as framed: firmware integration per customer and outage blame; sc-011''s MSP angle is
+      lighter'
+    codex: 'kill: A failed renewal on embedded devices can cause outages, so a purported set-and-forget
+      proxy still creates on-call liability. Flip: Three hardware teams pay €350 for a pilot limited to
+      noncritical devices with their own engineers owning failures.'
+    gemini: 'keep: Solves an immutable March 2027 deadline where connected hardware teams must automate
+      renewals or risk bricking legacy deployed field devices. Flip: Interviews reveal hardware leads
+      universally prefer internal bash scripts or custom private root CAs over third-party agents. (gemini-3.7-flash)'
+  status: proposed
+  decision: null
+  also_by: []
+  variants:
+  - 'sc-040 (gemini): Legacy Device TLS Expiry Sentinel'
+  consensus: 1.25
+- id: sc-034
+  title: Shopify EUDR Compliance Dossier Generator
+  pitch: Shopify app that collects supplier geolocation data and auto-generates mandatory EU Deforestation
+    Regulation due diligence statements for small importers.
+  buyer: Operations Manager at EU Shopify stores selling timber, leather, coffee, or cocoa (5-30 staff).
+  job: Filing EU customs due diligence declarations to clear imports before the June 2027 deadline.
+  geo: EU
+  price_eur_month: 175
+  customers_for_14k: 80
+  pattern: marketplace gap
+  where_money_is_proven: Customs clearance fees and paid GDPR/tax compliance apps on the Shopify App Store.
+  why_low_hassle: Distribution through Shopify App Store; programmatic mapping of product metafields to
+    EU customs portal format.
+  biggest_risk: EU customs changing portal API integration specs close to the mandatory enforcement date.
+  first_48h_test: Post in Shopify merchant communities offering a free EUDR audit spreadsheet for coffee/leather
+    brands.
+  origin: gemini
+  round: '2026-10-23'
+  related: []
+  evidence: []
+  first_read:
+    C: U
+    P: U
+    R: U
+    H: null
+    F: null
+    conflict: null
+  challenge: {}
+  status: merged
+  decision: null
+  merged_into: sc-015
+- id: sc-035
+  title: Artisan WhatsApp Quote & Payment Bridge
+  pitch: Podium-style WhatsApp automation for French home-service contractors to send quotes, capture
+    signatures, and collect payments directly inside WhatsApp chats.
+  buyer: Owner of French artisan or renovation business (2-10 employees).
+  job: Chasing unpaid invoices and quote sign-offs on WhatsApp, currently lost to admin chaos.
+  geo: FR
+  price_eur_month: 190
+  customers_for_14k: 74
+  pattern: geography
+  where_money_is_proven: Podium and Jobber generating tens of millions in US/UK; French artisan spend
+    on Codeur administrative setups.
+  why_low_hassle: Integrates official WhatsApp Cloud API with French billing APIs (Pennylane/Stripe);
+    no hardware or complex custom dev.
+  biggest_risk: Meta changing WhatsApp Business API pricing tiers or strict template approval rules.
+  first_48h_test: Run 50 EUR of Meta ads targeting French contractors offering a WhatsApp quote-close
+    demo.
+  origin: gemini
+  round: '2026-10-23'
+  related:
+  - sc-003
+  evidence: []
+  first_read:
+    C: U
+    P: U
+    R: U
+    H: 1
+    F: 1
+    conflict: check
+    low_hassle: true
+  challenge:
+    claude: 'doubt: tradespeople are frequent lead buyers (conflict) and WhatsApp''s API is a single point
+      of failure'
+    codex: 'kill: WhatsApp Business onboarding, quote software, signatures and payments make each €190
+      contractor account too setup-heavy for a few founder hours a week. Flip: Three contractors pay €190
+      and complete a real quote-to-payment flow in a week using the same setup.'
+    gemini: 'kill: French artisans rarely pay 190 EUR monthly for a single-channel bridge when comprehensive
+      French invoicing suites cost under 50 EUR. Flip: Five French contractors prepay 190 EUR monthly
+      after seeing a Meta ad prototype demo. (gemini-3.7-flash)'
+  status: proposed
+  decision: null
+  consensus: 0.0
+- id: sc-036
+  title: EU Green Claims Compliance Watchdog
+  pitch: Scans e-commerce catalogs for prohibited generic environmental claims and generates remediation
+    advice. Combines automated scraping with Romanian human-in-the-loop validation for audit confidence.
+  buyer: Head of E-commerce or Operations at EU consumer brands with 10–50 employees.
+  job: Auditing product copy against the EU Green Claims Directive to prevent regulatory fines.
+  geo: EU
+  price_eur_month: 290
+  customers_for_14k: 49
+  pattern: paid labour -> software
+  where_money_is_proven: Law firms and ESG consultants billing 2,000+ EUR per catalog audit.
+  why_low_hassle: Weekly asynchronous catalog scans. Romanian contractors verify edge cases; zero 24/7
+    on-call duty.
+  biggest_risk: 'Guess: Divergent enforcement timelines across individual EU member states slowing initial
+    buyer urgency.'
+  first_48h_test: Cold LinkedIn outreach offering 10 free catalog audits to EU Shopify brand founders.
+  origin: gemini
+  round: '2026-10-23'
+  related: []
+  evidence: []
+  first_read:
+    C: U
+    P: U
+    R: U
+    H: null
+    F: null
+    conflict: null
+  challenge: {}
+  status: merged
+  decision: null
+  merged_into: sc-005
+- id: sc-037
+  title: French Agency Copyright Transfer Vault
+  pitch: Automatically generates and collects legally binding 'cession de droits d'auteur' contracts matching
+    freelancer invoices. Guarantees tax and IP audit compliance with zero manual paperwork.
+  buyer: Operations Directors at French digital, design, and software agencies with 10–50 employees.
+  job: Securing mandatory French copyright assignment slips for client deliverables to pass tax audits.
+  geo: FR
+  price_eur_month: 190
+  customers_for_14k: 74
+  pattern: paid labour -> software
+  where_money_is_proven: Freelance platforms charging compliance fees; lawyers charging 500+ EUR for IP
+    assignment templates.
+  why_low_hassle: Asynchronous document collection triggered by email or invoice webhooks; no real-time
+    operations.
+  biggest_risk: 'Guess: Agency owners mistakenly assuming standard freelance invoices automatically transfer
+    all intellectual property.'
+  first_48h_test: Message 30 French agency owners asking how they currently track freelancer copyright
+    certificates.
+  origin: gemini
+  round: '2026-10-23'
+  related:
+  - sc-010
+  evidence: []
+  first_read:
+    C: U
+    P: U
+    R: U
+    H: 0
+    F: 1
+    conflict: none
+    low_hassle: true
+  challenge:
+    claude: 'doubt: real legal need, but templates cover it cheaply'
+    codex: 'kill: A guarantee of tax and intellectual-property audit compliance turns document collection
+      into legal advice, while the claimed mandatory slips are unverified. Flip: Three agencies pay €190
+      for a vault using their lawyer-approved contracts, with no compliance guarantee.'
+    gemini: 'keep: French IP law strictly mandates explicit written copyright assignment per project,
+      solving a real audit liability for agencies via founder''s specific edge. Flip: Guess: Agency outreach
+      reveals owners refuse to pay, relying on free boilerplate clauses despite known legal invalidity.
+      (gemini-3.7-flash)'
+  status: proposed
+  decision: null
+  also_by: []
+  variants:
+  - 'sc-041 (gemini): French Freelancer IP Assignment Generator'
+  consensus: 1.25
+- id: sc-038
+  title: Ad Claim Green-Check
+  pitch: Automated scanning of live Meta and Google ad copy against the EU generic green claims ban. Flags
+    non-compliant terms and recommends verified environmental wording.
+  buyer: Head of Performance Marketing at EU consumer brands (10–50 employees) spending €20k+/month on
+    paid ads.
+  job: Auditing ad creatives and landing pages to avoid regulatory fines and sudden ad account bans.
+  geo: EU
+  price_eur_month: 299
+  customers_for_14k: 47
+  pattern: sell to advertisers whose spend is rising
+  where_money_is_proven: Existing legal compliance retainer spend and public ad library data showing active
+    sustainable ad campaigns.
+  why_low_hassle: Runs via public ad library scrapers and scheduled AI agents. Self-serve dashboard, no
+    24/7 on-call requirement.
+  biggest_risk: I do not know how aggressively national consumer protection agencies will enforce penalties
+    in year one.
+  first_48h_test: Scrape 100 sustainable EU e-commerce brands' ads, email 20 Heads of Marketing showing
+    their non-compliant live ads.
+  origin: gemini
+  round: '2026-10-23'
+  related:
+  - sc-005
+  - sc-013
+  evidence: []
+  first_read:
+    C: U
+    P: U
+    R: U
+    H: 0
+    F: 2
+    conflict: none
+    low_hassle: true
+  challenge:
+    claude: 'keep-ish: ad-claims checking fits the ad edge; merge with sc-013 if both are kept'
+    codex: 'kill: A scraper can flag green-claim words but cannot verify the evidence behind recommended
+      wording, making the offer a legal judgment. Flip: Three brands pay €299 for flags and evidence collection
+      with their own counsel approving every claim.'
+    gemini: 'kill: Breaks a constraint: interpreting ad copy against the EU green claims ban and recommending
+      verified wording constitutes regulated legal advice. Flip: I am guessing; a lawyer confirming in
+      writing that automated term-flagging avoids regulated legal advice restrictions reverses this. (gemini-3.1-pro)'
+  status: proposed
+  decision: null
+  consensus: 0.5
+- id: sc-039
+  title: Missing Invoice Chaser for French Accounting
+  pitch: A WhatsApp and email automation agent that matches bank transactions against accounting platforms
+    and chases employees for missing receipts before month-end.
+  buyer: Office Manager or CFO at French SMBs (10–50 employees) using tools like Pennylane or Spendesk.
+  job: Collecting missing vendor invoices and VAT receipts from staff to complete monthly accounting closes.
+  geo: FR
+  price_eur_month: 190
+  customers_for_14k: 74
+  pattern: the founder's own itch
+  where_money_is_proven: Freelance administrative assistant postings and accounting prep budgets visible
+    on Codeur.com.
+  why_low_hassle: Scheduled background jobs syncing with accounting APIs. WhatsApp messaging runs asynchronously
+    without live phone support.
+  biggest_risk: I guess employee responsiveness on WhatsApp might degrade without management enforcement.
+  first_48h_test: Manually chase missing invoices via WhatsApp for 3 friendly French business owners to
+    measure collection speed.
+  origin: gemini
+  round: '2026-10-23'
+  related: []
+  evidence: []
+  first_read:
+    C: U
+    P: U
+    R: U
+    H: null
+    F: null
+    conflict: null
+  challenge: {}
+  status: merged
+  decision: null
+  merged_into: sc-004
+- id: sc-040
+  title: Legacy Device TLS Expiry Sentinel
+  pitch: Continuous monitoring and alert system tracking 100-day TLS certificate expirations on legacy
+    IoT devices and embedded systems unable to use ACME.
+  buyer: VP of Engineering or Infrastructure Lead at European IoT and connected-device makers (20–100
+    employees).
+  job: Manually tracking certificate lifecycles in spreadsheets to prevent device bricking and customer
+    outages.
+  geo: EU
+  price_eur_month: 350
+  customers_for_14k: 40
+  pattern: template -> tool
+  where_money_is_proven: Enterprise uptime monitoring tools and marketplace plugins on Chrome Web Store
+    and Atlassian.
+  why_low_hassle: Simple polling worker checking certificate expiration dates externally; entirely self-serve
+    alert configuration.
+  biggest_risk: I do not know the exact percentage of deployed devices lacking automated ACME support.
+  first_48h_test: Post in r/embedded and IoT LinkedIn groups offering a free automated expiry check script.
+  origin: gemini
+  round: '2026-10-23'
+  related: []
+  evidence: []
+  first_read:
+    C: U
+    P: U
+    R: U
+    H: null
+    F: null
+    conflict: null
+  challenge: {}
+  status: merged
+  decision: null
+  merged_into: sc-033
+- id: sc-041
+  title: French Freelancer IP Assignment Generator
+  pitch: A lightweight tool that auto-generates mandatory French intellectual property assignment schedules
+    (cession de droits) attached to freelancer invoices and payment notices.
+  buyer: Managing Director at French software, design, and marketing agencies (5–30 employees).
+  job: Drafting legally required IP transfer clauses for contractor invoices to protect client deliverables.
+  geo: FR
+  price_eur_month: 150
+  customers_for_14k: 94
+  pattern: the founder's own itch
+  where_money_is_proven: Legal document template sales and legal tech subscriptions from French business
+    creation spikes.
+  why_low_hassle: Templatized document generation triggered by invoice upload or email forward. Zero active
+    maintenance or custom integrations.
+  biggest_risk: I do not know if agency founders prioritize IP risk before an acquisition audit.
+  first_48h_test: Cold email 30 French agency owners offering a 1-click IP annex template for contractor
+    invoices.
+  origin: gemini
+  round: '2026-10-23'
+  related: []
+  evidence: []
+  first_read:
+    C: U
+    P: U
+    R: U
+    H: null
+    F: null
+    conflict: null
+  challenge: {}
+  status: merged
+  decision: null
+  merged_into: sc-037
+- id: sc-042
+  title: EU Packaging Dossier Service
+  pitch: Agent-assisted conversion of supplier packaging spec sheets into certified EU packaging conformity
+    technical files, verified by low-cost back-office staff.
+  buyer: Operations or Compliance Lead at EU e-commerce importers (5–25 employees) importing packaged
+    goods.
+  job: Compiling complex packaging technical documentation mandated by EU packaging regulations.
+  geo: EU
+  price_eur_month: 280
+  customers_for_14k: 50
+  pattern: arbitrage machine
+  where_money_is_proven: Regulatory consultant hourly billings and customs compliance fees paid by physical
+    goods importers.
+  why_low_hassle: AI extracts specs from supplier PDFs; Romanian contractor conducts final human verification
+    check. No custom software builds.
+  biggest_risk: I guess supplier spec PDF formats vary widely, increasing initial manual parsing time.
+  first_48h_test: Reach out to 20 Amazon EU packaging sellers offering to generate one conformity file
+    for free.
+  origin: gemini
+  round: '2026-10-23'
+  related: []
+  evidence: []
+  first_read:
+    C: U
+    P: U
+    R: U
+    H: null
+    F: null
+    conflict: null
+  challenge: {}
+  status: merged
+  decision: null
+  merged_into: sc-017
+- id: sc-043
+  title: Supplier rebate and credit-note reconciliation
+  pitch: Compare distributor purchase exports against agreed supplier rebates and credit notes, then send
+    finance staff a monthly list of amounts to verify and claim.
+  buyer: Finance manager at an EU industrial distributor with 10–100 employees
+  job: Find supplier credits and rebates missed during monthly reconciliation.
+  geo: FR/EU
+  price_eur_month: 700
+  customers_for_14k: 20
+  pattern: paid labour → software
+  where_money_is_proven: Ask distributors for staff reconciliation hours and examples of recovered credits;
+    willingness to pay is a guess.
+  why_low_hassle: It reads contract and transaction exports, flags discrepancies and leaves supplier contact
+    to the customer.
+  biggest_risk: Supplier contract formats may make normalization too costly.
+  first_48h_test: Reconcile one distributor's anonymized month of purchases and rebate terms, quantify
+    missed credits and request a paid pilot.
+  origin: codex
+  round: '2026-10-23'
+  related: []
+  evidence: []
+  first_read:
+    C: U
+    P: U
+    R: U
+    H: null
+    F: null
+    conflict: null
+  challenge:
+    note: proposed by Codex as missing during the challenge; not challenged yet
+  status: proposed
+  decision: null
+- id: sc-044
+  title: Cleaning client-issue closure desk
+  pitch: Turn client emails and WhatsApp complaints into assigned site issues with photo evidence and
+    a daily overdue digest.
+  buyer: Owner of a French commercial-cleaning firm with 20–200 staff
+  job: Supervisors already chase cleaners and reassure clients when site issues go unresolved.
+  geo: FR
+  price_eur_month: 450
+  customers_for_14k: 32
+  pattern: paid labour → software
+  where_money_is_proven: Measure supervisor time on recent complaints and inspect current operations-software
+    invoices; the €450 price is a guess.
+  why_low_hassle: The firm handles the field work; software only assigns, records and escalates issues
+    asynchronously.
+  biggest_risk: Cleaners may not submit closure evidence consistently.
+  first_48h_test: Ask three firms for 20 recent complaints, build a manual issue digest and seek one paid
+    €450 pilot.
+  origin: codex
+  round: '2026-10-23'
+  related: []
+  evidence: []
+  first_read:
+    C: U
+    P: U
+    R: U
+    H: null
+    F: null
+    conflict: null
+  challenge:
+    note: proposed by Codex as missing during the challenge; not challenged yet
+  status: proposed
+  decision: null
+- id: sc-045
+  title: Wholesale invoice-dispute packet
+  pitch: Assemble the purchase order, delivery proof, invoice and correspondence for each short-paid or
+    disputed B2B invoice so an accounts-receivable clerk can resolve it.
+  buyer: Finance lead at a French wholesaler with 10–100 employees
+  job: Staff already search several systems to answer customer invoice disputes.
+  geo: FR/EU
+  price_eur_month: 600
+  customers_for_14k: 24
+  pattern: paid labour → software
+  where_money_is_proven: Time clerks assembling recent dispute files and ask what overdue amounts remain
+    unresolved; willingness to pay is a guess.
+  why_low_hassle: A monthly export and document search prepare packets; customer staff decide and send
+    responses.
+  biggest_risk: Missing delivery documents could make too many packets incomplete.
+  first_48h_test: Prepare five packets from one wholesaler's anonymized disputes, record time saved and
+    ask for a paid pilot.
+  origin: codex
+  round: '2026-10-23'
+  related: []
+  evidence: []
+  first_read:
+    C: U
+    P: U
+    R: U
+    H: null
+    F: null
+    conflict: null
+  challenge:
+    note: proposed by Codex as missing during the challenge; not challenged yet
+  status: proposed
+  decision: null

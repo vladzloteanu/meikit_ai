@@ -63,5 +63,6 @@ The design is `docs/factory-design.md` (approved 2026-10-20). Vlad decides; the 
 | Challenge techniques (digest of the gstack skills) | `docs/challenge-techniques.md` |
 | Build plans | `docs/superpowers/plans/` |
 | Designs of later parts, awaiting or after approval (the admin) | `docs/superpowers/specs/` |
+| The idea store: candidates, verdicts, refusals, rounds, scouting costs | `scout/` (`scout/README.md`) |
 | Build ledger, rehearsals, outside reviews | `.superpowers/sdd/` (git-ignored scratch) |
 | Fixture provenance | `tools/factory/fixtures/README.md` |

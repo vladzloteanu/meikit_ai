@@ -488,7 +488,8 @@ append and a one-screen summary. `CLAUDE.md` tells a new session to start with `
   (fast-growing advertisers, one-star reviews, "alternatives to X" demand, public complaints) in the
   intake format. *Amended 2026-10-22: the method is proposed in `docs/idea-sourcing.md` (money
   first, then pain; P/C/R plus hassle and fit; a pilot run by hand); the command is built only
-  after Vlad validates that pilot.*
+  after Vlad validates that pilot. Since 2026-10-23 the candidates live in the store `scout/`
+  (Claude, Codex and Gemini rounds, blind challenge, refusals that bind later rounds).*
 
 ## 15. Left to the builder
 

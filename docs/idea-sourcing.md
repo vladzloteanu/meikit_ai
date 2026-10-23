@@ -40,9 +40,14 @@ command gets built only after Vlad has judged one harvest run by hand (section 1
   Two other roads reach the same number: a productized service run by agents, and buying a
   business that already earns it.
 - **Your four sources, rated.**
-  - *Reddit* is the richest English pain source. But since November 2025 every API use needs
-    Reddit's approval, its `.json` endpoints are closed, and French SMB buyers barely use it. Use
-    it to check a pain and to borrow the buyers' words, not to discover ideas.
+  - *Reddit* is the richest English pain source.
+    - Access: Reddit's own API needs its approval since November 2025, but Apify's Reddit scraper
+      works, through NeuralBox or directly with the key the factory already holds (the probe of
+      2026-10-23, section 3).
+    - Precision: about a quarter of what a phrase search returns is a buyer's own pain.
+    - Reach: French SMB buyers barely use it.
+
+    Use it to check a pain and to borrow the buyers' words, not to discover ideas.
   - *Hacker News* is free and open, but its buyers are developers.
   - *New top spenders* can be tracked in the EU for 0–40 EUR a month from official sources
     (section 4). They prove that a category pays to acquire customers, not that it would pay you.
@@ -61,6 +66,12 @@ command gets built only after Vlad has judged one harvest run by hand (section 1
 - **Output: a board, not a list.** 20–30 threads, each one buyer × one job, with its evidence and
   scores. The best 3–5 are written up as intake-ready cards, each with a 48-hour test. Vlad picks
   one, and `/idea-new` takes it from there.
+- **Ideas are stored, challenged, and never repeated** (section 12).
+  - Claude, Codex and Gemini generate independently.
+  - Codex and Gemini then challenge the merged list, blind to who proposed what.
+  - Everything lands in `scout/ideas.yml` with its verdicts, and the reason for a refusal binds
+    every later round.
+  - Round one (2026-10-23, 3.70 EUR) left 36 candidates; two survived all three reviewers.
 - **Proposed next step:** one harvest by hand (section 10). About 20 EUR cash, about 2 hours of
   Vlad's time, and a board within a week.
 
@@ -153,12 +164,30 @@ Why money comes first:
 | Search demand | C (CPC), R | SE Ranking (keys held): volume, CPC, competition, intent, 12 months, who bids. Keyword Planner needs an Ads account with billing | Volumes and CPCs of "X logiciel", "X software", "alternative à X", "X prix" | `keyword_volume`, `serp_ads` |
 | Reviews of paid tools | P with C | Shopify, WordPress.org and Google Play are open. G2, Capterra, TrustRadius and Trustpilot block automated reads, and G2's terms forbid them: read by hand | Why customers switch: a missing feature, a price rise, too complex for a small user | nothing yet |
 | Feature requests | P (C on paid tools) | Atlassian's public Jira, sorted by votes with no login: 51,171 open suggestions, the top ones with 2,400–2,850 votes. Discourse forums (Shopify Community, Make, Spiceworks). GitHub issues sorted by 👍 | Old, heavily voted requests that were never built, on paid products | nothing yet |
-| Communities | P, R | Reddit: any API use needs approval since November 2025, `.json` closed, RSS works, the Arctic Shift archive is free but carries no commercial licence. HN through Algolia: free, 10,000 requests an hour. F5Bot and Syften alerts: 0–120 USD a month. LinkedIn and French Facebook groups (the largest has about 102,700 members): by hand | The buyers' words, their workarounds, people to answer | `reddit_mentions`, `hn_mentions` |
+| Communities | P, R | Reddit: its own API needs approval since November 2025, `.json` closed, RSS works, the Arctic Shift archive is free but carries no commercial licence. Apify's `trudax/reddit-scraper` works (about $10 per 1,000 posts with residential proxies; the `-lite` actor about $4 per 1,000), through NeuralBox's `RunActor` or directly with the factory's Apify key (probe below). HN through Algolia: free, 10,000 requests an hour. F5Bot and Syften alerts: 0–120 USD a month. LinkedIn and French Facebook groups (the largest has about 102,700 members): by hand | The buyers' words, their workarounds, people to answer | `reddit_mentions`, `hn_mentions` |
 | Company registries | Counting buyers | SIRENE: free API and monthly files. API Recherche d'entreprises: no key, filters by NAF code and revenue. BODACC. INSEE counts 2025 creations at a record 1,165,800, and Q3 2026 at +16 % year on year, information and communication +55 %. NAF codes change on 2027-01-01 | How many buyers of a kind exist, which kinds are growing | nothing yet |
 | Public spending | C | BOAMP, TED, and DECP (contracts awarded, with amounts, published daily since 2024) | Budgets for software and services. Sales cycles are long, which is hassle | nothing yet |
 | Templates that sell | C | Etsy: shop sales are public, and the API has `transaction_sold_count`. Gumroad shows sales only when the seller opts in | Business workflows people pay to systematise | nothing yet |
 | SaaS spend benchmarks | C per category | Ramp AI Index, Vertice (ex-Vendr) price pages. Moss (EU): micro-companies average 703 EUR a month on AI tools | Budget lines per category and company size | nothing yet |
 | The founders' experience | P firsthand, R through the network | Recall sessions and the itch ledger (section 5) | Pains paid for in hours | `founders/` (private) |
+
+**The Reddit probe, 2026-10-23.** The query was r/smallbusiness, posts of the last month matching
+"is there a tool" or "hired someone to", 30 posts at most, through `make prompt` in NeuralBox
+asking its agent to run `trudax/reddit-scraper` (Vlad's suggestion).
+
+- **Data.** Live posts dated 2026-09-24 to 2026-10-23, with body, votes, comment count and URL.
+- **NeuralBox failed twice.** Its `RunActor` treats a run still in `READY` state (just created,
+  not yet started) as a failure, and Apify answers `READY` at once. The runs went on without it,
+  so the data was recovered with the factory's own Apify key. The fix in NeuralBox is
+  one line: treat `READY` like `RUNNING`.
+- **Speed.** The run timed out at 240 s with 26 posts.
+- **Precision.** Reddit's search is not exact phrase matching: about 7 of 26 posts were an owner's
+  own pain (a form builder's price, money talk on WhatsApp, a bakery drowning in tasks). About 8
+  were founders or vendors fishing for problems. A buyer-or-not filter is therefore needed before
+  a post becomes a signal.
+- **Cost.** 0.11 EUR of NeuralBox and 0.32 EUR of Apify for both runs (`scout/costs.jsonl`).
+- **Terms.** Reddit's policy covers scraping; this route carries the same terms risk as Arctic
+  Shift, and the choice is Vlad's.
 
 ## 4. New top spenders: how to track them, and what they prove
 
@@ -281,8 +310,9 @@ On its own it never makes a thread (the triage rule for adjacent advertising).
   - status: seed → harvested → woven → carded → picked → in the factory → verdict;
   - the next action.
 
-Proposed home, once built: `scout/` (`signals.jsonl`, `threads/`, `board.md`, `costs.jsonl`,
-`learnings.md`). For the pilot, plain markdown files in `scout/`.
+The store exists since 2026-10-23, Vlad's ask: `scout/` holds `ideas.yml`, `board.md`,
+`prompts/`, `runs/` and `costs.jsonl`, in the format of `scout/README.md`. Signals and threads
+keep the form above until the harvest is built.
 
 ## 7. Scoring: solid, low-hassle, worth 10k
 
@@ -413,11 +443,9 @@ what it produces before anything gets built.
 
 **Decisions for Vlad before it runs:**
 
-- **Where scouting costs are logged.** The factory logs costs per idea, and scouting has no
-  ledger.
-  - *Recommendation:* for the pilot, a `scout/costs.jsonl` written in the same line format.
-  - Later, `factory costs` learns a `scout` ledger. An `_scout` idea is not the answer: the board
-    would list it, since only `_fixture` is hidden.
+- **Where scouting costs are logged.** Since 2026-10-23 they go in `scout/costs.jsonl`, in the
+  ideas' line format. Later, `factory costs` learns a `scout` ledger. An `_scout` idea is not the
+  answer: the board would list it, since only `_fixture` is hidden.
 - **A personal Google Cloud project** (BigQuery's free tier), never the employer's.
 - **Meta's Ad Library API** needs identity confirmation and a developer app on a personal account.
   That belongs in `/factory-setup` (D11). Until then, the pilot skips Meta, or uses SearchAPI once
@@ -445,6 +473,73 @@ Then he decides: build `/factory-scout`, change the method, or stop.
   - `labor_scan`: Codeur.com, Freelancer.com;
   - `registry_count`: API Recherche d'entreprises;
   - a dated deadline calendar, refreshed monthly;
-  - the `scout/` ledger.
+  - `factory scout` commands to list the store, refuse with a reason and rebuild the board (the
+    agent does it by hand today), and a `scout` cost ledger.
 - **Calibration.** Every card that reaches a verdict records the sources that fed it. After ten
   verdicts, a source that never fed a PASS is dropped.
+
+## 12. Rounds: three model families generate, two challenge blind, the store remembers
+
+Vlad's ask, verbatim (2026-10-23):
+
+> I also want you to: - think yourself - challenge also another frontier LLM (codex/openai and
+> gemini). I want to go on storage with the ideas - so I can refuse some - so you don't repeat
+
+**How a round runs:**
+
+1. **Generation, independently.**
+   - Claude works with the private founder profile, which is never sent anywhere.
+   - Codex and Gemini get `scout/prompts/brief.md` only, from an empty folder, with no tools.
+2. **Merge into `scout/ideas.yml`.**
+   - Same buyer and same job is folded into the earlier entry: status `merged` there, `also_by` on
+     the kept entry.
+   - Same buyer or same job is linked through `related`.
+   - Claude's first read adds hassle, fit and conflict.
+3. **Blind challenge.** The merged list goes to Codex and Gemini, shuffled, with the origin hidden.
+   Each gives keep or kill, the reason, the cheapest observation that would flip it, a top five,
+   and the ideas the list misses.
+4. **Founders decide.** `scout/board.md` orders the ideas by consensus. The founders refuse or keep
+   them, and the reason for a refusal becomes a rule for every later round (`scout/README.md`).
+5. **Kept ideas move on:** the harvest (sections 3–4), then cards, then `/idea-new`.
+
+**Round one, 2026-10-23** (3.70 EUR, `scout/costs.jsonl`):
+
+- **Volume.** 42 ideas generated: Claude 16, Codex 15, Gemini 11. Nine were folded as duplicates,
+  and Codex added three as missing: 36 to judge.
+- **Convergence.**
+  - Collecting supplier invoices for French SMBs (sc-004) and EUDR due diligence for small
+    importers (sc-015) were proposed by all three.
+  - Packaging files (sc-017) and green-claim evidence (sc-018) were proposed by two.
+- **Blind challenge.**
+  - Codex kept 7 of 33, all of them its own ideas.
+  - Gemini kept 8, mostly deadline-driven.
+  - Only two survive all three reviewers: mail intake for domiciliation providers (sc-021) and
+    industrial catalogue cleanup with freelancers (sc-031).
+- **How the outside models read the brief.**
+  - "Nothing that competes with performance-marketing agencies" became "nothing sold to agencies".
+  - "No regulated advice" became "nothing that computes tax or recommends compliant wording".
+
+  Those readings killed sc-009, sc-010, sc-005 and sc-038. If Vlad reads the constraints
+  differently, the next brief says so.
+
+**What the round taught** (to fold into `/factory-scout` when it is built):
+
+- **Taste counts as much as merit.** Each model favours ideas in its own style even when the
+  origin is hidden. Only agreement across model families is a signal, a weak one, and none of it
+  is evidence.
+- **The brief's facts anchor generation.** Eight of Gemini's 11 ideas rest on the brief's research
+  facts, the other three on its list of the founder's edges. Next round: give the facts to the
+  challengers only, or vary them.
+- **Gemini has no clean route yet.**
+  - Direct Vertex access is denied: the factory's service account lacks
+    `aiplatform.endpoints.predict`.
+  - NeuralBox's `Gemini Generate` caps output at 4,096 tokens, which Gemini 3.1 Pro mostly spends
+    on reasoning: 11 of its 12 answers were cut. Gemini 3.7 Flash finished the work, with 2 of 9
+    answers cut.
+  - Granting that role (Vlad's action) makes Gemini a direct, uncapped call.
+- **Codex opens an MCP connection it was told not to.** It starts a NeuralBox MCP connection
+  despite `-c 'mcp_servers={}'`. The connection was refused for lack of authentication and no data
+  was sent, but the plugin configuration needs checking.
+- **The store is the admin's data.** The admin board design
+  (`docs/superpowers/specs/2026-10-23-admin-meikit-design.md`) asks whether the scout board is in
+  its v1. `scout/ideas.yml` is the data it would read.
