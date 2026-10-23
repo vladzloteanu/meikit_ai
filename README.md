@@ -14,7 +14,7 @@ rules an agent session follows are in `CLAUDE.md`.
 | `tools/tests/` | the test suite (pytest) |
 | `tools/factory/fixtures/` | canned provider answers for dry runs, with their provenance in its README |
 | `ideas/<slug>/` | one folder per idea, the ledger (`docs/ledger.md`); `_fixture` is the dry-run idea |
-| `docs/` | design, ledger, secrets, doctor, NeuralBox, challenge techniques, idea sourcing, build plans |
+| `docs/` | design, ledger, secrets, doctor, NeuralBox, challenge techniques, idea sourcing, build plans, designs of later parts (`superpowers/specs/`) |
 | `docs/research/` | research reports (`reports/`) and the notes behind them (`research_notes/`) |
 | `founders/` | founder profiles, private and git-ignored: each founder keeps their own copy |
 | `secrets/` | the encrypted config `config.yml.enc` (committed) and its schema `config.yml.example` |
